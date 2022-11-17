@@ -1,0 +1,11 @@
+Files for analyzing Speech Motor Sequence Learning (SMSL) task from Mark Richardson's Brain Modulation Lab
+
+Includes a copy of mPraat
+
+Code written by Andrew Meier except for mPraat
+
+Matlab and Praat code
+
+.....the following packages should be installed before using these files:
+https://github.com/Brain-Modulation-Lab/bml
+https://github.com/fieldtrip/fieldtrip
