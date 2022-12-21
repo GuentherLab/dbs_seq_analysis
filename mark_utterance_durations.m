@@ -7,7 +7,7 @@
 %
 % make sure that the following Matlab preference is checked: General / Deleting Files / Move to the Recycle Bin
 %
-% updated by Andrew Meier 2022/1/3
+% updated by Andrew Meier
 
 % loading annotation tables
 sync = bml_annot_read_tsv(sync_file); 
@@ -266,7 +266,7 @@ for i_unscored = 1:n_unscored_trials
                 end
             end
 
-            speechOnTime = numResp_on; %Replace manual measurement with automatic measurement
+            speechOnTime = numResp_on; %Replace automatic measurement with manual measurement
             title('Click ACCEPT to keep or EDIT to change manual measurements.'); drawnow; 
             pause(pausesec); %then returns to main menu (accept), where accept will add duration to data structure
 
@@ -319,7 +319,7 @@ for i_unscored = 1:n_unscored_trials
                 end
             end
 
-            speechOffTime = numResp_end; %Replace manual measurements with automatic measurement
+            speechOffTime = numResp_end; %Replace automatic measurement with manual measurement
             title('Click ACCEPT to keep or EDIT to change manual measurements.'); drawnow; 
             pause(pausesec); %then returns to main menu (accept), where accept will add duration to data structure
 
@@ -383,7 +383,7 @@ for i_unscored = 1:n_unscored_trials
                 end
             end
 
-            speechOnTime = numResp_on; %Replace manual measurements with automatic measurement
+            speechOnTime = numResp_on; %Replace automatic measurement with manual measurements 
             speechOffTime = numResp_end; 
             title('Click ACCEPT to keep or EDIT to change manual measurements.'); drawnow; 
             pause(pausesec); %then returns to main menu (accept), where accept will add duration to data structure

@@ -1,22 +1,33 @@
-###Description of this script
-##  This script allows for scoring of responses during STOP trials in the SMSL (aka SEQ-DBs) task. The script will create 
+###     Description of this script
+##  This script allows for scoring of responses during STOP trials in the SMSL (aka DBS-SEQ) task. The script will create 
 ##  and open a TextGrid accompanying each sound file in a directory. 
 ##
-##  The TextGrid contains a Tier 1 for classifying the stop response
-##  into 1 of 3 types:
+##  The TextGrid contains a Tier 1 for classifying the stop response into 1 of 3 types:
 ##	1. No-Start: subject did not begin the utterance
 ##	2. Interrupted: utterance was started but not finished
 ##	3. Completed: utterance was completed (may include speech errors as long as onset and offset consonant are audible) 
 ##  
-##  Use Tier 2 to add comments about the trial, e.g. if background noise makes it hard to hear a possible utterance. 
+##  Tier 2: SpeechEpoch - indicate the onset and offset of speech
+##	... click the ‘SpeechEpoch’ tier (it should turn yellow)
+##	... highlight a portion of the spectrogram, then press Enter (two blue/red bars should appear in the SpeechEpoch tier)
+##	... alternatively: instead of highlighting, select the onset or offset individually and press Enter
+##
+##  Tier 3: Comments - use this Tier to add comments about the trial, e.g. if background noise makes it hard to hear a possible utterance. 
+##  Tier 4: UnusableTrial - fill this in with a 1 if something makes the trial unusable... 
+##	...e.g. the experimenter and subject are talking to each other rather than subject doing the task
+##  Tier 5: DifficultToScore -  fill this in with 1 if the StopResponse is ambiguous (e.g. you can almost hear a response initiation)... 
+##	...note in Comments why it's difficult to score
 ##  
 ##  To run this script, you will need to have all sound files (one per trial) in a single directory. 
+##
+##  Running this script again after having previously scored trials in this directly will allow you to revise prior scorings.
+##  To skip to a specific file in this directory, using the 'Starting_file_index' field when starting the script. 
 ##
 ##  Script currently works only for .wav files but code can be edited to instead flexibly accept any file extension, as specified in the "file_extension" variable
 ##  Edit the names or number of Tiers in the "sentence Tier(s)" line below, or in the GUI that opens when you run the script. 
 ##  To start at a file other than the first one listed in the directory, use the Starting_file_index field
 #
-###End of description
+###    End of description
 
 clearinfo
 
@@ -27,7 +38,7 @@ form Select subject, file type, and tiers
 	sentence Starting_file_index 1
 	sentence File_name_or_initial_substring trial
         sentence File_extension wav
-	sentence Tier(s) StopResponse Comments UnusableTrial DifficultToScore
+	sentence Tier(s) StopResponse SpeechEpoch Comments UnusableTrial DifficultToScore
 endform
 
 #wd$ =     "C:\Users\amsme\Downloads\1008_ses-intraop_stop-trials\"
