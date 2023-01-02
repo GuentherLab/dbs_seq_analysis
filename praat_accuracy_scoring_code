@@ -21,12 +21,12 @@ form Select subject, file type, and tiers
 	sentence Starting_file_index 1
 	sentence File_name_or_initial_substring trial
         sentence File_extension wav
-	sentence Tier(s) WordAccuracy OnsetErrorType VowelOffsetErrorType Comments UnusableTrial DifficultToScore
+	sentence Tier(s) WordAccuracy OnsetErrorType VowelOffsetErrorType SpeechEpoch Comments UnusableTrial DifficultToScore
 endform
 
-# wd$ =     "C:\Users\amsme\Downloads\1008_ses-intraop_go-trials\"
+ wd$ =     "C:\Users\amsme\Downloads\1008_go\"
 # wd$ =     "Y:\DBS\derivatives\" + "sub-DM" + subName$ + "\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
- wd$ =     "Y:\Pilot\smsl\sub-pilot08\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
+# wd$ =     "Y:\Pilot\smsl\sub-pilot08\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
 
 outDir$ = wd$
 
