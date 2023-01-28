@@ -6,7 +6,7 @@
 ##	... or highlight the buzzer epoch and press Enter to demarcate both timepoints
 ##
 ##  Running this script again after having previously scored trials in this directly will allow you to revise prior scorings.
-##  To skip to a specific file in this directory, using the 'Starting_file_index' field when starting the script. 
+##  To skip to a specific file in this directory, change the 'Starting_file_index' value when starting the script. 
 ##
 ## For reference, the original buzzer stim file is contained in the github repository in:
 ## ..... https://github.com/Brain-Modulation-Lab/Task_SpeechMotorSequenceLearning/tree/main/stim/mixkit-game-show-buzz-in-3090.wav
@@ -28,8 +28,8 @@ wd$ =     "C:\Users\amsme\Downloads\1005_ses-intraop_stop-trials-ambientmic\"
 
 
 outDir$ = wd$
-
 file_extension$ = "wav"
+tg_append$ = "_buzzer-epoch"
 
 ##  Make a list of all the sound files in the directory we're using/number of files (numFiles):
 strings = Create Strings as file list: "wavList", wd$ + "'file_name_or_initial_substring$'*'file_extension$'"
@@ -42,43 +42,30 @@ for ifile from number(starting_file_index$) to numFiles
 	#    Query the file-list to get the first filename from it, then read that file in:
 	filename$ = Get string... ifile 
 	sound = Read from file... 'wd$''filename$'
-	
+
 	#Make a variable  "soundname$" that will be equal to the filename minus the ".wav" extension:
 	soundname$ = selected$ ("Sound", 1)
 	
-	#Read in corresponding TextGrid:
+	#Read in corresponding TextGrid
 	## Look for grid, if found, open it, otherwise make new one
-     	
-	full$ = "'wd$''soundname$'_buzzer-epoch.TextGrid"
-     		if fileReadable (full$)
-  		Read from file... 'full$'
-     		
-		else
+	tg_fullfile$ = "'wd$''soundname$''tg_append$'.TextGrid"
+     	if fileReadable (tg_fullfile$)
+  		Read from file... 'tg_fullfile$'
+	else
   		select Sound 'soundname$'
-  		To TextGrid... "'tier$'"
-     		endif
-	
-	#Read from file... 'wd$''soundname$'.TextGrid
-	#grid = To TextGrid: "Analysis", ""
+		To TextGrid... "'tier$'"
+	endif
+
+    	#Annotate the TextGrid while script paused
 	select Sound 'soundname$'
 	plusObject: "TextGrid " + soundname$
 	View & Edit
-
-    	#Annotate the TextGrid while script paused
-    	#plus Sound 'short$'
-     	#Edit
      	pauseScript: "Click Continue when you're done scoring this file"
-     	#minus Sound 'short$'
-     	Write to text file... 'wd$''soundname$'_buzzer-epoch.TextGrid
 
-	selectObject: "TextGrid " + soundname$
-
-     #  Code has now extracted all labels for all tiers for the current sound object and
-     #  textgrid 
+     #  Code has now extracted all labels for all tiers for the current sound object and textgrid 
      #  Now close any objects we no longer need, and end for loop
-	
 	select TextGrid 'soundname$'
-	Save as text file: wd$ + soundname$ + "_buzzer-epoch.TextGrid"
+	Save as text file: tg_fullfile$
 	select TextGrid 'soundname$'
     	plus Sound 'soundname$'
 	Remove
@@ -86,7 +73,6 @@ for ifile from number(starting_file_index$) to numFiles
 	select Strings wavList
 endfor
 
-#select Strings list
 select Strings wavList
 Remove
 clearinfo
