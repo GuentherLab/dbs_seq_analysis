@@ -51,22 +51,25 @@ for ifile from number(starting_file_index$) to numFiles
 	tg_fullfile$ = "'wd$''soundname$''tg_append$'.TextGrid"
      	if fileReadable (tg_fullfile$)
   		Read from file... 'tg_fullfile$'
+		tg_string$ = tg_append$
 	else
   		select Sound 'soundname$'
 		To TextGrid... "'tier$'"
+		tg_string$ = ""
 	endif
+	tg_obj$ = soundname$ + tg_string$
 
     	#Annotate the TextGrid while script paused
 	select Sound 'soundname$'
-	plusObject: "TextGrid " + soundname$
+	plusObject: "TextGrid " + tg_obj$
 	View & Edit
      	pauseScript: "Click Continue when you're done scoring this file"
 
      #  Code has now extracted all labels for all tiers for the current sound object and textgrid 
      #  Now close any objects we no longer need, and end for loop
-	select TextGrid 'soundname$'
+	select TextGrid 'tg_obj$'
 	Save as text file: tg_fullfile$
-	select TextGrid 'soundname$'
+	select TextGrid 'tg_obj$'
     	plus Sound 'soundname$'
 	Remove
 	clearinfo
