@@ -1,50 +1,32 @@
-###     Description of this script
-##  This script allows for scoring of responses during STOP trials in the SMSL (aka DBS-SEQ) task. The script will create 
-##  and open a TextGrid accompanying each sound file in a directory. 
-##
-##  The TextGrid contains a Tier 1 for classifying the stop response into 1 of 3 types:
-##	1. No-Start: subject did not begin the utterance
-##	2. Interrupted: utterance was started but not finished
-##	3. Completed: utterance was completed (may include speech errors as long as onset and offset consonant are audible) 
-##  
-##  Tier 2: SpeechEpoch - indicate the onset and offset of speech
-##	... click the ‘SpeechEpoch’ tier (it should turn yellow)
-##	... highlight a portion of the spectrogram, then press Enter (two blue/red bars should appear in the SpeechEpoch tier)
-##	... alternatively: instead of highlighting, select the onset or offset individually and press Enter
-##
-##  Tier 3: Comments - use this Tier to add comments about the trial, e.g. if background noise makes it hard to hear a possible utterance. 
-##  Tier 4: UnusableTrial - fill this in with a 1 if something makes the trial unusable... 
-##	...e.g. the experimenter and subject are talking to each other rather than subject doing the task
-##  Tier 5: DifficultToScore -  fill this in with 1 if the StopResponse is ambiguous (e.g. you can almost hear a response initiation)... 
-##	...note in Comments why it's difficult to score
+###Description of this script
+##  This script allows for scoring of accuracy on trials for the SEQ-FTD experiment. The script will create 
+##  and open a TextGrid accompanying each sound file in a directory. The TextGrid contains tiers for overall accuracy, sequencing accuracy 
+## onset/code cluster accuracy, and error type, and (if commented in) appends the results to a text file across all trials for that subject 
+## (called "accuracy-log.txt", and will be written to the same directory holding your sound files (designated wd$ below). 
 ##  
 ##  To run this script, you will need to have all sound files (one per trial) in a single directory. 
-##
-##  Running this script again after having previously scored trials in this directly will allow you to revise prior scorings.
-##  To skip to a specific file in this directory, using the 'Starting_file_index' field when starting the script. 
 ##
 ##  Script currently works only for .wav files but code can be edited to instead flexibly accept any file extension, as specified in the "file_extension" variable
 ##  Edit the names or number of Tiers in the "sentence Tier(s)" line below, or in the GUI that opens when you run the script. 
 ##  To start at a file other than the first one listed in the directory, use the Starting_file_index field
 #
-###    End of description
+###End of description
 
 clearinfo
 
 ## Set subject, file type, and desired tiers (opens GUI)
  
 form Select subject, file type, and tiers
-        sentence SubName 1024
+        sentence SubName 1007
 	sentence Starting_file_index 1
 	sentence File_name_or_initial_substring trial
         sentence File_extension wav
-	sentence Tier(s) StopResponse SpeechEpoch Comments UnusableTrial DifficultToScore
+	sentence Tier(s) WordAccuracy OnsetErrorType VowelOffsetErrorType SpeechEpoch Comments UnusableTrial DifficultToScore
 endform
 
-#wd$ =     "C:\Users\amsme\Downloads\1008_ses-intraop_stop-trials\"
-#wd$ =     "Y:\DBS\derivatives\" + "sub-DM" + subName$ + "\analysis\task-smsl_trial-audio\ses-training_stop-trials\"
-wd$ =     "Y:\DBS\derivatives\" + "sub-DM" + subName$ + "\analysis\task-smsl_trial-audio\ses-intraop_stop-trials\"
-
+ wd$ =     "C:\Users\amsme\Downloads\1008_go\"
+# wd$ =     "Y:\DBS\derivatives\" + "sub-DM" + subName$ + "\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
+# wd$ =     "Y:\Pilot\smsl\sub-pilot08\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
 
 outDir$ = wd$
 
@@ -65,9 +47,7 @@ for ifile from number(starting_file_index$) to numFiles
 	#Make a variable  "soundname$" that will be equal to the filename minus the ".wav" extension:
 	soundname$ = selected$ ("Sound", 1)
 	
-	#Read in corresponding TextGrid:
 	## Look for grid, if found, open it, otherwise make new one
-     	
 	full$ = "'wd$''soundname$'.TextGrid"
      		if fileReadable (full$)
   		Read from file... 'full$'
@@ -93,8 +73,18 @@ for ifile from number(starting_file_index$) to numFiles
 
 	selectObject: "TextGrid " + soundname$
 
+		##   Now we query the TextGrid to get the label from each tier, 
+		##   storing each value in a variable
+		select TextGrid 'soundname$'
+		wordAcc$ = Get label of interval... 1 1
+		onsetType$ = Get label of interval... 2 1
+		vowelOffsetType$ = Get label of interval... 3 1
+		comments$ = Get label of interval... 4 1
+		unusableTrial$ = Get label of interval... 5 1
+		difficultToScore$ = Get label of interval... 6 1
+     
      #  Code has now extracted all labels for all tiers for the current sound object and
-     #  textgrid 
+     #  textgrid, and written all the appropriate values to our log file.  
      #  Now close any objects we no longer need, and end for loop
 	
 	select TextGrid 'soundname$'
@@ -115,4 +105,7 @@ clearinfo
 
 
 
-#### modified 2021/09/06 by Andrew Meier for use with richardson lab data
+#### modified 2021/08/08 by Andrew Meier for use with richardson lab data
+## by Hilary Miller, 2021 for SEQ-FTD study, BU
+## hilarym@bu.edu
+## Parts inspired by Jill Thorson and Liz Heller Murray
