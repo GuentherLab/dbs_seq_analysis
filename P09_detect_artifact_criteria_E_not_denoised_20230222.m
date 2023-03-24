@@ -1,33 +1,31 @@
+% Detect artifacts, create an artifact annotation table
+
 function P09_detect_artifact_criteria_E(SUBJECT, param)
-
-%% Detect artifacts
-% creates an artifact annotation table
-
-% CRITERIA E paramaters valus
-CRITERIA = 'E'; %identifier for the criteria implemented in this script
-
-HIGH_PASS_FILTER = 'yes'; %should a high pass filter be applied
-HIGH_PASS_FILTER_FREQ = 1; %cutoff frequency of high pass filter
-
-do_bsfilter = 'yes'; 
-line_noise_harm_freqs=[60 120 180 240]; % for notch filters for 60hz harmonics
 
 %% load packages
 ft_defaults
 bml_defaults
 format long
 
-%% Definig paths
 %% Defining paths, loading parameters
 SUBJECT='DM1005';
 SESSION = 'intraop';
 TASK = 'smsl'; 
+
+%%% CRITERIA E parameter valus
+ARTIFACT_CRIT = 'E'; %identifier for the criteria implemented in this script
+HIGH_PASS_FILTER = 'yes'; %should a high pass filter be applied
+HIGH_PASS_FILTER_FREQ = 1; %cutoff frequency of high pass filter
+do_bsfilter = 'yes'; 
+line_noise_harm_freqs=[60 120 180 240]; % for notch filters for 60hz harmonics
+SAMPLE_RATE = 100; % downsample rate in hz for high gamma traces
 
 PATH_DATASET = 'Y:\DBS';
 PATH_DER = [PATH_DATASET filesep 'derivatives'];
 PATH_DER_SUB = [PATH_DER filesep 'sub-' SUBJECT];  
 PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
 PATH_ANNOT = [PATH_DER_SUB filesep 'annot'];
+PATH_FIELDTRIP = [PATH_DER_SUB filesep 'fieldtrip'];
 PATH_AEC = [PATH_DER_SUB filesep 'aec']; 
 PATH_SCORING = [PATH_DER_SUB filesep 'analysis' filesep 'task-', TASK, '_scoring'];
 PATH_ANALYSIS = [PATH_DER_SUB filesep 'analysis'];
@@ -41,19 +39,21 @@ PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION];
 PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
 
-ARTIFACT_CRIT = 'E'; 
-SAMPLE_RATE = 100; % downsample rate in hz for high gamma traces
-
-%%%%%%%% change this path once crit E is finalized
 PATH_ART_PROTOCOL = 'Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E';
 
 cd(PATH_DER_SUB)
 
-session= bml_annot_read(['annot/' SUBJECT '_session.txt']);
-electrode = bml_annot_read(['annot/' SUBJECT '_electrode.txt']);
+artifact_annot_path = ['annot/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_artifact-criteria-' ARTIFACT_CRIT '.tsv'];
+
+session= bml_annot_read_tsv(['annot/sub-' SUBJECT '_sessions.tsv']);
+electrodes = bml_annot_read_tsv(['annot/sub-' SUBJECT '_electrodes.tsv']);
+channels = bml_annot_read_tsv(['annot/sub-' SUBJECT '_ses-' SESSION '_channels.tsv']); %%%% for connector info
+[~, ch_ind] = intersect(channels.name, electrodes.name,'stable');
+electrodes = join(electrodes,channels(ch_ind,{'name','connector'}) ,'keys','name'); %%% add connector info
+
 
 %% Loading FieldTrip data 
-load([PATH_SUBJECT filesep 'Preprocessed Data' filesep 'FieldTrip' filesep SUBJECT '_ft_raw_session.mat'],'D','loaded_epoch');
+load([PATH_FIELDTRIP filesep 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_ft-raw.mat'],'D','loaded_epoch');
 nTrials = numel(D.trial);
 
 %remasking nans with zeros
@@ -62,12 +62,12 @@ cfg.value=0;
 cfg.remask_nan=true;
 D=bml_mask(cfg,D);
 
-%% working in protocol folder
-cd(PATH_PROTOCOL)
+% % % % % % % % % % % % %% working in protocol folder
+% % % % % % % % % % % % cd(PATH_PROTOCOL)
 
 %% loading electrode type band table
 if ~exist('el_band','var')
-  param = readtable('artifact_E_params.txt');
+  param = readtable([PATH_ART_PROTOCOL, filesep, 'artifact_', ARTIFACT_CRIT , '_params.tsv'],'FileType','text');
   param_default = param(param.subject == "default",:);
   param_subject = param(strcmp(param.subject,SUBJECT),:);
   if ~isempty(param_subject)
@@ -330,8 +330,8 @@ for idx = 1:height(param)
   %the entire connector group
 
   %adding connector information to artifac annotation table
-  electrode.conn_label = strcat({'conn'},num2str(electrode.connector));
-  artifact_2.conn_label = bml_map(artifact_2.label, electrode.electrode, electrode.conn_label);
+  electrodes.conn_label = strcat({'conn'},num2str(electrodes.connector));
+  artifact_2.conn_label = bml_map(artifact_2.label, electrodes.name, electrodes.conn_label);
 
 % 	%calculating absolute value envelope at 1Hz (1s chunks)
 %   cfg=[];
@@ -359,7 +359,7 @@ for idx = 1:height(param)
     cfg=[];
     cfg.groupby_x='conn_label'; %grouping variable in electrode table
     cfg.groupby_y='label'; %corresponding grouping variable in connector_artifact_3
-    artifact_4=bml_annot_intersect(cfg,electrode,connector_artifact_3);
+    artifact_4=bml_annot_intersect(cfg,electrodes,connector_artifact_3);
 
     if ~isempty(artifact_4)
       %combining with previously detected artifacts
@@ -394,15 +394,15 @@ for idx = 1:height(param)
   
 end
 
-cd(PATH_SYNC)
-artifact_annot_path = ['annot/' SUBJECT '_artifact_criteria_' CRITERIA '.txt'];
+
+
 
 %archiving 
 if isfile(artifact_annot_path)
   copyfile(artifact_annot_path,...
-        [PATH_SYNC filesep 'archive' filesep SUBJECT '_artifact_criteria_' CRITERIA '_' datestr(now,'yyyymmdd_HHMM') '.txt'])
+        [PATH_ANNOT filesep 'archive' filesep SUBJECT '_artifact_criteria_' ARTIFACT_CRIT '_' datestr(now,'yyyymmdd_HHMM') '.tsv'])
 end
 
-bml_annot_write(artifact,['annot/' SUBJECT '_artifact_criteria_' CRITERIA '.txt']);
+bml_annot_write(artifact,['annot/' SUBJECT '_artifact_criteria_' ARTIFACT_CRIT '.tsv']);
 % bml_annot_write(artifact,[PATH_PROTOCOL, filesep, 'annot', filesep, SUBJECT '_artifact_criteria_' CRITERIA '.txt']);
 

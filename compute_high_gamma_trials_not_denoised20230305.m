@@ -1,10 +1,10 @@
 % get high gamma timecourses for each trial, using high gamma definition from artifact criterion E
 % 
-% run this script after p09 (common average rereferencing) has been performed
+% run this script after common average rereferencing has been performed
 %
 % AM 
 
-function compute_high_gamma_trials(SUBJECT,ft_file,artifact,savename)
+function compute_high_gamma_trials(SUBJECT,ft_file,artifact,fieldtrip_savename)
 
 % Loading packages
 ft_defaults
@@ -15,6 +15,8 @@ format long
 SUBJECT='DM1005';
 SESSION = 'intraop';
 TASK = 'smsl'; 
+ARTIFACT_CRIT = 'E'; 
+SAMPLE_RATE = 100; % downsample rate in hz for high gamma traces
 
 PATH_DATASET = 'Y:\DBS';
 PATH_DER = [PATH_DATASET filesep 'derivatives'];
@@ -34,26 +36,24 @@ PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION];
 PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
 
-ARTIFACT_CRIT = 'E'; 
-SAMPLE_RATE = 100; % downsample rate in hz for high gamma traces
-
-%%%%%%%% change this path once crit E is finalized
 PATH_ART_PROTOCOL = 'Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E';
+
+fieldtrip_savename = ['fieldtrip/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_ft-hg-trial-criteria-E.mat'];
 
 cd(PATH_DER_SUB)
 
-% % % Load annotation tables
-
-electrode = bml_annot_read(['annot/' SUBJECT '_electrode.txt']);
-% artifact = bml_annot_read(['annot/' SUBJECT '_artifact_criteria_' ARTIFACT_CRIT '.txt']); % use multi-frequency-averaged high gamma
-art_param = readtable([PATH_ART_PROTOCOL filesep 'artifact_' ARTIFACT_CRIT '_params.txt']);
-empty_electrode = bml_annot_read(['annot/' SUBJECT '_empty_electrode.txt']);
-% % % cue_presentation = bml_annot_read(['annot/' SUBJECT '_cue_presentation.txt']);
-cue = bml_annot_read(['annot/' SUBJECT '_cue_precise.txt']);
-trials = bml_annot_read(['annot/' SUBJECT '_coding.txt']);
+% load timing and electrode data
+artifact = bml_annot_read_tsv(['annot/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_artifact-criteria-' ARTIFACT_CRIT '.tsv']);
+art_param = readtable([PATH_ART_PROTOCOL, filesep, 'artifact_', ARTIFACT_CRIT , '_params.tsv'],'FileType','text'); % artifact-finding parameters
+trials = bml_annot_read_tsv(['annot/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_annot-trials.tsv']);
+electrodes = bml_annot_read_tsv(['annot/' 'sub-' SUBJECT '_electrodes.tsv']);
+channels = bml_annot_read_tsv(['annot/sub-' SUBJECT '_ses-' SESSION '_channels.tsv']); %%%% for connector info
+[~, ch_ind] = intersect(channels.name, electrodes.name,'stable');
+electrodes = join(electrodes,channels(ch_ind,{'name','connector'}) ,'keys','name'); %%% add connector info
 
 
 % % % Load FieldTrip raw data - artifact-masked and rereferenced
+ft_file = ['fieldtrip/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_ft-raw-filt-trial-ar-ref.mat'];
 load(ft_file);
 ntrials_raw = numel(D_trial_ref.trial);
 
@@ -131,7 +131,7 @@ end
 cfg = [];
 D_hg = ft_appenddata(cfg, D_hg_eltype{:});
 
-save(savename, 'D_hg','-v7.3');
+save(fieldtrip_savename, 'D_hg','-v7.3');
 
 
 
