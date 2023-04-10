@@ -24,7 +24,7 @@ form Select subject, file type, and tiers
 	sentence Tier(s) WordAccuracy OnsetErrorType VowelOffsetErrorType SpeechEpoch Comments UnusableTrial DifficultToScore
 endform
 
- wd$ =     "C:\Users\amsme\Downloads\1008_go\"
+ wd$ =     "C:\Users\amsme\Downloads\1024_ses-intraop_go-trials\"
 # wd$ =     "Y:\DBS\derivatives\" + "sub-DM" + subName$ + "\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
 # wd$ =     "Y:\Pilot\smsl\sub-pilot08\analysis\task-smsl_trial-audio\ses-intraop_go-trials\"
 
