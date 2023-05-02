@@ -4,7 +4,7 @@ bml_defaults
 format long
 
 %% Defining paths, loading parameters
-SUBJECT='DM1005';
+SUBJECT='DM1008';
 SESSION = 'intraop';
 TASK = 'smsl'; 
 

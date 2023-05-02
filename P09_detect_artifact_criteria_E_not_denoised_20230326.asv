@@ -1,6 +1,6 @@
 % Detect artifacts, create an artifact annotation table
 
-function P09_detect_artifact_criteria_E(SUBJECT, param)
+% function P09_detect_artifact_criteria_E(SUBJECT, param)
 
 %% load packages
 ft_defaults
@@ -8,7 +8,7 @@ bml_defaults
 format long
 
 %% Defining paths, loading parameters
-SUBJECT='DM1005';
+SUBJECT='DM1008';
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
@@ -40,6 +40,7 @@ PATH_AUDIO = [PATH_SRC_SESS filesep 'audio'];
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
 
 PATH_ART_PROTOCOL = 'Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E';
+PATH_FIGURES = [PATH_ART_PROTOCOL filesep 'figures']; 
 
 cd(PATH_DER_SUB)
 
@@ -48,6 +49,7 @@ artifact_annot_path = ['annot/' 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_a
 session= bml_annot_read_tsv(['annot/sub-' SUBJECT '_sessions.tsv']);
 electrodes = bml_annot_read_tsv(['annot/sub-' SUBJECT '_electrodes.tsv']);
 channels = bml_annot_read_tsv(['annot/sub-' SUBJECT '_ses-' SESSION '_channels.tsv']); %%%% for connector info
+    channels.name = strrep(channels.name,'_Ll','_Lm'); % change name to match naming convention in electrodes table
 [~, ch_ind] = intersect(channels.name, electrodes.name,'stable');
 electrodes = join(electrodes,channels(ch_ind,{'name','connector'}) ,'keys','name'); %%% add connector info
 
@@ -94,7 +96,6 @@ hfig = figure();
 for idx = 1:height(param)
   
   fprintf('doing %s %s \n',SUBJECT,param.name{idx});
-  
   el_type = strip(param.electrode_type{idx});
     wav_width = param.wav_width(idx);
   env_mult_factor =  param.env_mult_factor(idx);
@@ -188,39 +189,44 @@ for idx = 1:height(param)
   THRESHOLD = nan(nTrials,2);
   max_v=nan(1,nTrials);
   min_v=nan(1,nTrials);
-  for i=1:nTrials
-    v = reshape(D_hg_eltype_env_log10.trial{i},1,[]);
+  for itrial=1:nTrials
+    v = reshape(D_hg_eltype_env_log10.trial{itrial},1,[]);
     v1 = v((v>THRESHOLD_FIX(1)) & (v<THRESHOLD_FIX(2)));
     m = median(v1);
     std = bml_robust_std(v1);
     if ~isempty(v1)
-      max_v(i)=max(v);
-      min_v(i)=min(v);
-      THRESHOLD(i,:) = m + THRESHOLD_STD_FACTORS.*std;
+      max_v(itrial)=max(v);
+      min_v(itrial)=min(v);
+      THRESHOLD(itrial,:) = m + THRESHOLD_STD_FACTORS.*std;
     end
   end
 
   %plotting histogram to asses threshold levels
-  clf(hfig); set(hfig,'Position',[0 0 600 600]);
-  for i=1:nTrials
-    subplot(ceil(nTrials/2),2,i)
-    hold on;
-    h=histogram(D_hg_eltype_env_log10.trial{i},linspace(min(min_v),max(max_v),61),...
-      'FaceAlpha',0.1,'EdgeAlpha',1);
-    maxBinCount = max(h.BinCounts);
-    plot([THRESHOLD(i,1),THRESHOLD(i,1)],[0,maxBinCount .* 1.1]);
-    plot([THRESHOLD(i,2),THRESHOLD(i,2)],[0,maxBinCount .* 1.1]);
-    %set(gca,'YScale','log')
-    title(['session ' num2str(i)]);
+  if ~isempty(v1)
+      clf(hfig); set(hfig,'Position',[0 0 600 600]);
+      for itrial=1:nTrials
+        subplot(ceil(nTrials/2),2,itrial)
+        hold on;
+        h=histogram(D_hg_eltype_env_log10.trial{itrial},linspace(min(min_v),max(max_v),61),...
+          'FaceAlpha',0.1,'EdgeAlpha',1);
+        maxBinCount = max(h.BinCounts);
+        plot([THRESHOLD(itrial,1),THRESHOLD(itrial,1)],[0,maxBinCount .* 1.1]);
+        plot([THRESHOLD(itrial,2),THRESHOLD(itrial,2)],[0,maxBinCount .* 1.1]);
+        %set(gca,'YScale','log')
+        title(['session ' num2str(itrial)]);
+      end
+      %saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_env_log10_hist.png'])
+  elseif isempty(v1)
+      warning(['For electrode type ''', el_type, ''' (sub ', SUBJECT, '), no timepoints found between low threshold (', ...
+          num2str(THRESHOLD_FIX(1)), ') and high threshold (', num2str(THRESHOLD_FIX(2)), ')'])
   end
-  saveas(hfig,['figures/' SUBJECT '_' pname '_artifact_env_log10_hist.png'])
 
   %detecting segments of time for each channel above threshold
   artifact_eltype_1 = table();
-  for i=1:nTrials
+  for itrial=1:nTrials
     cfg=[];
-    cfg.threshold = THRESHOLD(i,:);
-    cfg.trials = i;
+    cfg.threshold = THRESHOLD(itrial,:);
+    cfg.trials = itrial;
     artifact_eltype_1 = bml_annot_rowbind(artifact_eltype_1, bml_annot_detect(cfg,D_hg_eltype_env_log10));
   end
 
@@ -250,9 +256,9 @@ for idx = 1:height(param)
     ny=1; nx=numel(D_p.trial);
   end
   clf(hfig); set(hfig,'Position',[0 0 nx*200 ny*200]);
-  for i=1:ny
+  for itrial=1:ny
       for j=1:nx
-          pidx = (i-1)*nx+j;
+          pidx = (itrial-1)*nx+j;
           l = E_p.label(pidx);
           l_idx = bml_getidx(l,D_p.label);
           subplot(ny,nx,pidx);
@@ -260,7 +266,7 @@ for idx = 1:height(param)
           title(E_p.label(pidx));
       end
   end
-  saveas(hfig,['figures/' SUBJECT '_' pname '_artifact_snippets.png'])
+  %saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_snippets.png'])
 
   
   %consolidating annotations with CONSOLIDATION_TIME_TOLERANCE margin of overlap
@@ -363,7 +369,7 @@ for idx = 1:height(param)
 
     if ~isempty(artifact_4)
       %combining with previously detected artifacts
-      artifact_4.label = artifact_4.electrode;
+      artifact_4.label = artifact_4.name;
       artifact_5 = bml_annot_rowbind(artifact_2, artifact_4);
       cfg=[];
       cfg.groupby = 'label';
@@ -384,7 +390,7 @@ for idx = 1:height(param)
   clf(hfig); set(hfig,'Position',[0 0 600 600]);
   cfg.trial_name='session';
   bml_plot_raster(cfg,artifact_5_raw)
-  saveas(hfig,['figures/' SUBJECT '_' pname '_artifact_mask.png'])
+  %saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_mask.png'])
 
   artifact_5.pname = repmat({pname},height(artifact_5),1);
   
@@ -400,9 +406,9 @@ end
 %archiving 
 if isfile(artifact_annot_path)
   copyfile(artifact_annot_path,...
-        [PATH_ANNOT filesep 'archive' filesep SUBJECT '_artifact_criteria_' ARTIFACT_CRIT '_' datestr(now,'yyyymmdd_HHMM') '.tsv'])
+        [PATH_ANNOT filesep 'archive' filesep SUBJECT '_artifact-criteria-' ARTIFACT_CRIT '_' datestr(now,'yyyymmdd_HHMM') '.tsv'])
 end
 
-bml_annot_write(artifact,['annot/' SUBJECT '_artifact_criteria_' ARTIFACT_CRIT '.tsv']);
-% bml_annot_write(artifact,[PATH_PROTOCOL, filesep, 'annot', filesep, SUBJECT '_artifact_criteria_' CRITERIA '.txt']);
+%writetable(artifact,['annot/sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_artifact-criteria-' ARTIFACT_CRIT '.tsv'], 'delimiter','\t', 'FileType','text');
+
 
