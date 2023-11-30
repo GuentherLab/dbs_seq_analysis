@@ -8,10 +8,10 @@ ft_defaults
 bml_defaults
 format long
 
-% clear
+clear
 
 %% Defining paths, loading parameters
-% SUBJECT='DM1007';
+SUBJECT='DM1007';
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
@@ -66,7 +66,8 @@ if ~exist('D_hg','var') % if fieldtrip object not yet loaded
 end
 
 % trial timing and electrode info
-load([PATH_TRIAL_AUDIO, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables'], 'trials')
+% load([PATH_TRIAL_AUDIO, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables'], 'trials')
+trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_annot-produced-syllables.tsv']);
 trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
 elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' SUBJECT '_electrodes.tsv';]); 
     elc_info = renamevars(elc_info,'name','chan');
@@ -81,8 +82,7 @@ nans_tr = nan(ntrials,1);
 cel_tr = cell(ntrials,1); 
 
 % info about our trial timing analysis window
-trials = renamevars(trials,{'onset','duration'}, {'t_prod_on','dur_prod'}); % 
-trials.t_prod_off = trials.t_prod_on + trials.dur_prod; 
+trials = renamevars(trials,{'starts','ends','duration'}, {'t_prod_on','t_prod_off','dur_prod'}); % speech prod timing does not mark our trial boundaries
 trials.t_stim_syl_on = trials_with_stim_timing.audio_onset;
 trials.t_stim_syl_off = trials_with_stim_timing.audio_offset;
 trials.t_stim_gobeep_on = trials_with_stim_timing.audio_go_onset;
@@ -133,62 +133,54 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
 end
 trials(:,{'audio_go_offset'}) = []; % renamed/redundant
 
-% rename stim/learning condition variable, get syllable parts, rearrange table
+% rename stim/learning condition variable, rearrange table
 trials.learn_con = cell(ntrials,1);
 trials.learn_con(find(trials.stim_condition==1)) = {'nn_learn'};
 trials.learn_con(find(trials.stim_condition==2)) = {'nn_nov'};
 trials.learn_con(find(trials.stim_condition==3)) = {'nat'};
-trials = removevars(trials,{'stim_condition','run_id'});
-trials.ons_clust = cellfun(@(x)x(1:end-3),trials.word, 'UniformOutput',false);
-trials.rime = cellfun(@(x)x(end-1:end),trials.word, 'UniformOutput',false);
-trials.vow = cellfun(@(x)x(end-1),trials.word, 'UniformOutput',false);
-trials.coda = cellfun(@(x)x(end),trials.word, 'UniformOutput',false);
-trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error','word','ons_clust','rime','vow','coda'},'Before',1);
+trials = removevars(trials,{'id','stim_condition','run_id'});
+trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error'},'Before',1);
 
 %% test for response types 
 for ichan = 1:nchans
     good_trials = ~isnan(resp.base{ichan}); % non-artifactual trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
     is_native_trial = strcmp(trials.learn_con,'nat');
-    if nnz(good_trials) > 0 % only do stats analysis if channel had >0 good trials
-        
-        % above-baseline response during the prep period
-        [~, resp.p_prep(ichan)] = ttest(resp.prep{ichan}(good_trials), ones(size(resp.prep{ichan}(good_trials)))); 
+    if nnz(good_trials) == 0; continue; end % skip stats analysis if channel had no good trials
     
-        % above-baseline response during the production period (go trials only)
-        [~, resp.p_prod(ichan)] = ttest(resp.prod{ichan}(good_gotrials), ones(size(resp.prep{ichan}(good_gotrials)))); 
-    
-         % preferential response for learning condition(s)
-        resp.p_learn(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
-        resp.p_learn_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
-    
-        % preference for native vs nonnative
-         resp.p_nat_v_nn(ichan) = anova1(resp.prod{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
-         resp.p_nat_v_nn_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
-    
-    
-         % preferential response for specific stim
-        resp.p_stim_id(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.word(good_gotrials),'off');
-        resp.p_stim_id_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.word(good_gotrials),'off');
+    % above-baseline response during the prep period
+    [~, resp.p_prep(ichan)] = ttest(resp.prep{ichan}(good_trials), ones(size(resp.prep{ichan}(good_trials)))); 
 
-        resp.p_rime(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.rime(good_gotrials),'off');
-        resp.p_rime_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.rime(good_gotrials),'off');        
-    end
+    % above-baseline response during the production period (go trials only)
+    [~, resp.p_prod(ichan)] = ttest(resp.prod{ichan}(good_gotrials), ones(size(resp.prep{ichan}(good_gotrials)))); 
+
+     % preferential response for learning condition(s)
+    resp.p_learn(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
+    resp.p_learn_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
+
+    % preference for native vs nonnative
+     resp.p_nat_v_nn(ichan) = anova1(resp.prod{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+     resp.p_nat_v_nn_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+
+
+     % preferential response for specific stim
+    resp.p_stim_id(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.word(good_gotrials),'off');
+    resp.p_stim_id_prep(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.word(good_gotrials),'off');
 
 
 end
     
 %% cleanup and save
-elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
+% eliminate the entries in elc_info which do not match the time in which this experiment took place
+electrodes_outside_this_session = elc_info.starts > D_hg.time{1}(1) | elc_info.ends < D_hg.time{end}(end);
+elc_info = elc_info(~electrodes_outside_this_session,:);
 
 % add the following variables to the electrodes response table... use 'electrode' as key variable
 info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'mni_x','mni_y','mni_z',...
 	'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
-resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
-resp.sub = cellstr(repmat(SUBJECT, nchans, 1));
-resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
-resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
+resp = join(resp, elc_info(:,info_vars_to_copy)); % add elc_info to resp
+resp.sub = repmat(SUBJECT, nchans, 1);
 
 save(savefile, 'trials', 'resp')
