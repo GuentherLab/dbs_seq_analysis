@@ -8,16 +8,14 @@ bml_defaults
 format long
 
 %% Defining paths, loading parameters
-SUBJECT='DM1005';
+SUBJECT='DM1007';
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
 %%% choose an artifact criterion version
-% ARTIFACT_CRIT = 'E'; %identifier for the criteria implemented in this script
-% ARTIFACT_CRIT = 'F'; %identifier for the criteria implemented in this script
-ARTIFACT_CRIT = 'G'; %identifier for the criteria implemented in this script
-
-
+ARTIFACT_CRIT = 'E'; % 70-250hz high gamma; identifier for the criteria implemented in this script
+% ARTIFACT_CRIT = 'F'; % beta ; identifier for the criteria implemented in this script
+% ARTIFACT_CRIT = 'G'; %identifier for the criteria implemented in this script
 
 HIGH_PASS_FILTER = 'yes'; %should a high pass filter be applied
 HIGH_PASS_FILTER_FREQ = 1; %cutoff frequency of high pass filter
@@ -63,7 +61,7 @@ electrodes = join(electrodes,channels(ch_ind,{'name','connector'}) ,'keys','name
 
 %% Loading FieldTrip data 
 load([PATH_FIELDTRIP filesep 'sub-' SUBJECT '_ses-' SESSION '_task-' TASK '_ft-raw.mat'],'D','loaded_epoch');
-nTrials = numel(D.trial);
+ntrials = numel(D.trial);
 
 %remasking nans with zeros
 cfg=[];
@@ -103,89 +101,32 @@ hfig = figure();
 for idx = 1:height(param)
   
   fprintf('doing %s %s \n',SUBJECT,param.name{idx});
-  el_type = strip(param.electrode_type{idx});
-    wav_width = param.wav_width(idx);
-  env_mult_factor =  param.env_mult_factor(idx);
-  pname = strip(param.name{idx});
-  
+
+    cfg = [];
+    cfg.out_freq = 100; 
+    cfg.suppress_output = 1; 
+    cfg.param = param(idx,:); 
+    
+    D_avgpow_eltype = multifreq_avg_power(cfg, D_hpf);
+    
+    if isempty(D_avgpow_eltype)
+        %channel type not available
+        continue
+    end
+
   ENVELOPE_BIN_SIZE_SECONDS = param.env_bin_size(idx); %envelope bin size in seconds
   THRESHOLD_STD_FACTORS = [param.th_factor_std_low(idx), param.th_factor_std_high(idx)]; %factors to determine detection thresholds 
   THRESHOLD_FIX = [param.th_fix_min(idx), param.th_fix_max(idx)]; %fix thresholds to filter data before applying robust estimates
   CONSOLIDATION_TIME_TOLERANCE = param.th_consolidation(idx); %min time allowed between consecutive artifacts
   ELECTRODE_COVERAGE_THRESHOLD = param.th_frac_coverage(idx); %max allowed fraction of time with artifacts
   CONNECTOR_THRESHOLD = [param.th_conn_low(idx), param.th_conn_high(idx)]; %detection threshold for number of electrodes in a connector  
-  
-  %selecting ECoG channels for artifact rejection
-  cfg=[];
-  cfg.channel = [el_type,'_*'];
-  D_hpf_eltype = ft_selectdata(cfg,D_hpf);
-
-  if isempty(D_hpf_eltype.label)
-    %channel type not available
-    continue
-  end
-  
-%   %viasually inspect signal
-%   cfg=[];
-%   cfg.viewmode = 'vertical';
-%   cfg.blocksize = 30;
-%   cfg.ylim = 'maxmin';4
-%   cfg.continuous = 'yes';
-%   cfg.channel = {'ecog_11*', 'audio_*'};
-%   ft_databrowser(cfg,D);
-
-
-% compute log-spaced frequencies between wav_freq_min and wav_freq_max
-    nfreqs = param.n_wav_freqs(idx); 
-    wav_freqs = round(logspace(log10(param.wav_freq_min(idx)),log10(param.wav_freq_max(idx)),nfreqs));
-    D_multifreq_eltype = cell(nfreqs,1);
-    
-    normed_pow = cell(1,nTrials); 
-    for ifreq = 1:nfreqs
-      %calculating absolute value envelope at 1Hz (1s chunks)
-      cfg=[];
-      cfg.out_freq = 100;
-      cfg.wav_freq = wav_freqs(ifreq);
-      cfg.wav_width = wav_width;
-      D_multifreq_eltype{ifreq} = bml_envelope_wavpow(cfg,D_hpf_eltype);
-      
-      nchannels = length(D_multifreq_eltype{ifreq}.label);
-      D_multifreq_eltype{ifreq}.med_pow_per_block = NaN(nchannels, nTrials); % initialize
-      for iblock = 1:nTrials % for each block, normalize by median power
-        % rows are channels, so take the median across columns (power at timepoints for each channel)
-          D_multifreq_eltype{ifreq}.med_pow_per_block(:,iblock) = median(D_multifreq_eltype{ifreq}.trial{iblock},2);
-          % normalize power by median values within each channel for this block
-          %%% normed_pow will be filled with all normed powers across blocks and frequencies; we will average across the 3rd dimension (frequency)
-          normed_pow{iblock}(:,:,ifreq) = D_multifreq_eltype{ifreq}.trial{iblock} ./ D_multifreq_eltype{ifreq}.med_pow_per_block(:,iblock);
-      end
-    end
-    
-    D_hg_eltype = struct; % averaged high gamma
-        D_hg_eltype.hdr = D_multifreq_eltype{1}.hdr;
-        D_hg_eltype.trial = D_multifreq_eltype{1}.trial;
-        D_hg_eltype.sampleinfo = D_multifreq_eltype{1}.sampleinfo;
-        D_hg_eltype.trial = cell(1,nTrials); % to be filled
-        D_hg_eltype.time = D_multifreq_eltype{1}.time;
-        D_hg_eltype.label = D_multifreq_eltype{1}.label;
-    % get averaged high gamma
-    for iblock = 1:nTrials
-        D_hg_eltype.trial{iblock} = mean(normed_pow{iblock},3);
-    end
-%     clear D_multifreq_eltype normed_pow
-
-%   cfg=[];
-%   cfg.viewmode = 'vertical';
-%   cfg.blocksize = 30;
-%   cfg.ylim = 'maxmin';
-%   cfg.continuous = 'yes';
-%   ft_databrowser(cfg,D_hpf_ecog_env);
 
   cfg=[];
   cfg.freq = 1/ENVELOPE_BIN_SIZE_SECONDS;
-  D_hg_eltype_env = bml_envelope_binabs(cfg,D_hg_eltype);
+  D_avgpow_eltype_env = bml_envelope_binabs(cfg,D_avgpow_eltype);
 
   %calculating log10 transform (envelopes have log normal distributions)
-  D_hg_eltype_env_log10 = bml_apply(@(x) env_mult_factor .* log10(x),D_hg_eltype_env);
+  D_hg_eltype_env_log10 = bml_apply(@(x) param.env_mult_factor(idx) .* log10(x),D_avgpow_eltype_env);
   
   cfg=[];
   cfg.remask_inf=true;
@@ -193,10 +134,10 @@ for idx = 1:height(param)
   D_hg_eltype_env_log10 = bml_mask(cfg,D_hg_eltype_env_log10);
   
   %calculating distribution robust statistics. 
-  THRESHOLD = nan(nTrials,2);
-  max_v=nan(1,nTrials);
-  min_v=nan(1,nTrials);
-  for itrial=1:nTrials
+  THRESHOLD = nan(ntrials,2);
+  max_v=nan(1,ntrials);
+  min_v=nan(1,ntrials);
+  for itrial=1:ntrials
     v = reshape(D_hg_eltype_env_log10.trial{itrial},1,[]);
     v1 = v((v>THRESHOLD_FIX(1)) & (v<THRESHOLD_FIX(2)));
     m = median(v1);
@@ -211,8 +152,8 @@ for idx = 1:height(param)
   %plotting histogram to assess threshold levels
   if ~isempty(v1)
       clf(hfig); set(hfig,'Position',[0 0 600 600]);
-      for itrial=1:nTrials
-        subplot(ceil(nTrials/2),2,itrial)
+      for itrial=1:ntrials
+        subplot(ceil(ntrials/2),2,itrial)
         hold on;
         h=histogram(D_hg_eltype_env_log10.trial{itrial},linspace(min(min_v),max(max_v),61),...
           'FaceAlpha',0.1,'EdgeAlpha',1);
@@ -224,13 +165,13 @@ for idx = 1:height(param)
       end
       %saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_env_log10_hist.png'])
   elseif isempty(v1)
-      warning(['For electrode type ''', el_type, ''' (sub ', SUBJECT, '), no timepoints found between low threshold (', ...
+      warning(['For electrode type ''', param.electrode_type{idx}, ''' (sub ', SUBJECT, '), no timepoints found between low threshold (', ...
           num2str(THRESHOLD_FIX(1)), ') and high threshold (', num2str(THRESHOLD_FIX(2)), ')'])
   end
 
   %detecting segments of time for each channel above threshold
   artifact_eltype_1 = table();
-  for itrial=1:nTrials
+  for itrial=1:ntrials
     cfg=[];
     cfg.threshold = THRESHOLD(itrial,:);
     cfg.trials = itrial;
@@ -353,7 +294,7 @@ for idx = 1:height(param)
 
   %for each connector and bin, count number of faulty channels
   cfg=[];
-  cfg.roi = bml_raw2annot(D_hg_eltype_env);
+  cfg.roi = bml_raw2annot(D_avgpow_eltype_env);
   cfg.annot_label_colname = 'conn_label';
   connector_artifact_2_cvg_raw = bml_annot2raw(cfg,artifact_2);
 
@@ -390,14 +331,14 @@ for idx = 1:height(param)
 
   %final raster plot for artifacts
   cfg=[];
-  cfg.template = D_hg_eltype_env;
+  cfg.template = D_avgpow_eltype_env;
   cfg.annot_label_colname = 'label';
   artifact_5_raw = bml_annot2raw(cfg,artifact_5);
 
   clf(hfig); set(hfig,'Position',[0 0 600 600]);
   cfg.trial_name='session';
   bml_plot_raster(cfg,artifact_5_raw)
-  %saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_mask.png'])
+  saveas(hfig,[PATH_FIGURES filesep SUBJECT '_' pname '_artifact_mask.png'])
 
   artifact_5.pname = repmat({pname},height(artifact_5),1);
   

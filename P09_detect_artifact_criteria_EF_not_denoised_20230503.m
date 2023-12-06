@@ -8,7 +8,7 @@ bml_defaults
 format long
 
 %% Defining paths, loading parameters
-SUBJECT='DM1007';
+SUBJECT='DM1006';
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
@@ -115,7 +115,7 @@ for idx = 1:height(param)
   ELECTRODE_COVERAGE_THRESHOLD = param.th_frac_coverage(idx); %max allowed fraction of time with artifacts
   CONNECTOR_THRESHOLD = [param.th_conn_low(idx), param.th_conn_high(idx)]; %detection threshold for number of electrodes in a connector  
   
-  %selecting ECoG channels for artifact rejection
+  %selecting channels for artifact rejection
   cfg=[];
   cfg.channel = [el_type,'_*'];
   D_hpf_eltype = ft_selectdata(cfg,D_hpf);
@@ -124,16 +124,6 @@ for idx = 1:height(param)
     %channel type not available
     continue
   end
-  
-%   %viasually inspect signal
-%   cfg=[];
-%   cfg.viewmode = 'vertical';
-%   cfg.blocksize = 30;
-%   cfg.ylim = 'maxmin';4
-%   cfg.continuous = 'yes';
-%   cfg.channel = {'ecog_11*', 'audio_*'};
-%   ft_databrowser(cfg,D);
-
 
 % compute log-spaced frequencies between wav_freq_min and wav_freq_max
     nfreqs = param.n_wav_freqs(idx); 
