@@ -9,7 +9,7 @@ PATH_SUB = [PATH_DER filesep SUBJECT];
 PATH_FT = [PATH_SUB filesep 'fieldtrip'];
 PATH_ANNOT = [PATH_SUB filesep 'annot'];
 
-load([PATH_FT filesep SUBJECT '_ses-intraop_task-smsl_ft-raw_freqbands_trialed']);
+load([PATH_FT filesep SUBJECT '_ses-intraop_task-smsl_ft-raw_freqbands']);
 
 %C = [0 2 4 6; 8 10 12 14; 16 18 20 22];
 %image(C);
