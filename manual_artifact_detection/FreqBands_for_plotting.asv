@@ -63,9 +63,9 @@ for i=1:length(triplet_subjects)
         end
         timepoints(k,1) = j;
         
-        stop=1;
-        while stop<annot{k,3}
-            stop = continuous{1,1}.time(1,j);
+        offset=1;
+        while offset<annot{k,3}
+            offset = continuous{1,1}.time(1,j);
             j=j+1;
         end
         timepoints(k,2) = j;
@@ -130,12 +130,8 @@ end
     trial_startend(:,1) = annot.audio_onset(:) - 0.5;
     %trial_startend(:,2) = annot.sp_off(:) + 1.5;
     for i=1:length(annot.sp_off)
-        if ISNAN(annot.sp_off) && ~ISNAN(annot.keypress_time)
-            trial_startend(i,2) = annot.keypress_time(i); % if the trial is unusable and there is a keypress time it will instead get data ending at the keypress time
-        elseif ISNAN(annot.sp_off) && ISNAN(annot.keypress_time)
-            trial_startend(i,2) = (annot.audio_onset - 0.5) + 5;
-        else
-            trial_startend(i,2) = annot.sp_off(:) + 1.5;
+        if ISNAN(annot.sp_off)
+            
         end
     end
 
@@ -173,21 +169,19 @@ end
     
         % loop to determine onset column
         onset=1;
-        while onset<trial_startend(k,1)
+        while onset<annot{k,1}
             onset = continuous{1,1}.time(1,j);
             j=j+1;
         end
         timepoints(k,1) = j;
         
-        stop=1;
-        %offsettimep = annot{k,1} + annot{k,2}; % annot{i,2} is the duration, not offset
-        while stop<trial_startend(k,2)
-            stop = continuous{1,1}.time(1,j);
+        offset=1;
+        offsettimep = annot{k,1} + annot{k,2}; % annot{i,2} is the duration, not offset
+        while offset<offsettimep
+            offset = continuous{1,1}.time(1,j);
             j=j+1;
         end
         timepoints(k,2) = j;
-
-        j = 1; % the trials may overlap, so it is necessary to reset j
     end
     
     trialed = cell(1,numFreq);
