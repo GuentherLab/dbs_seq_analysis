@@ -1,4 +1,5 @@
 % dbs-seq version
+%%% before running this script, should to have the _respones.mat file created by response_types_seq.m loaded into workspace first
 
 %% Loading paths
 ft_defaults
@@ -61,13 +62,12 @@ elc_types_to_plot = {'ECOG'};
 
 also_plot_nonsgnf_elcs = 1; 
 
-inclusion_mode = 'thresh';
-% inclusion_mode = 'proportion';
-
-% p_thresh = 0.001; 
-p_thresh = 0.05; 
-
-p_proportion = 0.05; 
+% inclusion_mode = 'thresh';
+    % p_thresh = 0.001; 
+    p_thresh = 0.05; 
+inclusion_mode = 'proportion';
+%     p_proportion = 0.05; 
+    p_proportion = 1; 
 
 % inclusion_var = 'p_prep';
 % inclusion_var = 'p_prod';
