@@ -1,5 +1,5 @@
 triplet_subjects = [];
-SMSL_subjects = ['sub-DM1005'];
+SMSL_subjects = ["sub-DM1005", "sub-DM1007", "sub-DM1008", "sub-DM1024", "sub-DM1025", "sub-DM1037"];
 
 %% triplet loop
 for i=1:length(triplet_subjects)
@@ -109,9 +109,9 @@ for i=1:length(triplet_subjects)
 end
 
 %% SMSL loop
-%for i=1:length(SMSL_subjects)
-    %SUBJECT = SMSL_subjects(i); 
-    SUBJECT = 'sub-DM1005';
+for i=1:length(SMSL_subjects)
+    SUBJECT = char(SMSL_subjects(i)); 
+    %SUBJECT = 'sub-DM1005';
     disp(SUBJECT);
 
     PATH_DATASET = 'Y:\DBS';
@@ -130,16 +130,17 @@ end
     trial_startend(:,1) = annot.audio_onset(:) - 0.5;
     %trial_startend(:,2) = annot.sp_off(:) + 1.5;
     for i=1:length(annot.sp_off)
-        if ISNAN(annot.sp_off) && ~ISNAN(annot.keypress_time)
+        if isnan(annot.sp_off(i)) && ~isnan(annot.keypress_time(i))
             trial_startend(i,2) = annot.keypress_time(i); % if the trial is unusable and there is a keypress time it will instead get data ending at the keypress time
-        elseif ISNAN(annot.sp_off) && ISNAN(annot.keypress_time)
-            trial_startend(i,2) = (annot.audio_onset - 0.5) + 5;
+        elseif isnan(annot.sp_off(i)) && isnan(annot.keypress_time(i))
+            trial_startend(i,2) = (annot.audio_onset(i) - 0.5) + 5;
         else
-            trial_startend(i,2) = annot.sp_off(:) + 1.5;
+            trial_startend(i,2) = annot.sp_off(i) + 1.5;
         end
     end
 
     % compute frequencies
+    disp('computing frequencies');
     freqs = 10.^(linspace(0,2.5,20)); % number of frequencies: 20
     for ifreq = 1:length(freqs)
         thisfreq = freqs(ifreq)
@@ -190,6 +191,7 @@ end
         j = 1; % the trials may overlap, so it is necessary to reset j
     end
     
+    disp('breaking up into trials');
     trialed = cell(1,numFreq);
     % loop through each frequency
     for n = 1:numFreq
@@ -224,6 +226,6 @@ end
         end
     end
 
-    %save([PATH_FT filesep SUBJECT '_ses-intraop_task-smsl_ft-raw_freqbands.mat'],'trialed','-v7.3');
-    save([PATH_FT filesep SUBJECT '_test_larger-cut-window'],'trialed','-v7.3');
-%end
+    save([PATH_FT filesep SUBJECT '_ses-intraop_task-smsl_ft-raw_freqbands.mat'],'trialed','-v7.3');
+    %save([PATH_FT filesep SUBJECT '_test_larger-cut-window'],'trialed','-v7.3');
+end
