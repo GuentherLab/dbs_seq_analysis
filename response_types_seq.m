@@ -58,15 +58,15 @@ cd(PATH_FIELDTRIP)
 if use_vibration_denoised_data
     denoise_str = '_denoised';
 elseif ~use_vibration_denoised_data
-    denoise_str = '';
+    denoise_str = '_not-denoised';
 end
 
 if ~exist('D_hg','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-hg-trial-criteria-', ARTIFACT_CRIT, denoise_str, '.mat'])
+    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-hg-trial-ar-ref-', ARTIFACT_CRIT, denoise_str, '.mat'])
 end
 
-% trial timing and electrode info
-load([PATH_TRIAL_AUDIO, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables'], 'trials')
+% % trial timing and electrode info
+trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables.tsv']);
 trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
 elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' SUBJECT '_electrodes.tsv';]); 
     elc_info = renamevars(elc_info,'name','chan');
@@ -81,8 +81,8 @@ nans_tr = nan(ntrials,1);
 cel_tr = cell(ntrials,1); 
 
 % info about our trial timing analysis window
-trials = renamevars(trials,{'onset','duration'}, {'t_prod_on','dur_prod'}); % 
-trials.t_prod_off = trials.t_prod_on + trials.dur_prod; 
+trials = renamevars(trials,{'starts','ends','duration'}, {'t_prod_on','t_prod_off','dur_prod'}); % make it clear that these times demarcate speech production window
+trials.id = [];
 trials.t_stim_syl_on = trials_with_stim_timing.audio_onset;
 trials.t_stim_syl_off = trials_with_stim_timing.audio_offset;
 trials.t_stim_gobeep_on = trials_with_stim_timing.audio_go_onset;

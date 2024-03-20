@@ -58,11 +58,11 @@ cd(PATH_FIELDTRIP)
 if use_vibration_denoised_data
     denoise_str = '_denoised';
 elseif ~use_vibration_denoised_data
-    denoise_str = '';
+    denoise_str = '_not-denoised';
 end
 
 if ~exist('D_hg','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-hg-trial-criteria-', ARTIFACT_CRIT, denoise_str, '.mat'])
+    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-hg-trial-ar-ref-', ARTIFACT_CRIT, denoise_str, '.mat'])
 end
 
 % trial timing and electrode info
@@ -139,7 +139,7 @@ trials.learn_con(find(trials.stim_condition==1)) = {'nn_learn'};
 trials.learn_con(find(trials.stim_condition==2)) = {'nn_nov'};
 trials.learn_con(find(trials.stim_condition==3)) = {'nat'};
 trials = removevars(trials,{'stim_condition','run_id'});
-trials.ons_clust = cellfun(@(x){x(1:end-3)},trials.word, 'UniformOutput',false);
+trials.ons_clust = cellfun(@(x)x(1:end-3),trials.word, 'UniformOutput',false);
 trials.rime = cellfun(@(x)x(end-1:end),trials.word, 'UniformOutput',false);
 trials.vow = cellfun(@(x)x(end-1),trials.word, 'UniformOutput',false);
 trials.coda = cellfun(@(x)x(end),trials.word, 'UniformOutput',false);

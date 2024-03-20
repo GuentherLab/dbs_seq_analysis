@@ -2,7 +2,8 @@
 
 clear
 
-sublist = [1005, 1007, 1008];
+sublist = [1005, 1007, 1008, 1024, 1025, 1037];
+%     sublist = [1037]; 
 
 group_datadir = 'Y:\DBS\groupanalyses\task-smsl\gotrials'; 
 resp_all_subs_filename = 'resp_all_subjects'; 
