@@ -8,12 +8,12 @@
 %% params
 
 
-thissub = 'DM1008'; 
+% thissub = 'DM1008'; 
 
 erow = 13; 
  
-set(0,'DefaultFigureWindowStyle','docked')
-% set(0,'DefaultFigureWindowStyle','normal')
+% set(0,'DefaultFigureWindowStyle','docked')
+set(0,'DefaultFigureWindowStyle','normal')
 
 plot_mean_timecourse = 1; 
 plot_raster = 0; 

@@ -1,30 +1,42 @@
 % get response types from each dbs-seq subject then compile into a single table
 
 clear
+setpaths_dbs_seq()
 
-sublist = [1005, 1007, 1008, 1024, 1025, 1037];
+% params
+subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
+
+subnums = [1005, 1007, 1008, 1024, 1025, 1037];
 %     sublist = [1037]; 
 
-group_datadir = 'Y:\DBS\groupanalyses\task-smsl\gotrials'; 
-resp_all_subs_filename = 'resp_all_subjects'; 
+compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects']; 
 
-nsubs = length(sublist);
+%% set up sub list
+subnames = arrayfun(@(x)['DM',num2str(x)],subnums','UniformOutput',0);
+subs = bml_annot_read_tsv(subject_list_filename);
+subs = subs(cellfun(@(x)ismember(x,subnames),subs.subject_id), :); 
+subs = renamevars(subs,'subject_id','subject');
+nsubs = height(subs);
 
 %% run response type analysis on each subject individually
 for isub = 1:nsubs
-    clearvars -except sublist group_datadir resp_all_subs_filename nsubs isub
-    SUBJECT = ['DM', num2str(sublist(isub))]
+    clearvars -except subs compiled_responses_filepath nsubs isub
+    SUBJECT = subs.subject{isub}
     response_types_seq()
+    save(savefile, 'trials', 'resp')
 end
-cd(group_datadir)
+cd(PATH_RESULTS)
 
 %% combine responses from all subjects into one table
-resptemp = table; 
+setpaths_dbs_seq()
+fprintf(['Compiling response tables in %s \n'], compiled_responses_filepath);
+resp_temp = table; 
 for isub = 1:nsubs
-    SUBJECT = ['DM', num2str(sublist(isub))];
-    load([group_datadir, filesep, SUBJECT, '_responses'],'resp')
-    resptemp = [resptemp; resp];
+    SUBJECT = subs.subject{isub};
+    load([PATH_RESULTS, filesep, SUBJECT, '_responses'],'resp')
+    resp_temp = [resp_temp; resp];
+    subs.trials{isub} = trials; 
 end
 
-resp = resptemp; clear resptemp
-save([group_datadir, filesep, resp_all_subs_filename], 'resp')
+resp = resp_temp; clear resp_temp
+save(compiled_responses_filepath, 'resp','subs')

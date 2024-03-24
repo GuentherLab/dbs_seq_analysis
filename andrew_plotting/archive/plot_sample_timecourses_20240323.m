@@ -1,8 +1,5 @@
-%%%% plot timecourses of example electrodes highly tuned for a given parameter
-% run sort_top_tuned_seq first to create srt table
-
-rowlist = 1:6;
-% rowlist = [1 2 3 4 5 7];
+% rowlist = 1:6;
+rowlist = [1 2 3 4 5 7];
 % rowlist = 7:12; 
 % rowlist = 18:25; 
 % rowlist = 18:21; 
@@ -25,6 +22,28 @@ plot_brains_on_row2 = 0;
 
 plot_go_trials_only = 0; % exclude STOP trials from plotting
 
+% inclusion_var = 'p_prep';
+% inclusion_var = 'p_prod';
+% inclusion_var = 'p_learn';
+% inclusion_var = 'p_learn_prep';
+inclusion_var = 'p_nat_v_nn';
+% inclusion_var = 'p_nat_v_nn_prep';
+% inclusion_var = 'p_stim_id';
+% inclusion_var = 'p_stim_id_prep';
+% inclusion_var = 'p_rime'; 
+
+sort_by_trial_cond = 1; 
+  sort_cond = 'is_nat';
+%   sort_cond = 'learn_con';
+%     sort_cond = 'word';
+%     sort_cond = 'rime'; 
+
+% % % % delete channels if they have nan for the following parameter
+exclude_if_nan_param = 'p_prep';
+
+srt = sortrows(resp,inclusion_var); 
+srt = movevars(srt,{inclusion_var},'After','chan');
+srt = srt(~isnan(srt{:,exclude_if_nan_param}),:);
 
 
 %%

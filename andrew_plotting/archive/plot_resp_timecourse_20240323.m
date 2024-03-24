@@ -6,11 +6,16 @@
  
 %% params
 
+PATH_GROUP_ANALYSES = 'Y:\DBS\groupanalyses\task-smsl\gotrials';
+
 % srt_row = 9;
 channame = srt.chan{srt_row};
 thissub = srt.sub{srt_row};
+load([PATH_GROUP_ANALYSES,filesep, thissub,'_responses'],'trials');
 
-resprow = strcmp(resp.chan,channame) & strcmp(resp.sub,thissub);
+
+
+erow = strcmp(resp.chan,channame) & strcmp(resp.sub,thissub);
 
 %  erow = 9; 
  
@@ -46,16 +51,14 @@ trial_time_adj_method = 'median_plus_sd'; % median plus stdev
 %% align responses
  % align responses to first syl onset
 
-subind = 
-
  trials_tmp = trials; % temporary copy of trials table
 
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
-    timecourses_unaligned = resp.timecourse{resprow}(go_trial_inds); 
+    timecourses_unaligned = resp.timecourse{erow}(go_trial_inds); 
 elseif ~plot_go_trials_only % include both stop and go trials
-    timecourses_unaligned = resp.timecourse{resprow};
+    timecourses_unaligned = resp.timecourse{erow};
 end
 
 ntrials = height(trials_tmp);
@@ -190,7 +193,7 @@ else
 end
 
 
-    htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.HCPMMP1_label_1{resprow}], 'Interpreter','none');
+    htitle = title([thissub, '_', resp.chan{erow}, '_area-', resp.HCPMMP1_label_1{erow}], 'Interpreter','none');
     
     % stim syllable onsets
     h_stim_syl_on = xline(xline_fn(trials_tmp.stim_syl_on_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_syl_on, 'LineStyle',xline_style);
