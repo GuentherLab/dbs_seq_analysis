@@ -6,13 +6,14 @@
  
 %% params
 
+vardefault('sort_by_trial_cond',0);
+vardefault('sort_cond','learn_con');
+
 % srt_row = 9;
 channame = srt.chan{srt_row};
 thissub = srt.sub{srt_row};
 
 resprow = strcmp(resp.chan,channame) & strcmp(resp.sub,thissub);
-
-%  erow = 9; 
  
 % set(0,'DefaultFigureWindowStyle','docked')
 set(0,'DefaultFigureWindowStyle','normal')
@@ -57,6 +58,8 @@ if plot_go_trials_only % exclude stop trials
 elseif ~plot_go_trials_only % include both stop and go trials
     timecourses_unaligned = resp.timecourse{resprow};
 end
+trials_tmp = trials_tmp(~cellfun(@isempty, timecourses_unaligned),:);
+timecourses_unaligned = timecourses_unaligned(~cellfun(@isempty, timecourses_unaligned));
 
 ntrials = height(trials_tmp);
  nans_tr = nan(ntrials,1); 
@@ -64,7 +67,7 @@ ntrials = height(trials_tmp);
  trials_tmp = [trials_tmp, table(nans_tr,              nans_tr,...
      'VariableNames',     {'tpoints_pre_onset', 'tpoints_post_onset'})];
  
- samp_period = 1e-5 * round(1e5 * diff(trials.times{1}(1:2))); % sampling interval
+ samp_period = 1e-5 * round(1e5 * diff(trials_tmp.times{1}(1:2))); % sampling interval
  
  %%% find trial lengths pre- and post-onset
     %%%% trials.times{itrial} use global time coordinates
@@ -98,10 +101,8 @@ resp_align.resp = NaN(ntrials, tpoints_tot); % aligned responses for this electr
 for itrial = 1:ntrials
    pre_pad = max([0, n_tpoints_pre_fixed - trials_tmp.tpoints_pre_onset(itrial)]); 
    pre_cut = max([0, -n_tpoints_pre_fixed + trials_tmp.tpoints_pre_onset(itrial)]); 
-   % inds from timecourses_unaligned... if pre_cut > 0, some timepoints from this trial will not be used
-   pre_inds = 1+pre_cut:trials_tmp.tpoints_pre_onset(itrial); 
-   % fill in pre-onset data... fill in electrode responses starting after the padding epoch
-   resp_align.resp(itrial, pre_pad+1 : n_tpoints_pre_fixed) = timecourses_unaligned{itrial}(pre_inds); 
+   pre_inds = 1+pre_cut:trials_tmp.tpoints_pre_onset(itrial); % inds from timecourses_unaligned... if pre_cut > 0, some timepoints from this trial will not be used
+   resp_align.resp(itrial, pre_pad+1 : n_tpoints_pre_fixed) = timecourses_unaligned{itrial}(pre_inds); % fill in pre-onset data... fill in electrode responses starting after the padding epoch
 
    post_pad = max([0, n_tpoints_post_fixed - trials_tmp.tpoints_post_onset(itrial)]);
    post_cut = max([0, -n_tpoints_post_fixed + trials_tmp.tpoints_post_onset(itrial)]); 
@@ -141,13 +142,20 @@ trials_tmp.is_nat = cell(ntrials,1);
 
 if sort_by_trial_cond
     unq_conds = unique(trials_tmp{:,sort_cond});
+    if isnumeric(unq_conds)
+        unq_conds = unq_conds(~isnan(unq_conds));
+        unq_conds = cellstr(num2str(unq_conds));
+        trialconds  = strtrim(cellstr(num2str(trials_tmp{:,sort_cond})));
+    else
+        trialconds = trials_tmp{:,sort_cond}; 
+    end
     nconds = length(unq_conds);
 
     % plot error bars
     %%% plotting error bars separately from means makes it simpler to create legend
     for icond = 1:nconds
         thiscond = unq_conds{icond};
-        resp_rows_match = strcmp(trials_tmp{:,sort_cond}, thiscond);
+        resp_rows_match = strcmp(trialconds, thiscond);
         this_cond_resp = resp_align.resp(resp_rows_match,:); % aligned trial timecourses for trials that match this condition label
         this_cond_mean = nanmean(this_cond_resp);
          this_cond_std = std(this_cond_resp, 'omitnan'); % stdev of response timecourses
@@ -156,18 +164,20 @@ if sort_by_trial_cond
         this_cond_sem_lims = [this_cond_mean - this_cond_sem; this_cond_mean + this_cond_sem]; 
         plotinds = this_cond_n_nonnan_trials > 0; % timepoints with computable error bars
 
-        hfill = fill([xtime(plotinds), fliplr(xtime(plotinds))], [this_cond_sem_lims(1,plotinds), fliplr(this_cond_sem_lims(2,plotinds))], [0.8 0.8 0.8]); % standard error
-        hfill.LineStyle = 'none'; % no border
-
-        hfill.EdgeColor = [0.8 0.8 0.8]; 
-         hold on
+        if nnz(plotinds) > 0
+            hfill = fill([xtime(plotinds), fliplr(xtime(plotinds))], [this_cond_sem_lims(1,plotinds), fliplr(this_cond_sem_lims(2,plotinds))], [0.8 0.8 0.8]); % standard error
+            hfill.LineStyle = 'none'; % no border
+    
+            hfill.EdgeColor = [0.8 0.8 0.8]; 
+       end
+       hold on
     end
 
 
     % plot means
     for icond = 1:nconds
         thiscond = unq_conds{icond};
-        resp_rows_match = strcmp(trials_tmp{:,sort_cond}, thiscond);
+        resp_rows_match = strcmp(trialconds, thiscond);
         this_cond_resp = resp_align.resp(resp_rows_match,:); % aligned trial timecourses for trials that match this condition label
         this_cond_mean = nanmean(this_cond_resp);
         hplot(icond) = plot(xtime, this_cond_mean);
@@ -189,9 +199,12 @@ else
     legend_strs = {''}; 
 end
 
+    if string(resp.type{resprow})=="ECOG"
+        htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.HCPMMP1_label_1{resprow}], 'Interpreter','none');
+    else
+        htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.DISTAL_label_1{resprow}], 'Interpreter','none');
+    end
 
-    htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.HCPMMP1_label_1{resprow}], 'Interpreter','none');
-    
     % stim syllable onsets
     h_stim_syl_on = xline(xline_fn(trials_tmp.stim_syl_on_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_syl_on, 'LineStyle',xline_style);
 

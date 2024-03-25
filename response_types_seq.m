@@ -20,11 +20,12 @@ responsivity_alpha = 0.05; % consider electrodes responsive if they have above-b
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
 vardefault('SUBJECT','DM1007');
+vardefault('resp_signal','hg'); 
+vardefault('ARTIFACT_CRIT','E'); 
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
 %%% CRITERIA E parameter valus
-ARTIFACT_CRIT = 'E'; % % use multi-frequency-averaged high gamma
 PATH_DER = [PATH_DATA filesep 'derivatives'];
 PATH_DER_SUB = [PATH_DER filesep 'sub-' SUBJECT];  
 PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
@@ -43,8 +44,8 @@ PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION];
 PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
 
-PATH_ART_PROTOCOL = ['Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E'];
-savefile = [PATH_RESULTS, filesep, SUBJECT '_responses'];
+% PATH_ART_PROTOCOL = ['Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E'];
+
 
 
 %% load data 
@@ -56,8 +57,9 @@ elseif ~use_vibration_denoised_data
     denoise_str = '_not-denoised';
 end
 
-if ~exist('D_hg','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-hg-trial-ar-ref-', ARTIFACT_CRIT, denoise_str, '.mat'])
+if ~exist('D_wavpow','var') % if fieldtrip object not yet loaded
+    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial-ar-ref-', ARTIFACT_CRIT, denoise_str, '.mat'])
+%     D_wavpow = D_hg; % comment in for highgamma.... temporary fix
 end
 
 % % trial timing and electrode info
@@ -70,7 +72,7 @@ elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' SUBJECT '_electrodes.ts
 % 'base' = average durng pre-stim baseline
 % all response values except 'base' are baseline-normalized by dividing by that trial's baseline average
 ntrials = height(trials);
-nchans = length(D_hg.label);
+nchans = length(D_wavpow.label);
 nans_ch = nan(nchans,1); 
 nans_tr = nan(ntrials,1); 
 cel_tr = cell(ntrials,1); 
@@ -89,7 +91,7 @@ trials.duration = trials.ends - trials.starts;
 
 % table containing responses during epochs for each chan
 cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
-resp = table(   D_hg.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
+resp = table(   D_wavpow.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
   'VariableNames', {'chan', 'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
 
 % extract epoch-related responses
@@ -100,33 +102,33 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
     iblock = trials.block_id(itrial); 
     trial_id_in_block = trials.trial_id(itrial); % block-relative trial number
     
-    % get indices within the trial-specific set of timepoints of D_hg.time{itrial} that match our specified trial window
-    match_time_inds = D_hg.time{itrial} > trials.starts(itrial) & D_hg.time{itrial} < trials.ends(itrial); 
-    trials.times{itrial} = D_hg.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
+    % get indices within the trial-specific set of timepoints of D_wavpow.time{itrial} that match our specified trial window
+    match_time_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < trials.ends(itrial); 
+    trials.times{itrial} = D_wavpow.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
     % get trial-relative baseline time indices; window time-locked to first stim onset
-    base_inds = D_hg.time{itrial} > trials.starts(itrial) & D_hg.time{itrial} < [trials.t_stim_syl_on(itrial) - base_win_sec(2)]; 
-    stim_inds = D_hg.time{itrial} > trials.t_stim_syl_on(itrial) & D_hg.time{itrial} < trials.t_stim_syl_off(itrial) + stim_window_extend_end; 
-    prep_inds = D_hg.time{itrial} > trials.t_stim_syl_off(itrial) & D_hg.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; 
-    prod_inds = D_hg.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_hg.time{itrial} < trials.t_prod_off(itrial);     
+    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < [trials.t_stim_syl_on(itrial) - base_win_sec(2)]; 
+    stim_inds = D_wavpow.time{itrial} > trials.t_stim_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_stim_syl_off(itrial) + stim_window_extend_end; 
+    prep_inds = D_wavpow.time{itrial} > trials.t_stim_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; 
+    prod_inds = D_wavpow.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{itrial} < trials.t_prod_off(itrial);     
 
     for ichan = 1:nchans
         % baseline activity and timecourse
         % use mean rather than nanmean, so that trials which had artifacts marked with NaNs will be excluded
-        resp.base{ichan}(itrial) = mean( D_hg.trial{itrial}(ichan, base_inds), 'includenan' ); % mean HG during baseline
+        resp.base{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
     
         % get baseline-normalized trial timecourse
-       resp.timecourse{ichan}{itrial} =  D_hg.trial{itrial}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
+       resp.timecourse{ichan}{itrial} =  D_wavpow.trial{itrial}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
 
         % response during stim presentation (not go beep)
-        resp.stim{ichan}(itrial) = mean( D_hg.trial{itrial}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
+        resp.stim{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
 
         % preparatory response
         %%%% prep period inds = after stim ends and before syllable prod onset
-        resp.prep{ichan}(itrial) = mean( D_hg.trial{itrial}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
+        resp.prep{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
 
         % response during speech production
-        resp.prod{ichan}(itrial) = mean( D_hg.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
+        resp.prod{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
     end    
 end
 trials(:,{'audio_go_offset'}) = []; % renamed/redundant

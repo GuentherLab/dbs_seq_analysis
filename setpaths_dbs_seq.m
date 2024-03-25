@@ -18,6 +18,8 @@
          PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
      case 'NSSBML01' % TURBO - BML server computer
          PATH_DATA='Y:\DBS';
+         PATH_DER = [PATH_DATA filesep 'derivatives'];
+         PATH_SRC = [PATH_DATA filesep 'sourcedata'];
          PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
          PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
          PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
