@@ -71,13 +71,13 @@ analyze_responsive_elcs_only = 1;
 % param = 'p_prod_learn';
 % param = 'p_prep_learn';
 
-param = 'p_prod_nn_v_nat';
+% param = 'p_prod_nn_v_nat';
 % param = 'p_prep_nn_v_nat';
 
 % param = 'p_prep_novel_vs_trained';
 % param = 'p_prod_novel_vs_trained';
 
-% param = 'p_prep_novel_vs_nat';
+param = 'p_prep_novel_vs_nat';
 % param = 'p_prod_novel_vs_nat';
 
 % param = 'p_stim_syl';

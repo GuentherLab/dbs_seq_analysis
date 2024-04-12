@@ -137,7 +137,7 @@ end
 
 elc_to_plot = resp(rows_to_plot,{'mni_x','mni_y','mni_z'}); 
 
-
+%%
 
 xyz_to_plot_nonsnapped = [elc_to_plot.mni_x, elc_to_plot.mni_y, elc_to_plot.mni_z];
 if snap_to_surf

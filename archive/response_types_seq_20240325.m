@@ -22,7 +22,6 @@ setpaths_dbs_seq()
 vardefault('SUBJECT','DM1007');
 vardefault('resp_signal','hg'); 
 vardefault('ARTIFACT_CRIT','E'); 
-vardefault('rereference_method','CTAR');
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
@@ -45,6 +44,8 @@ PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION];
 PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
 
+% PATH_ART_PROTOCOL = ['Y:\DBS\groupanalyses\task-smsl\A09_artifact_criteria_E'];
+
 
 
 %% load data 
@@ -57,7 +58,7 @@ elseif ~use_vibration_denoised_data
 end
 
 if ~exist('D_wavpow','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial_ar-',ARTIFACT_CRIT, '_ref-',rereference_method, denoise_str, '.mat'])
+    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial-ar-ref-', ARTIFACT_CRIT, denoise_str, '.mat'])
 %     D_wavpow = D_hg; % comment in for highgamma.... temporary fix
 end
 

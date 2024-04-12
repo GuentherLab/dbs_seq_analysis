@@ -3,11 +3,11 @@
 
 %% params
 
-% rowlist = 1:6;
+rowlist = 1:6;
 % rowlist = 7:12; 
 % rowlist = 13:18; 
 % rowlist = 19:24; 
-rowlist = 25:30; 
+% rowlist = 25:30; 
 % rowlist = 31:36; 
 % rowlist = 22:25;
 % rowlist = [2 3 4 6 7 8];
@@ -30,9 +30,10 @@ plot_brains_on_row2 = 0;
 plot_go_trials_only = 1; % exclude STOP trials from plotting
 
 sort_by_trial_cond = 1; 
-    sort_cond = 'learn_con';
+%     sort_cond = 'learn_con';
+%     sort_cond = 'is_nat';
 %     sort_cond = 'word';
-%     sort_cond = 'vow';
+    sort_cond = 'vow';
 %     sort_cond = 'word_accuracy';
 %     sort_cond = 'seq_accuracy';
 

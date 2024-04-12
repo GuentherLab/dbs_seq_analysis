@@ -224,7 +224,8 @@ end
 %     hyline = yline(0, 'LineWidth',yline_zero_width, 'Color',yline_zero_color, 'LineStyle',yline_zero_style);
     
     xlabel('Time (sec)')
-    ylabel('HG power (normed)')
+%     ylabel('HG power (normed)')
+    ylabel('normed power')
 
     set(gcf,'Color',[1 1 1])
 
@@ -232,6 +233,8 @@ end
     hold off
 
 end
+
+box off
 
 if plot_raster
     imagesc(resp_align.resp)
