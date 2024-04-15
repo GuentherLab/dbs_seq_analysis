@@ -50,7 +50,7 @@ if ~plot_brains_on_row2
         thisrow = rowlist(ielc); 
         subplot(nplotrows,nelcs/nplotrows,ielc);
         srt_row = thisrow;
-        plot_resp_timecourse
+        plot_resp_timecourse_seq
     
         if ~isempty(ylimits)
             ylim(ylimits)
@@ -66,7 +66,7 @@ elseif plot_brains_on_row2
         thisrow = rowlist(ielc);
         subplot(2,nelcs,ielc)
         srt_row = thisrow;
-        plot_resp_timecourse
+        plot_resp_timecourse_seq
     
         if ~isempty(ylimits)
             ylim(ylimits)
