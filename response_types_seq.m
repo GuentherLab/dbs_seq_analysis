@@ -174,6 +174,7 @@ for ichan = 1:nchans
         [~, resp.p_prod(ichan)] = ttest2(resp.prod{ichan}(good_gotrials), zeros_vec); 
 
         % test for general task responsivity
+        %%%% one way to make this metric more stringent would be: run anova on mean response in 4 periods: baseline, stim, prep, speech
         resp.p_min_stim_prep_prod(ichan) = min([resp.p_stim(ichan), resp.p_prep(ichan), resp.p_prod(ichan)]);
         resp.rspv(ichan) = resp.p_min_stim_prep_prod(ichan) < responsivity_alpha; 
 
