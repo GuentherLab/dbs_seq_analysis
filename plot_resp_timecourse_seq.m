@@ -1,7 +1,14 @@
- 
+%%% wrapper for plot_resp_timecourse.m specific to the DBS-SEQ project 
+ % load resp_all_subjects and run sort_top_tuned first 
+
+close all
+
+ %% params 
+
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
 
+sort_cond = sort_cond; 
 %     sort_cond = 'learn_con';
 %     sort_cond = 'is_nat';
 %     sort_cond = 'word';
@@ -32,10 +39,15 @@ trial_time_adj_method = 'median_plus_sd'; % median plus stdev
 % trial_time_adj_method = 'median';
 % trial_time_adj_method = 'max';
 
+%%%%% trial table varname for times used for time-locking responses
+time_align_var = 't_prod_on'; % speech onset
+
 %%
 
- trials_tmp = subs.trials{subind}; % temporary copy of trials table
+trials_tmp = subs.trials{subind}; % temporary copy of trials table
+trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
+resprow = strcmp(resp.chan,channame) & strcmp(resp.sub,thissub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
@@ -43,18 +55,17 @@ if plot_go_trials_only % exclude stop trials
 elseif ~plot_go_trials_only % include both stop and go trials
     timecourses_unaligned = resp.timecourse{resprow};
 end
-trials_tmp = trials_tmp(~cellfun(@isempty, timecourses_unaligned),:);
-timecourses_unaligned = timecourses_unaligned(~cellfun(@isempty, timecourses_unaligned));
 
 trials_tmp.is_nat = cell(ntrials,1);
     trials_tmp.is_nat(strcmp(trials_tmp.learn_con,'nat')) = {'native'};
     trials_tmp.is_nat(~strcmp(trials_tmp.learn_con,'nat')) = {'nonnative'};
 
+if ~isempty(sort_cond)
+    trial_conds = trials_tmp{:,sort_cond}; 
+end
 
-trial_conds = trials_tmp{:,sort_cond}; 
-
-%%
-plot_resp_timecourse()
+ %% sort trials by condition, get average responses + error, plot
+ plot_resp_timecourse()
 
 %%
 

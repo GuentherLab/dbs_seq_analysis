@@ -1,26 +1,23 @@
 %%%% set paths for AM dbs-seq analysis depending on computer
 
 [~,compname] = system('hostname'); compname = string(deblank(compname));
-
+vardefault('op',struct)
+field_default('op','art_crit','E'); % E = high gamma, F = beta
 
  switch compname
      case {'MSI','677-GUE-WL-0010'} % AM personal computer, work laptop
-%          PATH_DATA=''; %%% may not have a copy on all machines....
-%          PATH_RESULTS = []; %%% use the SSD for faster load times
+         PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
          PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos
          PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis']; 
          PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
          PATH_BML = [PATH_CODE filesep 'bml']; 
          PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; 
-         % PATH_LEADDBS = [PATH_CODE filesep ]; 
-         % PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
-         % PATH_SUBCORT_ATLAS_VIM = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_DISTAL_Ewert2017.mat']; % too large to keep in github; put atlases in Results
-         % PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
+         PATH_LEADDBS = [PATH_CODE filesep ]; 
+         PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
+         PATH_SUBCORT_ATLAS_VIM = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_DISTAL_Ewert2017.mat']; % too large to keep in github; put atlases in Results
+         PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
      case 'NSSBML01' % TURBO - BML server computer
          PATH_DATA='Y:\DBS';
-         PATH_DER = [PATH_DATA filesep 'derivatives'];
-         PATH_SRC = [PATH_DATA filesep 'sourcedata'];
-         PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
          PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
          PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
          PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
@@ -34,6 +31,9 @@
  end
 
  % common paths
+  PATH_DER = [PATH_DATA filesep 'derivatives'];
+ PATH_SRC = [PATH_DATA filesep 'sourcedata'];
+ PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
 % PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
