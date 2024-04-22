@@ -34,7 +34,7 @@ field_default('op','art_crit','E'); % E = high gamma, F = beta
   PATH_DER = [PATH_DATA filesep 'derivatives'];
  PATH_SRC = [PATH_DATA filesep 'sourcedata'];
  PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
-% PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
+PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_RESULTS;... % outputs of post-derivatives analyses by AM

@@ -6,7 +6,7 @@
 % op.art_crit = 'E'; op.resp_signal = 'hg'; 
 
 % op.rereference_method = 'none';
-% op.rereference_method = 'CTAR';
+op.rereference_method = 'CTAR';
 
 sublist ={...
      'DM1005';...
