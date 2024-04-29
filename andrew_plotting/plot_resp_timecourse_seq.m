@@ -8,7 +8,7 @@ close all
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
 
-sort_cond = sort_cond; 
+% sort_cond = ''; 
 %     sort_cond = 'learn_con';
 %     sort_cond = 'is_nat';
 %     sort_cond = 'word';
@@ -56,13 +56,15 @@ elseif ~plot_go_trials_only % include both stop and go trials
     timecourses_unaligned = resp.timecourse{resprow};
 end
 
-trials_tmp.is_nat = cell(ntrials,1);
+trials_tmp.is_nat = cell(height(trials_tmp),1);
     trials_tmp.is_nat(strcmp(trials_tmp.learn_con,'nat')) = {'native'};
     trials_tmp.is_nat(~strcmp(trials_tmp.learn_con,'nat')) = {'nonnative'};
 
 if ~isempty(sort_cond)
     trial_conds = trials_tmp{:,sort_cond}; 
 end
+
+timecourses_unaligned = [table(trial_conds, resp.timecourse{resprow}, 'VariableNames', {'cond','timecourse'}), trials_tmp] ;
 
  %% sort trials by condition, get average responses + error, plot
  plot_resp_timecourse()
