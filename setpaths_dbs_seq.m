@@ -1,8 +1,9 @@
 %%%% set paths for AM dbs-seq analysis depending on computer
 
 [~,compname] = system('hostname'); compname = string(deblank(compname));
-vardefault('op',struct)
+vardefault('op',struct);
 field_default('op','art_crit','E'); % E = high gamma, F = beta
+field_default('op','default_trialdur_max_if_empty',15);  % use this trial duration in sec if it's not provided (used in set_project_specific_variables.m)
 
  switch compname
      case {'MSI','677-GUE-WL-0010'} % AM personal computer, work laptop
@@ -34,7 +35,7 @@ field_default('op','art_crit','E'); % E = high gamma, F = beta
   PATH_DER = [PATH_DATA filesep 'derivatives'];
  PATH_SRC = [PATH_DATA filesep 'sourcedata'];
  PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
-PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
+PATH_ARTIFACT = [PATH_DATA filesep 'groupanalyses\task-smsl' filesep 'A09_artifact_criteria_', op.art_crit];
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_RESULTS;... % outputs of post-derivatives analyses by AM

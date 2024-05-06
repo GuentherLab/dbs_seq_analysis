@@ -1,15 +1,20 @@
  %%%% check whether there is a nonrandom distribution of significantly tuned electrodes across areas
   %%% load resp_all_subjects first
+
+clearvars -except resp op subs
+
 setpaths_dbs_seq()
 
 % load([PATH_RESULTS, filesep, 'resp_all_subjects.mat'])
 
 % close all
 
- %% params
 vardefault('show_barplot',1);
 
-newfig = 1; 
+vardefault('warn_about_unassigned_elcs',0); 
+field_default('op','newfig',0); 
+
+op.analyze_responsive_elcs_only = 1; 
 
 %%% define anatomical regions composed of smaller areas
 % 1 = 'Area 1' (Fischl et al 2008, Geyer et al 1999, Geyer et al 2000) ... posterior postcentral gyrus
@@ -61,11 +66,9 @@ regiondef = {   'SMC',  {'1','2','3a','3b','4','6v','6d','43','55b','PEF','FEF',
                 'GP', {'GPe_L','GPe_R','GPi_postparietal_R','GPi_premotor_R','GPi_sensorimotor_L','GPi_sensorimotor_L'};... % 
                 };
 
-analyze_responsive_elcs_only = 1;
-
 % param = 'p_min_stim_prep_prod'; % general task responsivity
 % param = 'p_prep';
-% param = 'p_prod';
+param = 'p_prod';
 % param = 'p_stim';
 
 % param = 'p_prod_learn';
@@ -77,7 +80,7 @@ analyze_responsive_elcs_only = 1;
 % param = 'p_prep_novel_vs_trained';
 % param = 'p_prod_novel_vs_trained';
 
-param = 'p_prep_novel_vs_nat';
+% param = 'p_prep_novel_vs_nat';
 % param = 'p_prod_novel_vs_nat';
 
 % param = 'p_stim_syl';

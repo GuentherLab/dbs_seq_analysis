@@ -3,7 +3,7 @@
 
 
 
-% param = 'p_min_stim_prep_prod'; % general task responsivity
+param = 'p_min_stim_prep_prod'; % general task responsivity
 % param = 'p_stim';
 % param = 'p_prep';
 % param = 'p_prod';
@@ -18,7 +18,7 @@
 % param = 'p_prod_novel_vs_trained';
 
 % param = 'p_prep_novel_vs_nat';
-param = 'p_prod_novel_vs_nat';
+% param = 'p_prod_novel_vs_nat';
 
 % param = 'p_stim_syl';
 % param = 'p_prep_syl';
@@ -44,4 +44,6 @@ if exclude_if_p_zero
         clear srtvals idxorder
 end
 
-srt = srt(string(srt.type) ~= "ECOG",:); % exclude ecog electrodes
+srt = srt(string(srt.type) ~= "RECOG",:); % exclude ecog electrodes
+
+open srt

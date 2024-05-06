@@ -2,6 +2,7 @@
 % look for electrodes with different responses to different conditions
 
 % clear
+set_project_specific_variables()
 
 %% analysis parameters
 %%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before stim onset
@@ -12,8 +13,6 @@ stim_window_extend_end = 0.3; % for responses during stimulus, add this long in 
 % for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
 speech_window_extend_start = 0.15;  
 trial_end_post_speech_win = 0.6; % end the trial this long after speech offset in seconds
-
-use_vibration_denoised_data = 0; 
 
 responsivity_alpha = 0.05; % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
 
@@ -50,28 +49,20 @@ PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intrao
 %% load data 
 % cd(PATH_FIELDTRIP)
 
-if use_vibration_denoised_data
-    denoise_str = '_denoised';
-elseif ~use_vibration_denoised_data
-    denoise_str = '_not-denoised';
-end
-
 if ~exist('D_wavpow','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial_ar-',ARTIFACT_CRIT, '_ref-',rereference_method, denoise_str, '.mat'])
+    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', op.resp_signal, '_trial_ar-',op.art_crit, '_ref-',op.rereference_method, op.denoise_string, '.mat'],'D_wavpow_trial')
 %     D_wavpow = D_hg; % comment in for highgamma.... temporary fix
 end
 
-% % trial timing and electrode info
+% % trial timing
 trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables.tsv']);
 trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
-elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' SUBJECT '_electrodes.tsv';]); 
-    elc_info = renamevars(elc_info,'name','chan');
 
 %% get responses in predefined epochs
 % 'base' = average durng pre-stim baseline
 % all response values except 'base' are baseline-normalized by dividing by that trial's baseline average
 ntrials = height(trials);
-nchans = length(D_wavpow.label);
+nchans = length(D_wavpow_trial.label);
 nans_ch = nan(nchans,1); 
 nans_tr = nan(ntrials,1); 
 cel_tr = cell(ntrials,1); 
@@ -90,7 +81,7 @@ trials.duration = trials.ends - trials.starts;
 
 % table containing responses during epochs for each chan
 cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
-resp = table(   D_wavpow.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
+resp = table(   D_wavpow_trial.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
   'VariableNames', {'chan', 'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
 
 % extract epoch-related responses
@@ -102,32 +93,32 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
     trial_id_in_block = trials.trial_id(itrial); % block-relative trial number
     
     % get indices within the trial-specific set of timepoints of D_wavpow.time{itrial} that match our specified trial window
-    match_time_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < trials.ends(itrial); 
-    trials.times{itrial} = D_wavpow.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
+    match_time_inds = D_wavpow_trial.time{itrial} > trials.starts(itrial) & D_wavpow_trial.time{itrial} < trials.ends(itrial); 
+    trials.times{itrial} = D_wavpow_trial.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
     % get trial-relative baseline time indices; window time-locked to first stim onset
-    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < [trials.t_stim_syl_on(itrial) - base_win_sec(2)]; 
-    stim_inds = D_wavpow.time{itrial} > trials.t_stim_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_stim_syl_off(itrial) + stim_window_extend_end; 
-    prep_inds = D_wavpow.time{itrial} > trials.t_stim_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; 
-    prod_inds = D_wavpow.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{itrial} < trials.t_prod_off(itrial);     
+    base_inds = D_wavpow_trial.time{itrial} > trials.starts(itrial) & D_wavpow_trial.time{itrial} < [trials.t_stim_syl_on(itrial) - base_win_sec(2)]; 
+    stim_inds = D_wavpow_trial.time{itrial} > trials.t_stim_syl_on(itrial) & D_wavpow_trial.time{itrial} < trials.t_stim_syl_off(itrial) + stim_window_extend_end; 
+    prep_inds = D_wavpow_trial.time{itrial} > trials.t_stim_syl_off(itrial) & D_wavpow_trial.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; 
+    prod_inds = D_wavpow_trial.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow_trial.time{itrial} < trials.t_prod_off(itrial);     
 
     for ichan = 1:nchans
         % baseline activity and timecourse
         % use mean rather than nanmean, so that trials which had artifacts marked with NaNs will be excluded
-        resp.base{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
+        resp.base{ichan}(itrial) = mean( D_wavpow_trial.trial{itrial}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
     
         % get baseline-normalized trial timecourse
-       resp.timecourse{ichan}{itrial} =  D_wavpow.trial{itrial}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
+       resp.timecourse{ichan}{itrial} =  D_wavpow_trial.trial{itrial}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
 
         % response during stim presentation (not go beep)
-        resp.stim{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
+        resp.stim{ichan}(itrial) = mean( D_wavpow_trial.trial{itrial}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
 
         % preparatory response
         %%%% prep period inds = after stim ends and before syllable prod onset
-        resp.prep{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
+        resp.prep{ichan}(itrial) = mean( D_wavpow_trial.trial{itrial}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
 
         % response during speech production
-        resp.prod{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
+        resp.prod{ichan}(itrial) = mean( D_wavpow_trial.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
     end    
 end
 trials(:,{'audio_go_offset'}) = []; % renamed/redundant
@@ -153,7 +144,7 @@ for ichan = 1:nchans
     is_novel_trial = strcmp(trials.learn_con,'nn_nov');
     is_trained_trial = strcmp(trials.learn_con,'nn_train');
     is_native_trial = strcmp(trials.learn_con,'nat');
-    if nnz(good_trials) > 0 % only do stats analysis if channel had >0 good trials
+    if nnz(good_trials) > 1 % only do stats analysis if channel had >1 good trials
          prep_resp_novel = resp.prep{ichan}(good_gotrials & is_novel_trial);
          prep_resp_trained = resp.prep{ichan}(good_gotrials & is_trained_trial);
          prep_resp_nonnative = [prep_resp_novel; prep_resp_trained]; 
@@ -188,17 +179,21 @@ for ichan = 1:nchans
         resp.p_prod_nn_v_nat(ichan) = anova1(resp.prod{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_prod_nn_minus_nat(ichan) = sign( nanmean(prod_resp_nonnative) - nanmean(prod_resp_nat) ); 
 
-         % preference for novel nonnative vs. trained nonnative (effect of training occurring only during Training phase... no natives)
-         [~, resp.p_prep_novel_vs_trained(ichan)] = ttest2( prep_resp_novel, prep_resp_trained );      
-            resp.sign_prep_novel_minus_trained(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_trained) ); 
-         [~, resp.p_prod_novel_vs_trained(ichan)] = ttest2( prod_resp_novel, prod_resp_trained );      
-            resp.sign_prod_novel_minus_trained(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_trained) ); 
+         if nnz(prep_resp_novel) > 1 && nnz(prep_resp_trained) > 1   
+             % preference for novel nonnative vs. trained nonnative (effect of training occurring only during Training phase... no natives)
+             [~, resp.p_prep_novel_vs_trained(ichan)] = ttest2( prep_resp_novel, prep_resp_trained );      
+                resp.sign_prep_novel_minus_trained(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_trained) ); 
+             [~, resp.p_prod_novel_vs_trained(ichan)] = ttest2( prod_resp_novel, prod_resp_trained );      
+                resp.sign_prod_novel_minus_trained(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_trained) ); 
+         end
 
-         % preference for native vs nonnative novel (most well-leared vs. least well-learned)
-         [~, resp.p_prep_novel_vs_nat(ichan)] = ttest2( prep_resp_novel, prep_resp_nat );      
-            resp.sign_prep_novel_minus_nat(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_nat) ); 
-         [~, resp.p_prod_novel_vs_nat(ichan)] = ttest2( prod_resp_novel, prod_resp_nat );      
-            resp.sign_prod_novel_minus_nat(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_nat) ); 
+         if nnz(prep_resp_novel) > 1 && nnz(prep_resp_nat) > 1   
+             % preference for native vs nonnative novel (most well-learned vs. least well-learned)
+             [~, resp.p_prep_novel_vs_nat(ichan)] = ttest2( prep_resp_novel, prep_resp_nat );      
+                resp.sign_prep_novel_minus_nat(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_nat) ); 
+             [~, resp.p_prod_novel_vs_nat(ichan)] = ttest2( prod_resp_novel, prod_resp_nat );      
+                resp.sign_prod_novel_minus_nat(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_nat) ); 
+         end
     
          % preferential response for specific stim
         resp.p_stim_syl(ichan) = anova1(resp.stim{ichan}(good_trials),trials.word(good_trials),'off'); % include stop trials
@@ -217,14 +212,16 @@ for ichan = 1:nchans
 end
     
 %% cleanup
-elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
+%%%%% add electrode info to resp table... electrodes table loaded in set_project_specific_variables.m
+ electrodes = renamevars(electrodes,'name','chan');
+electrodes_overlapping_resptable = electrodes(ismember(electrodes.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
 
 % add the following variables to the electrodes response table... use 'electrode' as key variable
 info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'mni_x','mni_y','mni_z',...
 	'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
-resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
-resp.sub = cellstr(repmat(SUBJECT, nchans, 1));
+resp = join(resp, electrodes_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
+resp.sub = cellstr(repmat(op.sub, nchans, 1));
 resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);

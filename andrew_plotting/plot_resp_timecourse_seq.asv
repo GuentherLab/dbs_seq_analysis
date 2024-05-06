@@ -4,25 +4,10 @@
 close all
 
  %% params 
-% srt_row = 34;
-
-vardefault('smooth_timecourses',1); 
-    vardefault('smooth_windowsize',20); 
-%      vardefault('smooth_method', 'movmean'; 
-     vardefault('smooth_method','gaussian');
-show_error_bars = 0; 
-vardefault('newfig',1); 
+srt_row = 1;
 
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
-
-vardefault('plotop',struct);
-field_default('plotop','x_ax_hardlims',[]); % widest allowable x limits
-
-field_default('plotop','y_ax_hardlims',[]); % widest allowable y limits
-
-field_default('plotop','linewidth',2); 
-
 
 % sort_cond = ''; 
 %     sort_cond = 'learn_con';
@@ -57,8 +42,6 @@ trial_time_adj_method = 'median_plus_sd'; % median plus stdev
 
 %%%%% trial table varname for times used for time-locking responses
 time_align_var = 't_prod_on'; % speech onset
-
-cmapname = 'jet'; 
 
 %%
 
@@ -99,12 +82,12 @@ end
 %%
 
 % times relative to produced syllable 
-timecourses_unaligned.stim_syl_on_adj = timecourses_unaligned.t_stim_syl_on - timecourses_unaligned.t_prod_on ; 
-timecourses_unaligned.stim_syl_off_adj = timecourses_unaligned.t_stim_syl_off - timecourses_unaligned.t_prod_on ; 
-timecourses_unaligned.stim_gobeep_on_adj = timecourses_unaligned.t_stim_gobeep_on - timecourses_unaligned.t_prod_on ; 
-timecourses_unaligned.stim_gobeep_off_adj = timecourses_unaligned.t_stim_gobeep_off - timecourses_unaligned.t_prod_on ; 
-timecourses_unaligned.t_prod_on_adj = timecourses_unaligned.t_prod_on - timecourses_unaligned.t_prod_on(:,1) ; 
-timecourses_unaligned.t_prod_off_adj = timecourses_unaligned.t_prod_off - timecourses_unaligned.t_prod_on(:,1) ; 
+trials_tmp.stim_syl_on_adj = trials_tmp.t_stim_syl_on - trials_tmp.t_prod_on ; 
+trials_tmp.stim_syl_off_adj = trials_tmp.t_stim_syl_off - trials_tmp.t_prod_on ; 
+trials_tmp.stim_gobeep_on_adj = trials_tmp.t_stim_gobeep_on - trials_tmp.t_prod_on ; 
+trials_tmp.stim_gobeep_off_adj = trials_tmp.t_stim_gobeep_off - trials_tmp.t_prod_on ; 
+trials_tmp.t_prod_on_adj = trials_tmp.t_prod_on - trials_tmp.t_prod_on(:,1) ; 
+trials_tmp.t_prod_off_adj = trials_tmp.t_prod_off - trials_tmp.t_prod_on(:,1) ; 
 
 
     if string(resp.type{resprow})=="ECOG"
@@ -114,18 +97,18 @@ timecourses_unaligned.t_prod_off_adj = timecourses_unaligned.t_prod_off - timeco
     end
 
     % stim syllable onsets
-    h_stim_syl_on = xline(xline_fn(timecourses_unaligned.stim_syl_on_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_syl_on, 'LineStyle',xline_style, 'HandleVisibility','off');
+    h_stim_syl_on = xline(xline_fn(trials_tmp.stim_syl_on_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_syl_on, 'LineStyle',xline_style);
 
 
 %     stim offset
-    h_stim_gobeep_off = xline(mean(timecourses_unaligned.stim_gobeep_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_gobeep_off, 'LineStyle',xline_style, 'HandleVisibility','off');
+    h_stim_gobeep_off = xline(mean(trials_tmp.stim_gobeep_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_gobeep_off, 'LineStyle',xline_style);
 
    
 % % %     % produced syllable onset
-    h_t_prod_on = xline(0, 'LineWidth',xline_width, 'Color',xline_color_prod_on, 'LineStyle',xline_style, 'HandleVisibility','off'); 
+    h_t_prod_on = xline(0, 'LineWidth',xline_width, 'Color',xline_color_prod_on, 'LineStyle',xline_style); 
 
    % % %     % produced syllable offset 
-    h_stim_prod_off = xline(mean(timecourses_unaligned.t_prod_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_prod_off, 'LineStyle',xline_style, 'HandleVisibility','off');
+    h_stim_prod_off = xline(mean(trials_tmp.t_prod_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_prod_off, 'LineStyle',xline_style);
 
 
  
