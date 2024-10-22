@@ -3,6 +3,7 @@
 [~,compname] = system('hostname'); compname = string(deblank(compname));
 
 
+
  if strcmp(compname, 'NSSBML01') || isdir('Y:\DBS')  % if working on TURBO (BML server computer) or accessing via mapped Z drive
       PATH_DATA='Y:\DBS';
      PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
@@ -57,8 +58,5 @@ set(0, 'DefaultLegendInterpreter', 'none')
 % set(0, 'DefaultAxesTickLabelInterpreter', 'none')
 
 format long
-
-vardefault('op',struct);
-field_default('op','art_crit','E'); % E = high gamma, F = beta
 
  clearvars compname paths_to_add PATH_CODE PATH_BML
