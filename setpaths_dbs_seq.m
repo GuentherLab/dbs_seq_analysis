@@ -1,7 +1,7 @@
 %%%% set paths for AM dbs-seq analysis depending on computer
 
 [~,compname] = system('hostname'); compname = string(deblank(compname));
-vardefault('op',struct)
+vardefault('op',struct);
 field_default('op','art_crit','E'); % E = high gamma, F = beta
 
  switch compname
@@ -13,6 +13,7 @@ field_default('op','art_crit','E'); % E = high gamma, F = beta
          PATH_BML = [PATH_CODE filesep 'bml']; 
          PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; 
          PATH_LEADDBS = [PATH_CODE filesep ]; 
+         PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
          PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
          PATH_SUBCORT_ATLAS_VIM = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_DISTAL_Ewert2017.mat']; % too large to keep in github; put atlases in Results
          PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
@@ -23,6 +24,7 @@ field_default('op','art_crit','E'); % E = high gamma, F = beta
          PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
          PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
          PATH_LEADDBS = 'C:\Program Files\LeadDBS';
+         PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
          PATH_AVERAGE_MNI = 'Z:/DBS/DBS_subject_lists/MNI_ICBM_2009b_NLIN_ASYM/cortex/CortexLowRes_15000V.mat';
          PATH_SUBCORT_ATLAS_VIM = 'C:\Program Files\LeadDBS_Classic\leaddbs\templates\space\MNI_ICBM_2009b_NLIN_ASYM\atlases\DISTAL (Ewert 2017)/atlas_index.mat';
          PATH_STN_ATLAS = 'Z:\Resources\STN-Atlas\atlas_index.mat';
@@ -33,7 +35,7 @@ field_default('op','art_crit','E'); % E = high gamma, F = beta
  % common paths
   PATH_DER = [PATH_DATA filesep 'derivatives'];
  PATH_SRC = [PATH_DATA filesep 'sourcedata'];
- PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
+ 
 PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
