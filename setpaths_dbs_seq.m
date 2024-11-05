@@ -2,12 +2,21 @@
 
 [~,compname] = system('hostname'); compname = string(deblank(compname));
 
+  if strcmp(compname, 'NSSBML01') % if working on TURBO (BML server computer)
+      PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
+     PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with files local on AM computers 
+     PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
+     PATH_BML = [PATH_CODE filesep 'bml']; 
+     PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
+  else 
+     error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
+ end
 
  if strcmp(compname, 'NSSBML01') || isdir('Y:\DBS')  % if working on TURBO (BML server computer) or accessing via mapped Z drive
       PATH_DATA='Y:\DBS';
      PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
-     PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
-     PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
+     
      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
      PATH_LEADDBS = 'C:\Program Files\LeadDBS';
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
@@ -16,10 +25,9 @@
      PATH_STN_ATLAS = 'Z:\Resources\STN-Atlas\atlas_index.mat';
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with files local on AM computers 
      PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
-     PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos
+     
      PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis']; 
-     PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
-     PATH_BML = [PATH_CODE filesep 'bml']; 
+     
      PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; 
      PATH_LEADDBS = [PATH_CODE filesep ]; 
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
@@ -29,6 +37,8 @@
  else 
      error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
  end
+
+
 
  % common paths
   PATH_DER = [PATH_DATA filesep 'derivatives'];
