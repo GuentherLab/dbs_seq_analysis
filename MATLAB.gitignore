@@ -4,7 +4,6 @@
 # OSX / *nix default autosave extension
 *.m~
 
-<<<<<<< Updated upstream
 # Compiled MEX binaries (all platforms)
 *.mex*
 
@@ -12,8 +11,6 @@
 *.mlappinstall
 *.mltbx
 
-=======
->>>>>>> Stashed changes
 # Generated helpsearch folders
 helpsearch*/
 
