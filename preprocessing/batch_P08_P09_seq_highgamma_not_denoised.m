@@ -8,6 +8,10 @@
 % op.rereference_method = 'none';
 op.rereference_method = 'CTAR';
 
+op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before vis onset; gets unsed in redfine_trial
+
+op.denoised = 1; 
+
 sublist ={...
      'DM1005';...
      'DM1007';...
