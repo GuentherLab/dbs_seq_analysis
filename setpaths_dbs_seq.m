@@ -2,52 +2,40 @@
 
 [~,compname] = system('hostname'); compname = string(deblank(compname));
 
+%%%%% paths differentiated by matlab running locally vs. on server
   if strcmp(compname, 'NSSBML01') % if working on TURBO (BML server computer)
       PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
      PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
+     PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
+     PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
+     PATH_LEADDBS = 'C:\Program Files\LeadDBS';
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with files local on AM computers 
      PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
      PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
+     PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis'];; 
+     PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; % previously tried using remote Y drive version, but often causes matlab to freeze
+     PATH_BML = [PATH_CODE filesep 'bml']; 
+     PATH_LEADDBS = [PATH_CODE filesep ]; % ? have a copy on local computer ? 
   else 
      error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
  end
 
+ %%%% paths differentiated by whether or not Y drive on Turbo is available
  if strcmp(compname, 'NSSBML01') || isdir('Y:\DBS')  % if working on TURBO (BML server computer) or accessing via mapped Y drive
       PATH_DATA='Y:\DBS';
-     PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
      
-     PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
-     PATH_LEADDBS = 'C:\Program Files\LeadDBS';
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
      PATH_AVERAGE_MNI = 'Z:/DBS/DBS_subject_lists/MNI_ICBM_2009b_NLIN_ASYM/cortex/CortexLowRes_15000V.mat';
      PATH_SUBCORT_ATLAS_VIM = 'C:\Program Files\LeadDBS_Classic\leaddbs\templates\space\MNI_ICBM_2009b_NLIN_ASYM\atlases\DISTAL (Ewert 2017)/atlas_index.mat';
      PATH_STN_ATLAS = 'Z:\Resources\STN-Atlas\atlas_index.mat';
-<<<<<<< HEAD
- end
- if any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if launching matlab on AM computers 
-     PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos
-     PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis']; 
-     PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
-     PATH_BML = [PATH_CODE filesep 'bml']; 
-=======
- elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with files local on AM computers 
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with local data - not stored on server
      PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
-     
-     PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis']; 
-     
-     PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; 
-     PATH_LEADDBS = [PATH_CODE filesep ]; 
->>>>>>> bce8218513ba5569dae1326bf34ac04f8df3c224
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
      PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
      PATH_SUBCORT_ATLAS_VIM = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_DISTAL_Ewert2017.mat']; % too large to keep in github; put atlases in Results
      PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
-     if ~isdir('Y:\DBS') % if mapped Y drive is not accessible
-         PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
-         PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; 
-          PATH_LEADDBS = [PATH_CODE filesep ]; 
-     end
+     
  else 
      error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
  end
