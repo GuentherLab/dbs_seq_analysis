@@ -46,7 +46,6 @@
   PATH_DER = [PATH_DATA filesep 'derivatives'];
  PATH_SRC = [PATH_DATA filesep 'sourcedata'];
  
-PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_E']; % keep in repo to sync across devices
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_RESULTS;... % outputs of post-derivatives analyses by AM
@@ -73,5 +72,8 @@ format long
 
 vardefault('op',struct);
 field_default('op','art_crit','E'); % E = high gamma, F = beta
+
+PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_', op.art_crit]; % keep in repo to sync across devices
+
 
  clearvars compname paths_to_add PATH_CODE PATH_BML
