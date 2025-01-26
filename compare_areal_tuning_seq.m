@@ -23,6 +23,9 @@ newfig = 1;
 % 
 % 6r = 'Rostral Area 6' (Amunts et al 2010)... ventral premotor, precentral sulcus
 %
+% FEF = Frontal Eye Fields... in first 5 dbsseq subs, this is close to precentral gyrus, but may be more frontal in future subs
+% PEF = Premotor Eye Fields
+%
 % OP4 = 'Area OP4/PV' .... ventral precentral/postecentral gyrus, operculum
 %
 % 55b = 'Area 55b' (Hopf 1956)... mid precentral gyrus, precentral sulcus, posterior MFG... premotor cortex
@@ -32,7 +35,7 @@ newfig = 1;
 % i6-8 = 'Inferior 6-8 Transitional Area'(von Economo and Koskinas 1925, Triarhou 2007)... dorsal premotor
 %
 % 8Av = 'Area 8av' (Petredes and Pandya 1999) .... middle frontal gyrus
-% 8C = 'ARea 8C' (Petredes and Pandya 1999) ... ventral middle frontal gyrus
+% 8C = 'Area 8C' (Petredes and Pandya 1999) ... ventral middle frontal gyrus
 %
 % A4 = 'Auditory 4 Complex' (Morosan et al 2005).... dorsal STG
 % A5 = 'Auditory 5 Complex' .... ventral STG
