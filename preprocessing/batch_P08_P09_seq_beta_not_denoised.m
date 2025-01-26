@@ -3,6 +3,16 @@
 
 clear
 
+% op.art_crit = 'E'; op.resp_signal = 'hg'; 
+op.art_crit = 'F'; op.resp_signal = 'beta'; 
+
+% op.rereference_method = 'none';
+op.rereference_method = 'CTAR';
+
+op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before visual onset; gets unsed in redfine_trial
+
+op.denoised = 0; 
+
 sublist ={...
      'DM1005';...
      'DM1007';...
@@ -18,8 +28,6 @@ nsubs = length(sublist);
 for isub = 1:nsubs
     thissub = sublist{isub}
     op.sub = thissub;
-    op.art_crit = 'F'; 
-    op.resp_signal = 'beta'; 
 
     close all force
 
