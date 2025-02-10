@@ -1,18 +1,18 @@
 %%% wrapper for plot_resp_timecourse.m specific to the DBS-SEQ project 
  % load resp_all_subjects and run sort_top_tuned first 
 
-close all
+% close all
 
  %% params 
-
+ 
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
 
-sort_cond = sort_cond; 
+
 %     sort_cond = 'learn_con';
-%     sort_cond = 'is_nat';
+    % sort_cond = 'is_nat';
 %     sort_cond = 'word';
-    sort_cond = 'vow';
+    % sort_cond = 'vow';
 %     sort_cond = 'word_accuracy';
 %     sort_cond = 'seq_accuracy';
 
@@ -47,22 +47,25 @@ time_align_var = 't_prod_on'; % speech onset
 trials_tmp = subs.trials{subind}; % temporary copy of trials table
 trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
-resprow = strcmp(resp.chan,channame) & strcmp(resp.sub,thissub);
+srtrow = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
-    timecourses_unaligned = resp.timecourse{resprow}(go_trial_inds); 
+    timecourses_unaligned = srt.timecourse{srtrow}(go_trial_inds); 
 elseif ~plot_go_trials_only % include both stop and go trials
-    timecourses_unaligned = resp.timecourse{resprow};
+    timecourses_unaligned = srt.timecourse{srtrow};
 end
 
-trials_tmp.is_nat = cell(ntrials,1);
+trials_tmp.is_nat = cell(height(trials_tmp),1);
     trials_tmp.is_nat(strcmp(trials_tmp.learn_con,'nat')) = {'native'};
     trials_tmp.is_nat(~strcmp(trials_tmp.learn_con,'nat')) = {'nonnative'};
 
-if ~isempty(sort_cond)
+if isempty(sort_cond) % plot all trials in a single trace
+    trial_conds = ones(height(trials_tmp),1); 
+elseif ~isempty(sort_cond)
     trial_conds = trials_tmp{:,sort_cond}; 
 end
+
 
  %% sort trials by condition, get average responses + error, plot
  plot_resp_timecourse()
@@ -78,10 +81,10 @@ trials_tmp.t_prod_on_adj = trials_tmp.t_prod_on - trials_tmp.t_prod_on(:,1) ;
 trials_tmp.t_prod_off_adj = trials_tmp.t_prod_off - trials_tmp.t_prod_on(:,1) ; 
 
 
-    if string(resp.type{resprow})=="ECOG"
-        htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.HCPMMP1_label_1{resprow}], 'Interpreter','none');
+    if string(srt.type{srtrow})=="ECOG"
+        htitle = title([thissub, '_', srt.chan{srtrow}, '_area-', srt.HCPMMP1_label_1{srtrow}], 'Interpreter','none');
     else
-        htitle = title([thissub, '_', resp.chan{resprow}, '_area-', resp.DISTAL_label_1{resprow}], 'Interpreter','none');
+        htitle = title([thissub, '_', srt.chan{srtrow}, '_area-', srt.DISTAL_label_1{srtrow}], 'Interpreter','none');
     end
 
     % stim syllable onsets
