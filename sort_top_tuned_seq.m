@@ -14,11 +14,11 @@
 % param = 'p_prod_nn_v_nat';
 % param = 'p_prep_nn_v_nat';
 
-% param = 'p_prep_novel_vs_trained';
+param = 'p_prep_novel_vs_trained';
 % param = 'p_prod_novel_vs_trained';
 
 % param = 'p_prep_novel_vs_nat';
-param = 'p_prod_novel_vs_nat';
+% param = 'p_prod_novel_vs_nat';
 
 % param = 'p_stim_syl';
 % param = 'p_prep_syl';
@@ -41,7 +41,8 @@ srt = movevars(srt,{'sub','chan',param,'HCPMMP1_label_1','DISTAL_label_1'},'Befo
 if exclude_if_p_zero
     pzero_rows = srtvals == 0; 
     srt = srt(~pzero_rows,:);    
-        clear srtvals idxorder
+    idxorder = idxorder(~pzero_rows,:);  
+        % clear srtvals idxorder
 end
 
-srt = srt(string(srt.type) ~= "ECOG",:); % exclude ecog electrodes
+% srt = srt(string(srt.type) ~= "ECOG",:); % exclude ecog electrodes

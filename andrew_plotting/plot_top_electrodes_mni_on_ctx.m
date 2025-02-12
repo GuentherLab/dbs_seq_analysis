@@ -62,10 +62,10 @@ elc_types_to_plot = {'ECOG'};
 
 also_plot_nonsgnf_elcs = 1; 
 
-% inclusion_mode = 'thresh';
+inclusion_mode = 'thresh';
     % p_thresh = 0.001; 
     p_thresh = 0.05; 
-inclusion_mode = 'proportion';
+% inclusion_mode = 'proportion';
 %     p_proportion = 0.05; 
     p_proportion = 1; 
 
@@ -73,12 +73,22 @@ inclusion_mode = 'proportion';
 % inclusion_var = 'p_prod';
 % inclusion_var = 'p_learn';
 % inclusion_var = 'p_learn_prep';
-% inclusion_var = 'p_nat_v_nn';
-% inclusion_var = 'p_nat_v_nn_prep';
-% inclusion_var = 'p_stim_id';
-% inclusion_var = 'p_stim_id_prep';
+
+% inclusion_var = 'p_prod_nn_v_nat';
+% inclusion_var = 'p_prep_nn_v_nat';
+
+% inclusion_var = 'p_prod_novel_vs_nat'; 
+inclusion_var = 'p_prep_novel_vs_nat'; 
+
+% inclusion_var = 'p_prod_novel_vs_trained';
+% inclusion_var = 'p_prep_novel_vs_trained';
+
+% inclusion_var = 'p_prod_syl';
+% inclusion_var = 'p_prep_syl';
+
+
 % inclusion_var = 'p_rime'; 
-inclusion_var = 'p_rime_prep';
+% inclusion_var = 'p_rime_prep';
 
 
 switch inclusion_mode
@@ -91,7 +101,9 @@ end
 
 rows_to_plot & any(strcmp(resp.type,elc_types_to_plot), 2);
 
-plotcolor = 'b';
+% plotcolor = 'b';
+plotcolor = 'r';
+
 plotcolor_nonsgnf = [0.3 0.3 0.3]; 
 
 
@@ -104,7 +116,8 @@ x_offset = -1;
 
 
 
-close all
+% close all
+
 hfig = figure('WindowState','maximized');
 patch('vertices', average_mni.Vertices, 'faces', average_mni.Faces,...
 'FaceColor', [.9 .9 .9], 'EdgeColor', 'none', 'FaceAlpha',1, ...

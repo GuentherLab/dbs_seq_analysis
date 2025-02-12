@@ -44,14 +44,16 @@ time_align_var = 't_prod_on'; % speech onset
 
 %%
 
+subind = string(subs.subject) == srt.sub(srtrow);
 trials_tmp = subs.trials{subind}; % temporary copy of trials table
 trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
-srtrow = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
+channame = srt.chan{srtrow}; 
+% srtrow = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
-    timecourses_unaligned = srt.timecourse{srtrow}(go_trial_inds); 
+    timecourses_unaligned = srt.timecourse{srt_row}(go_trial_inds); 
 elseif ~plot_go_trials_only % include both stop and go trials
     timecourses_unaligned = srt.timecourse{srtrow};
 end
