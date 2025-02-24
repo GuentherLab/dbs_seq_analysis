@@ -53,7 +53,7 @@ channame = srt.chan{srtrow};
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
-    timecourses_unaligned = srt.timecourse{srt_row}(go_trial_inds); 
+    timecourses_unaligned = srt.timecourse{srtrow}(go_trial_inds); 
 elseif ~plot_go_trials_only % include both stop and go trials
     timecourses_unaligned = srt.timecourse{srtrow};
 end

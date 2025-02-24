@@ -153,7 +153,7 @@ for ichan = 1:nchans
     is_novel_trial = strcmp(trials.learn_con,'nn_nov');
     is_trained_trial = strcmp(trials.learn_con,'nn_train');
     is_native_trial = strcmp(trials.learn_con,'nat');
-    if nnz(good_trials) > 0 % only do stats analysis if channel had >0 good trials
+    if nnz(good_gotrials) > 1 % only do stats analysis if channel had >0 good go trials
          prep_resp_novel = resp.prep{ichan}(good_gotrials & is_novel_trial);
          prep_resp_trained = resp.prep{ichan}(good_gotrials & is_trained_trial);
          prep_resp_nonnative = [prep_resp_novel; prep_resp_trained]; 
