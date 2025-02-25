@@ -9,8 +9,8 @@ subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
 resp_signal = 'hg'; ARTIFACT_CRIT = 'E'; 
 % resp_signal = 'beta'; ARTIFACT_CRIT = 'F'; 
 
-% rereference_method = 'none';
-rereference_method = 'CTAR';
+rereference_method = 'none';
+% rereference_method = 'CTAR';
 
 subnums = [1005, 1007, 1008, 1024, 1025, 1037];
 %     sublist = [1037]; 
@@ -39,7 +39,7 @@ setpaths_dbs_seq()
 fprintf(['Compiling response tables in %s \n'], compiled_responses_filepath);
 resp_temp = table; 
 for isub = 1:nsubs
-    SUBJECT = subs.subject{isub}
+    SUBJECT = subs.subject{isub};
     load([PATH_RESULTS, filesep, SUBJECT, '_responses_', resp_signal, '_ref-',rereference_method],'resp','trials')
     resp_temp = [resp_temp; resp];
     subs.trials{isub} = trials; 

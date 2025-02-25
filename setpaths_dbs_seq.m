@@ -67,6 +67,8 @@ addpath(paths_to_add{:});
 ft_defaults()
 bml_defaults()
 
+addpath(fileparts(which('anova1'))); % make sure Matlab stats toolbox is on top, so that it's not superseded by fieldtrip/external/stats
+
 set(0, 'DefaultTextInterpreter', 'none')
 set(0, 'DefaultLegendInterpreter', 'none')
 % set(0, 'DefaultAxesTickLabelInterpreter', 'none')

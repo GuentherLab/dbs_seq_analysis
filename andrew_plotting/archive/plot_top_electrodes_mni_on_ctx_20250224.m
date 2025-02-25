@@ -57,13 +57,14 @@ color_ep_cm = '#9EB859';% #EP CM
 
 
 
-%% ecog
+
 elc_types_to_plot = {'ECOG'};
 
 also_plot_nonsgnf_elcs = 1; 
 
 inclusion_mode = 'thresh';
     % p_thresh = 0.001; 
+%     p_thresh = 0.01;
     p_thresh = 0.05; 
 % inclusion_mode = 'proportion';
 %     p_proportion = 0.05; 
@@ -71,17 +72,21 @@ inclusion_mode = 'thresh';
 
 % inclusion_var = 'p_prep';
 % inclusion_var = 'p_prod';
-% inclusion_var = 'p_learn';
-% inclusion_var = 'p_learn_prep';
 
-% inclusion_var = 'p_prod_nn_v_nat';
+inclusion_var = 'p_prep_learn';
+% inclusion_var = 'p_prod_learn';
+
+
 % inclusion_var = 'p_prep_nn_v_nat';
+% inclusion_var = 'p_prod_nn_v_nat';
 
+
+% inclusion_var = 'p_prep_novel_vs_nat'; 
 % inclusion_var = 'p_prod_novel_vs_nat'; 
-inclusion_var = 'p_prep_novel_vs_nat'; 
 
-% inclusion_var = 'p_prod_novel_vs_trained';
 % inclusion_var = 'p_prep_novel_vs_trained';
+% inclusion_var = 'p_prod_novel_vs_trained';
+
 
 % inclusion_var = 'p_prod_syl';
 % inclusion_var = 'p_prep_syl';
@@ -99,7 +104,6 @@ switch inclusion_mode
         rows_to_plot = rows_ranked( 1:round(p_proportion * n_elc) ); 
 end
 
-rows_to_plot & any(strcmp(resp.type,elc_types_to_plot), 2);
 
 % plotcolor = 'b';
 plotcolor = 'r';
@@ -124,6 +128,10 @@ patch('vertices', average_mni.Vertices, 'faces', average_mni.Faces,...
 'facelighting', 'gouraud', 'specularstrength', 0, 'ambientstrength', 0.5, 'diffusestrength', 0.5)
 hold on
 
+
+
+
+rows_to_plot & any(strcmp(resp.type,elc_types_to_plot), 2);
 
 
 
