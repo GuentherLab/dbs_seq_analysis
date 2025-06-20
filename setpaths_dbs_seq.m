@@ -9,7 +9,7 @@
      PATH_DBSSEQ_CODE = 'C:\Users\amsmeier\dbs_seq_analysis'; 
      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
      PATH_LEADDBS = 'C:\Program Files\LeadDBS';
- elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with files local on AM computers 
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with files local on AM computers 
      PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
      PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
@@ -31,7 +31,7 @@
      PATH_AVERAGE_MNI = 'Z:/DBS/DBS_subject_lists/MNI_ICBM_2009b_NLIN_ASYM/cortex/CortexLowRes_15000V.mat';
      PATH_SUBCORT_ATLAS_VIM = 'C:\Program Files\LeadDBS_Classic\leaddbs\templates\space\MNI_ICBM_2009b_NLIN_ASYM\atlases\DISTAL (Ewert 2017)/atlas_index.mat';
      PATH_STN_ATLAS = 'Z:\Resources\STN-Atlas\atlas_index.mat';
- elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010'})) % if working with local data - not stored on server
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with local data - not stored on server
      PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
      PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
@@ -39,7 +39,7 @@
      PATH_STN_ATLAS = [PATH_RESULTS filesep 'atlases' filesep 'atlas_index_subcort_Ewert_v2.1.7.mat']; 
      
  else 
-     error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
+     error('computer name not recognized; please add computer to setpaths_dbs_seq.m')
  end
 
 
