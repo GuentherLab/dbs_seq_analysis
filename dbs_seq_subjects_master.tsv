@@ -1,0 +1,19 @@
+analyze	sub	Gpi_L	age	sex	diagnosis	handedness	hearing L	hearing R
+1	DM1005	VIM_L	16	female	Dys	Right	8	7
+1	DM1007	GPi_LR	63	female	ET	Right	7	7
+1	DM1008	Gpi_RL	61	female	Dys	Left	8	8
+0	DM1013		52	male	PD	Right		
+0	pilot08	VIM_L	62	female	[muscular dystrophy]			
+1	DM1024	VIM_L	70	female	ET	Right	1*	0*
+1	DM1025		77	male	ET	Right		
+0	DM1033	STN_L	62	male	PD	Right	2	5
+1	DM1037		69	male	PD	Right	4	4
+0	DM1043	STN						
+1	DM1044	STN	53	male	PD	Right		
+1	DM1045		67	male	PD	Right		
+1	DM1046							
+1	DM1047							
+1	DM1048	VIM						
+1	DM1049			f	ET			
+1	DM1050							
+1	DM1051							

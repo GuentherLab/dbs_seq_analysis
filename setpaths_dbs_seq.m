@@ -47,6 +47,7 @@
  % common paths
   PATH_DER = [PATH_DATA filesep 'derivatives'];
  PATH_SRC = [PATH_DATA filesep 'sourcedata'];
+ PATH_SUB_MASTER_TABLE = [PATH_DBSSEQ_CODE filesep 'dbs_seq_subjects_master.tsv']; 
  
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
@@ -61,6 +62,7 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_BML;... % Brain Modulation Lab repo
                 PATH_FIELDTRIP_CODE;...
                 PATH_LEADDBS;...
+                PATH_SUB_MASTER_TABLE; ...
     };
 addpath(paths_to_add{:});
 
@@ -71,7 +73,7 @@ addpath(fileparts(which('anova1'))); % make sure Matlab stats toolbox is on top,
 
 set(0, 'DefaultTextInterpreter', 'none')
 set(0, 'DefaultLegendInterpreter', 'none')
-% set(0, 'DefaultAxesTickLabelInterpreter', 'none')
+set(0, 'DefaultAxesTickLabelInterpreter', 'none')
 
 format long
 
