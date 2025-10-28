@@ -29,13 +29,12 @@
 clearinfo
 
 # ---------- GUI ----------
-form Select subject, file type, tiers, and directory
+form Select subject, file type, and tiers
     sentence subName 1047
     integer starting_file_index 1
     sentence file_name_or_initial_substring trial
     sentence file_extension wav
     sentence tiers SpeechEpoch Comments UnusableTrial DifficultToScore
-    sentence data_directory
 endform
 
 # ---------- Normalize inputs ----------
@@ -49,51 +48,14 @@ endif
 # Replace any non-breaking spaces etc. in tiers string
 tiers$ = replace_regex$(tiers$, "[ \t]+", " ", 0)
 
-# ---------- Resolve working directory (paste or picker) ----------
-wd$ = data_directory$
-
-# Expand ~ to HOME on macOS/Linux
-if wd$ <> "" and left$(wd$,1) = "~"
-    home$ = environment$ ("HOME")
-    if length (wd$) = 1
-        wd$ = home$
-    elsif mid$(wd$,2,1) = "/"
-        wd$ = home$ + mid$(wd$,3)
-    endif
-endif
-
-# If empty or invalid, open a folder picker (also grants macOS permissions)
-if wd$ = ""
-    wd$ = chooseDirectory$: "Select the folder containing your sound files"
-endif
-
-# Normalize trailing slash
-if wd$ <> "" and right$(wd$,1) <> "/"
-    wd$ = wd$ + "/"
-endif
-
-# Validate the directory by attempting to list any files
+# ---------- Choose folder (grants macOS permissions) ----------
+wd$ = chooseDirectory$: "Select the folder containing your sound files"
 if wd$ = ""
     exitScript: "No folder selected."
 endif
-
-testList = Create Strings as file list: "dirSmokeTest", wd$ + "*"
-select Strings dirSmokeTest
-nStrings = Get number of strings
-if nStrings = 0
-    Remove
-    wd2$ = chooseDirectory$: "Folder seemed empty or unreadable. Pick a folder?"
-    if wd2$ = ""
-        exitScript: "No usable folder."
-    endif
-    if right$(wd2$,1) <> "/"
-        wd2$ = wd2$ + "/"
-    endif
-    wd$ = wd2$
-else
-    Remove
+if right$(wd$, 1) <> "/"
+    wd$ = wd$ + "/"
 endif
-
 
 # ---------- Build file list ----------
 pattern$ = wd$ + file_name_or_initial_substring$ + "*." + file_extension$
