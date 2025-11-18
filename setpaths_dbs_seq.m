@@ -10,6 +10,8 @@
      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
      PATH_LEADDBS = 'C:\Program Files\LeadDBS';
      PATH_SPM = ''; 
+     PATH_ECOG_LOCALIZATION = 'C:\Program Files\Brain-Modulation-Lab\ECoG_localization'; % scripts for registering ecog to DBS... probably Turbo only
+
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with files local on AM computers 
      PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
      PATH_BML = [PATH_CODE filesep 'bml']; 
@@ -19,6 +21,8 @@
      PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_LEADDBS = [PATH_CODE filesep ]; % ? have a copy on local computer ? 
      PATH_SPM = [PATH_CODE, filesep, 'spm12']; 
+     PATH_ECOG_LOCALIZATION = ''; % scripts for registering ecog to DBS... probably Turbo only
+
   else 
      error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
  end
@@ -65,6 +69,7 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_FIELDTRIP_CODE;...
                 PATH_SPM;... 
                 PATH_LEADDBS;...
+                PATH_ECOG_LOCALIZATION;... 
                 PATH_SUB_MASTER_TABLE; ...
     };
 addpath(paths_to_add{:});
