@@ -4,16 +4,17 @@
 %% params
 
 % rowlist = 1; 
-% rowlist = 1:6;
+rowlist = 1:6;
 % rowlist = 7:12; 
 % rowlist = 13:18; 
-rowlist = 19:24; 
+% rowlist = 19:24; 
 % rowlist = 25:30; 
 % rowlist = 31:36; 
 % rowlist = 22:25;
 % rowlist = [2 3 4 6 7 8];
 % rowlist = [9 10 12 17 21 22];
 % rowlist = [1 7 13 19 25 31];
+% rowlist = [ 1 2 3 4 5 8]; 
 
 % rowlist = [91:96]; 
 
@@ -45,8 +46,8 @@ plot_brains_on_row2 = 0;
 plot_go_trials_only = 1; % exclude STOP trials from plotting
 
 % sort_cond = []; % plot all trials averaged as a single timecourse without sorting
-%     sort_cond = 'learn_con';
-    sort_cond = 'is_nat';
+    sort_cond = 'learn_con';
+%     sort_cond = 'is_nat';
 %     sort_cond = 'word';
     % sort_cond = 'vow';
 %     sort_cond = 'word_accuracy';
@@ -69,7 +70,7 @@ hfig = figure('WindowState','maximized');
 
 if ~plot_brains_on_row2
     for ielc = 1:nelcs
-        srtrow = rowlist(ielc) 
+        srt_row = rowlist(ielc) 
         subplot(nplotrows,nelcs/nplotrows,ielc);
 
         plot_resp_timecourse_seq
@@ -87,7 +88,7 @@ elseif plot_brains_on_row2
     for ielc = 1:nelcs
         thisrow = rowlist(ielc);
         subplot(2,nelcs,ielc)
-        srtrow = thisrow;
+        srt_row = thisrow;
         plot_resp_timecourse_seq
     
         if ~isempty(ylimits)
