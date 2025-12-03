@@ -58,3 +58,6 @@ hxline = xline(0);
 within = table([1 2 3]', 'VariableNames', {'learncon'});
 rm = fitrm(subs, 'acc_novel,acc_learned,acc_native ~ 1', 'WithinDesign', within);
 ranovatbl = ranova(rm, 'WithinModel', 'learncon')
+
+save(['Y:\DBS\groupanalyses\task-smsl\group_acc_20250728\group_acc_20250728'])
+avefig(['Y:\DBS\groupanalyses\task-smsl\group_acc_20250728\group_acc_20250728.fig'])
