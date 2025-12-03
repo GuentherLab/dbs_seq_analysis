@@ -71,8 +71,8 @@ analyze_responsive_elcs_only = 0;
 % param = 'p_prod';
 % param = 'p_stim';
 
-% param = 'p_prep_learn';
-param = 'p_prod_learn';
+param = 'p_prep_learn';
+% param = 'p_prod_learn';
 
 % param = 'p_prep_nn_v_nat';
 % param = 'p_prod_nn_v_nat';

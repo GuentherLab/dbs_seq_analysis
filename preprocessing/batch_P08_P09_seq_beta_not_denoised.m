@@ -6,8 +6,9 @@ clear
 % op.art_crit = 'E'; op.resp_signal = 'hg'; 
 op.art_crit = 'F'; op.resp_signal = 'beta'; 
 
-% op.rereference_method = 'none';
-op.rereference_method = 'CTAR';
+% op.rereference_method = 'none'; % monopolar.... for subcortical/DBS
+% op.rereference_method = 'CTAR'; % common trimmed averaged
+op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
 
 op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before visual onset; gets unsed in redfine_trial
 

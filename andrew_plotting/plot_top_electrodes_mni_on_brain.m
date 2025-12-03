@@ -55,13 +55,13 @@ color_pd_gpi = '#F9BD00';% #PD GPi
 color_et_vim = '#36A5D1';% #ET VIM
 color_ep_cm = '#9EB859';% #EP CM
 
-%  struct_to_plot = 'ctx';
+ struct_to_plot = 'ctx';
     snap_to_surf = 1; % cortex only - if true, project eletrodes to nearest point on ctx surface
     % shift electrodes so that they aren't covered by the brain surface
     %%% gets applied after snapping to surface
     %%% .... if snapping, offset of -1 should be enough to have points entirely above ctx surface (in L hem)
     x_offset = -1;
-struct_to_plot = 'stn';
+% struct_to_plot = 'stn';
 % struct_to_plot = 'thal';
 
 %%% pick hemisphere to plot - subcortical only
@@ -84,7 +84,7 @@ inclusion_mode = 'thresh';
 % inclusion_var = 'p_prep';
 % inclusion_var = 'p_prod';
 
-% inclusion_var = 'p_prep_learn';
+inclusion_var = 'p_prep_learn';
 % inclusion_var = 'p_prod_learn';
 
 
@@ -95,7 +95,7 @@ inclusion_mode = 'thresh';
 % inclusion_var = 'p_prep_novel_vs_nat'; 
 % inclusion_var = 'p_prod_novel_vs_nat'; 
 
-inclusion_var = 'p_prep_novel_vs_trained';
+% inclusion_var = 'p_prep_novel_vs_trained';
 % inclusion_var = 'p_prod_novel_vs_trained';
 
 
