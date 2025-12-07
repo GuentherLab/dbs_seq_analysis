@@ -15,6 +15,8 @@ rowlist = 1:6;
 % rowlist = [9 10 12 17 21 22];
 % rowlist = [1 7 13 19 25 31];
 % rowlist = [ 1 2 3 4 5 8]; 
+% rowlist = [837:845];
+rowlist = [847:852];
 
 % rowlist = [91:96]; 
 

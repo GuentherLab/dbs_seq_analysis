@@ -44,18 +44,18 @@ time_align_var = 't_prod_on'; % speech onset
 
 %%
 
-subind = string(subs.subject) == srt.sub(srtrow);
+subind = string(subs.subject) == srt.sub(srt_row);
 trials_tmp = subs.trials{subind}; % temporary copy of trials table
 trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
-channame = srt.chan{srtrow}; 
-% srtrow = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
+channame = srt.chan{srt_row}; 
+% srt_row = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
-    timecourses_unaligned = srt.timecourse{srtrow}(go_trial_inds); 
+    timecourses_unaligned = srt.timecourse{srt_row}(go_trial_inds); 
 elseif ~plot_go_trials_only % include both stop and go trials
-    timecourses_unaligned = srt.timecourse{srtrow};
+    timecourses_unaligned = srt.timecourse{srt_row};
 end
 
 trials_tmp.is_nat = cell(height(trials_tmp),1);
@@ -83,10 +83,10 @@ trials_tmp.t_prod_on_adj = trials_tmp.t_prod_on - trials_tmp.t_prod_on(:,1) ;
 trials_tmp.t_prod_off_adj = trials_tmp.t_prod_off - trials_tmp.t_prod_on(:,1) ; 
 
 
-    if string(srt.type{srtrow})=="ECOG"
-        htitle = title([thissub, '_', srt.chan{srtrow}, '_area-', srt.HCPMMP1_label_1{srtrow}], 'Interpreter','none');
+    if string(srt.type{srt_row})=="ECOG"
+        htitle = title([thissub, '_', srt.chan{srt_row}, '_area-', srt.HCPMMP1_label_1{srt_row}], 'Interpreter','none');
     else
-        htitle = title([thissub, '_', srt.chan{srtrow}, '_area-', srt.DISTAL_label_1{srtrow}], 'Interpreter','none');
+        htitle = title([thissub, '_', srt.chan{srt_row}, '_area-', srt.DISTAL_label_1{srt_row}], 'Interpreter','none');
     end
 
     % stim syllable onsets
