@@ -13,8 +13,8 @@ rereference_method = 'none';
 % rereference_method = 'CTAR';
 % rereference_method = 'CMR';
 
-subnums = [1005, 1007, 1008, 1024, 1025, 1037];
-%     sublist = [1037]; 
+% subnums = [1005, 1007, 1008, 1024, 1025, 1037];
+    subnums = [1037]; 
 
 compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects_', resp_signal, '_ref-',rereference_method]; 
 
