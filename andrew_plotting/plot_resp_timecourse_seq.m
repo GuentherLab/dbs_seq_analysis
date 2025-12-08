@@ -8,7 +8,7 @@
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
 
-
+vardefault('sort_cond',[])
 %     sort_cond = 'learn_con';
     % sort_cond = 'is_nat';
 %     sort_cond = 'word';
@@ -17,6 +17,13 @@ condval_inds_to_plot = []; % plot all vals
 %     sort_cond = 'seq_accuracy';
 
 plot_go_trials_only = 1; % exclude STOP trials from plotting
+
+vardefault('newfig',1);
+vardefault('smooth_timecourses', 1);
+vardefault('smooth_method','gaussian');
+vardefault('smooth_windowsize',10);
+vardefault('ylimits', []); % use defaults
+vardefault('xlimits',[-2.2 0.5]);
 
 xline_color_stim_syl_on = [0.6 0.4 0.1];
 xline_color_stim_gobeep_on = [0.0 1 0.0];
