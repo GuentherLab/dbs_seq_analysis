@@ -18,7 +18,6 @@
      PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
      PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis'];; 
      PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; % previously tried using remote Y drive version, but often causes matlab to freeze
-     PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_LEADDBS = [PATH_CODE filesep ]; % ? have a copy on local computer ? 
      PATH_SPM = [PATH_CODE, filesep, 'spm12']; 
      PATH_ECOG_LOCALIZATION = ''; % scripts for registering ecog to DBS... probably Turbo only
@@ -70,7 +69,6 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_SPM;... 
                 PATH_LEADDBS;...
                 PATH_ECOG_LOCALIZATION;... 
-                PATH_SUB_MASTER_TABLE; ...
     };
 addpath(paths_to_add{:});
 
