@@ -4,7 +4,8 @@ clear
 setpaths_dbs_seq()
 
 % params
-subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
+% subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
+subject_list_filename = [PATH_DBSSEQ_CODE, filesep, 'dbs_seq_subjects_master.tsv']; 
 
 % resp_signal = 'hg'; ARTIFACT_CRIT = 'E'; 
 resp_signal = 'beta'; ARTIFACT_CRIT = 'F'; 
@@ -13,8 +14,8 @@ rereference_method = 'none';
 % rereference_method = 'CTAR';
 % rereference_method = 'CMR';
 
-% subnums = [1005, 1007, 1008, 1024, 1025, 1037];
-    subnums = [1037]; 
+subnums = [1005, 1007, 1008, 1024, 1025, 1037];
+%     subnums = [1044, 1048]; 
 
 compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects_', resp_signal, '_ref-',rereference_method]; 
 
@@ -28,9 +29,9 @@ nsubs = height(subs);
 %% run response type analysis on each subject individually
 for isub = 1:nsubs
     clearvars -except subs compiled_responses_filepath nsubs isub resp_signal rereference_method ARTIFACT_CRIT
-    SUBJECT = subs.subject{isub}
+    op.sub = subs.subject{isub}
     response_types_seq()
-    savefile = [PATH_RESULTS, filesep, SUBJECT '_responses_' resp_signal, '_ref-',rereference_method];
+    savefile = [PATH_RESULTS, filesep, op.sub '_responses_' resp_signal, '_ref-',rereference_method];
     save(savefile, 'trials','resp')
 end
 cd(PATH_RESULTS)
@@ -40,8 +41,8 @@ setpaths_dbs_seq()
 fprintf(['Compiling response tables in %s \n'], compiled_responses_filepath);
 resp_temp = table; 
 for isub = 1:nsubs
-    SUBJECT = subs.subject{isub};
-    load([PATH_RESULTS, filesep, SUBJECT, '_responses_', resp_signal, '_ref-',rereference_method],'resp','trials')
+    op.sub = subs.subject{isub};
+    load([PATH_RESULTS, filesep, op.sub, '_responses_', resp_signal, '_ref-',rereference_method],'resp','trials')
     resp_temp = [resp_temp; resp];
     subs.trials{isub} = trials; 
 end

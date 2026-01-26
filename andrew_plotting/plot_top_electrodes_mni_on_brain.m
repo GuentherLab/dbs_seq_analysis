@@ -84,7 +84,7 @@ inclusion_mode = 'thresh';
 % inclusion_var = 'p_prep';
 % inclusion_var = 'p_prod';
 
-inclusion_var = 'p_prep_learn';
+% inclusion_var = 'p_prep_learn';
 % inclusion_var = 'p_prod_learn';
 
 
@@ -92,7 +92,7 @@ inclusion_var = 'p_prep_learn';
 % inclusion_var = 'p_prod_nn_v_nat';
 
 
-% inclusion_var = 'p_prep_novel_vs_nat'; 
+inclusion_var = 'p_prep_novel_vs_nat'; 
 % inclusion_var = 'p_prod_novel_vs_nat'; 
 
 % inclusion_var = 'p_prep_novel_vs_trained';

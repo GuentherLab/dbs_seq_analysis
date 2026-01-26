@@ -6,7 +6,9 @@
 op.art_crit = 'E'; op.resp_signal = 'hg'; 
 
 % op.rereference_method = 'none';
-op.rereference_method = 'CTAR';
+% op.rereference_method = 'CTAR';
+op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
+
 
 op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before visual onset; gets unsed in redfine_trial
 
@@ -20,6 +22,7 @@ sublist ={...
 %      'DM1025';...
 %      'DM1037';...
      'DM1044';...
+%      'DM1048';...
      };
 
 addpath('C:\Users\amsmeier\ieeg_ft_funcs_am')

@@ -50,12 +50,16 @@ trial_time_adj_method = 'median_plus_sd'; % median plus stdev
 time_align_var = 't_prod_on'; % speech onset
 
 %%
-
-subind = string(subs.subject) == srt.sub(srt_row);
-trials_tmp = subs.trials{subind}; % temporary copy of trials table
+if exist('subs','var')
+    subind = string(subs.subject) == srt.sub(srt_row);
+    trials_tmp = subs.trials{subind}; % temporary copy of trials table
+else % if full subtable not available, try using trials table that has already been loaded
+    trials_tmp = trials; 
+end
 trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
 channame = srt.chan{srt_row}; 
+thissub = srt.sub{srt_row}; 
 % srt_row = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;

@@ -16,7 +16,7 @@ rowlist = 1:6;
 % rowlist = [1 7 13 19 25 31];
 % rowlist = [ 1 2 3 4 5 8]; 
 % rowlist = [837:845];
-rowlist = [847:852];
+% rowlist = [847:852];
 
 % rowlist = [91:96]; 
 
@@ -60,7 +60,7 @@ newfig = 0;
 smooth_timecourses = 1; 
     % smooth_method = 'movmean';
     smooth_method = 'gaussian';
-    smooth_windowsize = 10; 
+    smooth_windowsize = 30; 
 
 plotops.linewidth = 1; 
 

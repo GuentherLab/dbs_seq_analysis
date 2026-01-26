@@ -19,7 +19,7 @@ responsivity_alpha = 0.05; % consider electrodes responsive if they have above-b
 
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
-vardefault('SUBJECT','DM1007');
+field_default('op','sub','DM1007');
 vardefault('resp_signal','hg'); 
 vardefault('ARTIFACT_CRIT','E'); 
 vardefault('rereference_method','CTAR');
@@ -28,7 +28,7 @@ TASK = 'smsl';
 
 %%% CRITERIA E parameter valus
 PATH_DER = [PATH_DATA filesep 'derivatives'];
-PATH_DER_SUB = [PATH_DER filesep 'sub-' SUBJECT];  
+PATH_DER_SUB = [PATH_DER filesep 'sub-' op.sub];  
 PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
 PATH_ANNOT = [PATH_DER_SUB filesep 'annot'];
 PATH_FIELDTRIP = [PATH_DER_SUB filesep 'fieldtrip'];
@@ -40,7 +40,7 @@ PATH_TRIAL_AUDIO_INTRAOP_GO = [PATH_TRIAL_AUDIO filesep 'ses-', SESSION, '_go-tr
 PATH_TRIAL_AUDIO_INTRAOP_STOP = [PATH_TRIAL_AUDIO filesep 'ses-', SESSION, '_stop-trials']; 
 
 PATH_SRC = [PATH_DATA filesep 'sourcedata'];
-PATH_SRC_SUB = [PATH_SRC filesep 'sub-' SUBJECT];  
+PATH_SRC_SUB = [PATH_SRC filesep 'sub-' op.sub];  
 PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION]; 
 PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
 PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
@@ -57,15 +57,41 @@ elseif ~use_vibration_denoised_data
 end
 
 if ~exist('D_wavpow','var') % if fieldtrip object not yet loaded
-    load([PATH_FIELDTRIP, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial_ar-',ARTIFACT_CRIT, '_ref-',rereference_method, denoise_str, '.mat'])
+    load([PATH_FIELDTRIP, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial_ar-',ARTIFACT_CRIT, '_ref-',rereference_method, denoise_str, '.mat'])
 %     D_wavpow = D_hg; % comment in for highgamma.... temporary fix
 end
 
 % % trial timing and electrode info
-trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' SUBJECT, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables.tsv']);
-trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', SUBJECT, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
-elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' SUBJECT '_electrodes.tsv';]); 
+trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' op.sub, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables.tsv']);
+trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
+
+electrodes_table_filename = [PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv'];
+
+if exist(electrodes_table_filename, 'file')
+    elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
+        elc_info = renamevars(elc_info,'name','chan');
+else
+    channels = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_ses-' SESSION '_channels.tsv']); %%%% for connector info
+        channels.name = strrep(channels.name,'_Ll','_Lm'); % change name to match naming convention in electrodes table
+    channels(channels.connector==0,:) = []; % channels with this connector label seem to be duplicates or unused
+    elc_info = channels; 
     elc_info = renamevars(elc_info,'name','chan');
+
+    % fill in blank info for localization variables if electrodes table is not available
+    nancol = nan(height(elc_info),1); 
+    celcol = cell(height(elc_info),1); 
+    elc_info_blank = table(...
+        nancol, nancol, nancol, ...
+        nancol, nancol, nancol, ...
+        celcol, nancol, celcol, nancol, celcol, nancol, ...
+        celcol, nancol,celcol, nancol, ...
+        'VariableNames',...
+        {'native_x','native_y','native_z',...
+        'mni_x','mni_y','mni_z',...
+	    'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
+        'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'}); 
+    elc_info = [elc_info, elc_info_blank];
+end
 
 %% get responses in predefined epochs
 % 'base' = average durng pre-stim baseline
@@ -225,6 +251,6 @@ info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
 	'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
 resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
-resp.sub = cellstr(repmat(SUBJECT, nchans, 1));
+resp.sub = cellstr(repmat(op.sub, nchans, 1));
 resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
