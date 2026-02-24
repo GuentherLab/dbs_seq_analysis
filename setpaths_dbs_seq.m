@@ -8,8 +8,8 @@
      PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
      PATH_DBSSEQ_CODE = 'C:\Users\amsmeier\dbs_seq_analysis'; 
      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
-     PATH_LEADDBS = 'C:\Program Files\LeadDBS';
-     PATH_SPM = ''; 
+     PATH_LEADDBS = 'C:\Program Files\LeadDBS_Classic'; % classic, not updated version, is used for preprocessing
+     PATH_SPM = 'C:\Program Files\SPM\spm12'; 
      PATH_ECOG_LOCALIZATION = 'C:\Program Files\Brain-Modulation-Lab\ECoG_localization'; % scripts for registering ecog to DBS... probably Turbo only
 
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with files local on AM computers 
