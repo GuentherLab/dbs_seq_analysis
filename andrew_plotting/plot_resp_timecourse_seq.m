@@ -8,7 +8,7 @@
 condval_inds_to_plot = []; % plot all vals
 % condval_inds_to_plot = [1:6];
 
-vardefault('sort_cond',[])
+vardefault('sort_cond',[]);
 %     sort_cond = 'learn_con';
     % sort_cond = 'is_nat';
 %     sort_cond = 'word';
@@ -23,15 +23,23 @@ vardefault('smooth_timecourses', 1);
 vardefault('smooth_method','gaussian');
 vardefault('smooth_windowsize',10);
 vardefault('ylimits', []); % use defaults
-vardefault('xlimits',[-2.2 0.5]);
+vardefault('xlimits',[]);
 
-xline_color_stim_syl_on = [0.6 0.4 0.1];
-xline_color_stim_gobeep_on = [0.0 1 0.0];
-xline_color_stim_gobeep_off = [0.0 1 0.0];
-xline_color_prod_on = [0.5 0.5 0.5];
-xline_color_prod_off = [0.5 0.5 0.5];
-xline_style = '--';
-xline_width = 0.25; 
+%%%%% trial table varname for times used for time-locking responses
+vardefault('time_align_var','t_prod_on'); % default to speech onset
+
+%%%% trial times to plot 
+% the fixed timepoint will be exact (x=0); for other times, we take the avg relative to the fixed point
+    % trial-table-varname, line color, text label, L/R side
+times_to_plot = {...    
+    't_vis_syl_on', [0 0 1],        {'vis','on'},       'L';... 
+    't_aud_syl_on', [0.6 0.4 0.1],  {'aud','on'},       'L';...
+    't_aud_syl_off',[0.6 0.4 0.1],  {'aud','off'},      'R';...
+    't_aud_go_on',  [0 1 0],        {'GO','beep'}       'L';...
+    't_prod_on',    [0.5 0.5 0.5],  {'speech','start'}, 'L';...
+    't_prod_off',   [0.5 0.5 0.5],  {'speech','end'},    'R';...
+    };
+
 
 %%%%% method for finding time landmarks from trial times
 xline_fn = @mean; 
@@ -46,10 +54,11 @@ trial_time_adj_method = 'median_plus_sd'; % median plus stdev
 % trial_time_adj_method = 'median';
 % trial_time_adj_method = 'max';
 
-%%%%% trial table varname for times used for time-locking responses
-time_align_var = 't_prod_on'; % speech onset
 
+%%%%%% end params
 %%
+times_to_plot = table(times_to_plot(:,1), times_to_plot(:,2), times_to_plot(:,3), times_to_plot(:,4), 'VariableNames', {'varname','color','plot_label','line_side'}); 
+
 if exist('subs','var')
     subind = string(subs.subject) == srt.sub(srt_row);
     trials_tmp = subs.trials{subind}; % temporary copy of trials table
@@ -59,8 +68,8 @@ end
 trials_tmp.align_time = trials_tmp{:,time_align_var}; 
 
 channame = srt.chan{srt_row}; 
-thissub = srt.sub{srt_row}; 
-% srt_row = strcmp(srt.chan,channame) & strcmp(srt.sub,thissub);
+op.sub = srt.sub{srt_row}; 
+% srt_row = strcmp(srt.chan,channame) & strcmp(srt.sub,op.sub);
 if plot_go_trials_only % exclude stop trials
     go_trial_inds = ~trials_tmp.is_stoptrial;
     trials_tmp = trials_tmp(go_trial_inds,:);
@@ -85,34 +94,13 @@ end
 
 %%
 
-% times relative to produced syllable 
-trials_tmp.stim_syl_on_adj = trials_tmp.t_stim_syl_on - trials_tmp.t_prod_on ; 
-trials_tmp.stim_syl_off_adj = trials_tmp.t_stim_syl_off - trials_tmp.t_prod_on ; 
-trials_tmp.stim_gobeep_on_adj = trials_tmp.t_stim_gobeep_on - trials_tmp.t_prod_on ; 
-trials_tmp.stim_gobeep_off_adj = trials_tmp.t_stim_gobeep_off - trials_tmp.t_prod_on ; 
-trials_tmp.t_prod_on_adj = trials_tmp.t_prod_on - trials_tmp.t_prod_on(:,1) ; 
-trials_tmp.t_prod_off_adj = trials_tmp.t_prod_off - trials_tmp.t_prod_on(:,1) ; 
-
-
     if string(srt.type{srt_row})=="ECOG"
-        htitle = title([thissub, '_', srt.chan{srt_row}, '_area-', srt.HCPMMP1_label_1{srt_row}], 'Interpreter','none');
+        htitle = title([op.sub, '_', srt.chan{srt_row}, '_area-', srt.HCPMMP1_label_1{srt_row}], 'Interpreter','none');
     else
-        htitle = title([thissub, '_', srt.chan{srt_row}, '_area-', srt.DISTAL_label_1{srt_row}], 'Interpreter','none');
+        htitle = title([op.sub, '_', srt.chan{srt_row}, '_area-', srt.DISTAL_label_1{srt_row}], 'Interpreter','none');
     end
 
-    % stim syllable onsets
-    h_stim_syl_on = xline(xline_fn(trials_tmp.stim_syl_on_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_syl_on, 'LineStyle',xline_style);
 
-
-%     stim offset
-    h_stim_gobeep_off = xline(mean(trials_tmp.stim_gobeep_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_stim_gobeep_off, 'LineStyle',xline_style);
-
-   
-% % %     % produced syllable onset
-    h_t_prod_on = xline(0, 'LineWidth',xline_width, 'Color',xline_color_prod_on, 'LineStyle',xline_style); 
-
-   % % %     % produced syllable offset 
-    h_stim_prod_off = xline(mean(trials_tmp.t_prod_off_adj,'omitnan'), 'LineWidth',xline_width, 'Color',xline_color_prod_off, 'LineStyle',xline_style);
 
 
  

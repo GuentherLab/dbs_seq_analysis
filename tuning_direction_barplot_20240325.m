@@ -1,4 +1,7 @@
+% plot proportion of signs (1 or -1) of response diff between trial conditions across areas
+%%% general motivation: do speech related areas show greater response on less well-learned conditions?
 
+close all
 
 
 % param = 'p_min_stim_prep_prod'; % general task responsivity
@@ -46,32 +49,41 @@ alpha = 0.05;
 
 analyze_responsive_elcs_only = 1;
 
-region_selected = 'IFG-IFS'; 
 
 show_barplot = 0; 
 
 paramvals = resp{:,param};
 param_name = param; 
 full_param_string = param; 
+
 compare_areal_tuning()
+    hfig = figure('Color','w'); box off
+
 
 %%
-resp_slct = resp_temp(strcmp(resp_temp.region, region_selected),:);
+for iregion = 1:size(regiondef,1)
+    region_selected = regiondef{iregion,1};
 
-means_to_plot = [mean(resp_slct.sign_prep_nn_minus_nat), mean(resp_slct.sign_prod_nn_minus_nat)]; 
-erbar = [std(resp_slct.sign_prep_nn_minus_nat), std(resp_slct.sign_prod_nn_minus_nat)] ./ sqrt(height(resp_slct)); 
+    subplot(3,4,iregion)
 
-hfig = figure('Color','w'); box off
-hbar = bar(means_to_plot); 
-hold on
-hax = gca; 
-hax.XTickLabel = {'prep';'prod'};
-h_ebar = errorbar(means_to_plot, erbar); 
-    h_ebar.LineWidth = 0.8;
-    h_ebar.LineStyle = 'none';
-    h_ebar.Color = [0 0 0];
-
-ylabel({'mean sign of HG response', '(nonnative vs. native)'})
+    resp_slct = resp_temp(strcmp(resp_temp.region, region_selected),:);
+    
+    means_to_plot = [mean(resp_slct.sign_prep_nn_minus_nat), mean(resp_slct.sign_prod_nn_minus_nat)]; 
+    erbar = [std(resp_slct.sign_prep_nn_minus_nat), std(resp_slct.sign_prod_nn_minus_nat)] ./ sqrt(height(resp_slct)); 
+    
+    hbar = bar(means_to_plot); 
+    hold on
+    hax = gca; 
+    hax.XTickLabel = {'prep';'prod'};
+    h_ebar = errorbar(means_to_plot, erbar); 
+        h_ebar.LineWidth = 0.8;
+        h_ebar.LineStyle = 'none';
+        h_ebar.Color = [0 0 0];
+    
+    ylabel({'mean sign of response', '(nonnative minus native)'})
+    
+    title(region_selected)
+end
 
 
 

@@ -64,7 +64,7 @@ regiondef = {   'SMC',  {'1','2','3a','3b','4','6v','6d','43','55b','PEF','FEF',
                 'GP', {'GPe_L','GPe_R','GPi_postparietal_R','GPi_premotor_R','GPi_sensorimotor_L','GPi_sensorimotor_L'};... % 
                 };
 
-analyze_responsive_elcs_only = 0;
+analyze_responsive_elcs_only = 1;
 
 % param = 'p_min_stim_prep_prod'; % general task responsivity
 % param = 'p_prep';
@@ -77,10 +77,10 @@ analyze_responsive_elcs_only = 0;
 % param = 'p_prep_nn_v_nat';
 % param = 'p_prod_nn_v_nat';
 
-% param = 'p_prep_novel_vs_trained';
+param = 'p_prep_novel_vs_trained';
 % param = 'p_prod_novel_vs_trained';
 
-param = 'p_prep_novel_vs_nat';
+% param = 'p_prep_novel_vs_nat';
 % param = 'p_prod_novel_vs_nat';
 
 % param = 'p_stim_syl';

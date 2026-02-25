@@ -36,8 +36,8 @@ rowlist = 1:6;
 ylimits = []; % use defaults
 % ylimits = [-1 2]; 
 
-% xlimits = []; % use defaults
-xlimits = [-2.2 0.5]; 
+xlimits = []; % use defaults
+% xlimits = [-2.2 0.5]; 
 
 
 nplotrows = 3; 
@@ -54,6 +54,10 @@ plot_go_trials_only = 1; % exclude STOP trials from plotting
     % sort_cond = 'vow';
 %     sort_cond = 'word_accuracy';
 %     sort_cond = 'seq_accuracy';
+
+%%%%% trial table varname for times used for time-locking responses
+time_align_var = 't_prod_on'; % speech onset
+% time_align_var = 't_vis_syl_on'; % audio stim cue on
 
 newfig = 0;
 

@@ -1,19 +1,17 @@
-analyze	subject_id	dbs target	age	sex	diagnosis	handedness	hearing L	hearing R
-1	DM1005	Gpi_L	16	female	Dys	Right	8	7
-1	DM1007	VIM_L	63	female	ET	Right	7	7
-1	DM1008	GPi_LR	61	female	Dys	Left	8	8
-0	DM1013	Gpi_RL	52	male	PD	Right		
-0	pilot08		62	female	[muscular dystrophy]			
-1	DM1024	VIM_L	70	female	ET	Right	1*	0*
-1	DM1025	VIM_L	77	male	ET	Right		
-0	DM1033		62	male	PD	Right	2	5
-1	DM1037	STN_L	69	male	PD	Right	4	4
-0	DM1043							
-1	DM1044	STN	53	male	PD	Right		
-1	DM1045	STN	67	male	PD	Right		
-1	DM1046	STN (but no subctx LFP)						
-1	DM1047	STN						
-1	DM1048	STN						
-1	DM1049	VIM		f	ET			
-1	DM1050	VIM						
-1	DM1051	STN						
+analyze	sub	task_version	diagnosis	ecog_target	dbs_target	notes
+1	DM1005	1	Dys	STG_L, IFG_L	Gpi_L	
+1	DM1007	1	ET	STG_L, IFG_L	VIM_L	
+1	DM1008	1	Dys	STG_L, IFG_L	GPi_LR	
+1	DM1024	4	ET	STG_L, IFG_L	VIM_L	
+1	DM1025	4	ET	STG_L, IFG_L	VIM_L	
+1	DM1037	4	PD	STG_L, IFG_L	STN_L	
+1	DM1044	4	PD		STN	
+1	DM1045	4	PD		STN	
+1	DM1046	4	PD		STN (but no subctx LFP)	
+1	DM1047	4	PD		STN	
+1	DM1048	4	PD	IFG and SMA attempt	STN	
+1	DM1049	4	ET		VIM	
+1	DM1050	4	ET		VIM	
+1	DM1051	4	PD		STN	
+0	DM1052	4	PD		GPi	include once fully processed
+0	DM1054	4NL	PD		GPi	include once fully processed

@@ -30,7 +30,7 @@ subnums = [...
 % % % %     1051;... % finish b06
 % % % %     1052;... % finish b06    
 % % % % %     1054;... % finish b06  
-    ]
+    ];
 
 
 compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects_', resp_signal, '_ref-',rereference_method]; 

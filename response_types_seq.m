@@ -4,8 +4,8 @@
 % clear
 
 %% analysis parameters
-%%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before stim onset
-%%% baseline should end at least a few 100ms before stim onset in order to not include anticipatory activity in baseline
+%%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before visual stim onset.... this comes before aud stim onset in dbsseq
+%%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
 base_win_sec = [1, 0.3]; 
 stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
@@ -94,8 +94,8 @@ else
 end
 
 %% get responses in predefined epochs
-% 'base' = average durng pre-stim baseline
-% all response values except 'base' are baseline-normalized by dividing by that trial's baseline average
+% 'base' = average durng pre-visual-stim baseline
+% all response values except 'base' are baseline-normalized by dividing by that trial's baseline average... 'base' records the absolute value of the baseline
 ntrials = height(trials);
 nchans = length(D_wavpow.label);
 nans_ch = nan(nchans,1); 
@@ -105,11 +105,12 @@ cel_tr = cell(ntrials,1);
 % info about our trial timing analysis window
 trials = renamevars(trials,{'starts','ends','duration'}, {'t_prod_on','t_prod_off','dur_prod'}); % make it clear that these times demarcate speech production window
 trials.id = [];
-trials.t_stim_syl_on = trials_with_stim_timing.audio_onset;
-trials.t_stim_syl_off = trials_with_stim_timing.audio_offset;
-trials.t_stim_gobeep_on = trials_with_stim_timing.audio_go_onset;
-trials.t_stim_gobeep_off = trials_with_stim_timing.audio_go_offset;
-trials.starts = trials.t_stim_syl_on - base_win_sec(1); % trial starts at beginning of baseline window
+trials.t_vis_syl_on = trials_with_stim_timing.visual_onset; 
+trials.t_aud_syl_on = trials_with_stim_timing.audio_onset;
+trials.t_aud_syl_off = trials_with_stim_timing.audio_offset;
+trials.t_aud_go_on = trials_with_stim_timing.audio_go_onset;
+trials.t_aud_go_off = trials_with_stim_timing.audio_go_offset;
+trials.starts = trials.t_vis_syl_on - base_win_sec(1); % trial starts at beginning of baseline window - before vis onset, which comes earlier than audio stim in dbsseeq 
 trials.ends = trials.t_prod_off + trial_end_post_speech_win; % trial ends at fixed time after voice offset
 trials.duration = trials.ends - trials.starts; 
 
@@ -132,9 +133,9 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
     trials.times{itrial} = D_wavpow.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
     % get trial-relative baseline time indices; window time-locked to first stim onset
-    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < [trials.t_stim_syl_on(itrial) - base_win_sec(2)]; 
-    stim_inds = D_wavpow.time{itrial} > trials.t_stim_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_stim_syl_off(itrial) + stim_window_extend_end; 
-    prep_inds = D_wavpow.time{itrial} > trials.t_stim_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; 
+    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < [trials.t_vis_syl_on(itrial) - base_win_sec(2)]; 
+    stim_inds = D_wavpow.time{itrial} > trials.t_vis_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_aud_syl_off(itrial) + stim_window_extend_end; % starts at vis onset, stop before vis offset (at aud offset)
+    prep_inds = D_wavpow.time{itrial} > trials.t_aud_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; % this period includes go beep
     prod_inds = D_wavpow.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{itrial} < trials.t_prod_off(itrial);     
 
     for ichan = 1:nchans
