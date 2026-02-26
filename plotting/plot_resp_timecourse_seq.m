@@ -110,4 +110,5 @@ f=get(gca,'Children');
 
 if ~isempty(sort_cond)
     hleg = legend(flipud(f(end-nvals_to_plot+1:end)),resp_grpd.condval{condval_inds_to_plot});
+    hleg.Position(1) = hleg.Position(1)-0.26; % move to the left
 end

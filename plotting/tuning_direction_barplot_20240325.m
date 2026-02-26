@@ -1,7 +1,7 @@
 % plot proportion of signs (1 or -1) of response diff between trial conditions across areas
 %%% general motivation: do speech related areas show greater response on less well-learned conditions?
 
-close all
+% close all
 
 
 % param = 'p_min_stim_prep_prod'; % general task responsivity
@@ -47,7 +47,7 @@ regiondef = {   'SMC',  {'1','2','3a','3b','4','6v','6d','43','55b','PEF','FEF',
 
 alpha = 0.05; 
 
-analyze_responsive_elcs_only = 1;
+analyze_responsive_elcs_only = 0;
 
 
 show_barplot = 0; 

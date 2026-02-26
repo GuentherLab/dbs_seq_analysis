@@ -56,7 +56,8 @@ plot_go_trials_only = 1; % exclude STOP trials from plotting
 %     sort_cond = 'seq_accuracy';
 
 %%%%% trial table varname for times used for time-locking responses
-time_align_var = 't_prod_on'; % speech onset
+% time_align_var = 't_prod_on'; % speech onset
+time_align_var = 't_aud_go_on'; % go beep
 % time_align_var = 't_vis_syl_on'; % audio stim cue on
 
 newfig = 0;
