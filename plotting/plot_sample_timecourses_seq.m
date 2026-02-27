@@ -1,6 +1,11 @@
 %%%% plot timecourses of example electrodes highly tuned for a given parameter
 % run sort_top_tuned_seq first to create srt table
 
+load('Y:\DBS\groupanalyses\task-smsl\gotrials\resp_all_subjects_hg_ref-CMR.mat')
+sort_top_tuned_seq(); 
+% close all
+clear op
+
 %% params
 
 % rowlist = 1; 
@@ -14,7 +19,7 @@ rowlist = 1:6;
 % rowlist = [2 3 4 6 7 8];
 % rowlist = [9 10 12 17 21 22];
 % rowlist = [1 7 13 19 25 31];
-% rowlist = [ 1 2 3 4 5 8]; 
+% rowlist = [ 1 2 3 4 5 8];  
 % rowlist = [837:845];
 % rowlist = [847:852];
 
@@ -25,89 +30,76 @@ rowlist = 1:6;
 % rowlist = 263:268;
 % rowlist = 269:274;
 
+% rowlist = round(linspace(1,height(srt),6)); % equally spaced elcs from the sorted table
+% rowlist = round(linspace(1000,height(srt),6));
+% rowlist = round(linspace(900,1150,6));
+
+ylimits = []; % use defaults
+% ylimits = [-1 2]; 
+
+% xlimits = []; % use defaults
+xlimits = [-3 1.6]; 
+
+
+nplotrows = 3; 
+
+op.plot_go_trials_only = 1; % exclude STOP trials from plotting
+
+op.sort_cond = []; % plot all trials averaged as a single timecourse without sorting
+%     op.sort_cond = 'learn_con';
+%     op.sort_cond = 'is_nat';
+    op.sort_cond = 'word';
+    % op.sort_cond = 'vow';
+%     op.sort_cond = 'word_accuracy';
+%     op.sort_cond = 'seq_accuracy';
+
+op.condval_inds_to_plot = []; % plot all conditions
+
+%%%%% trial table varname for times used for time-locking responses
+op.time_align_var = 't_prod_on'; % speech onset
+% op.time_align_var = 't_aud_go_on'; % go beep
+% op.time_align_var = 't_vis_syl_on'; % audio stim cue on
+
+
+
+op.smooth_timecourses = 1; 
+    % op.smooth_method = 'movmean';
+    op.smooth_method = 'gaussian';
+    op.smooth_windowsize = 30; 
+
+op.leg_pos_adjust = 0.21; % move legend position to the left this much... 0.21 looks good when using 2 columns
+op.trace_width = 1; 
+op.newfig = 0;
+op.plot_raster = 0; 
+
 %%%%%%%%%% if using the options below, make sure all elcs are from same sub or trial times will be incorrect
  % srt = resp_hg_ctar; subind = 1; channame = srt.chan{rowlist(1)}; thissub = srt.sub{rowlist(1)}; % use this option to plot from the non-sorted resp table
  % srt = resp_hg_noref; subind = 1; channame = srt.chan{rowlist(1)}; thissub = srt.sub{rowlist(1)}; % use this option to plot from the non-sorted resp table
  % srt = resp_beta_noref; subind = 1; channame = srt.chan{rowlist(1)}; thissub = srt.sub{rowlist(1)}; % use this option to plot from the non-sorted resp table
 
-
-% % % y_axmax = 1; 
-
-ylimits = []; % use defaults
-% ylimits = [-1 2]; 
-
-xlimits = []; % use defaults
-% xlimits = [-2.2 0.5]; 
-
-
-nplotrows = 3; 
-
-% either plot just timecourses, or timecourses plus brains
-plot_brains_on_row2 = 0; 
-
-plot_go_trials_only = 1; % exclude STOP trials from plotting
-
-% sort_cond = []; % plot all trials averaged as a single timecourse without sorting
-    sort_cond = 'learn_con';
-%     sort_cond = 'is_nat';
-%     sort_cond = 'word';
-    % sort_cond = 'vow';
-%     sort_cond = 'word_accuracy';
-%     sort_cond = 'seq_accuracy';
-
-%%%%% trial table varname for times used for time-locking responses
-% time_align_var = 't_prod_on'; % speech onset
-time_align_var = 't_aud_go_on'; % go beep
-% time_align_var = 't_vis_syl_on'; % audio stim cue on
-
-newfig = 0;
-
-smooth_timecourses = 1; 
-    % smooth_method = 'movmean';
-    smooth_method = 'gaussian';
-    smooth_windowsize = 30; 
-
-plotops.linewidth = 1; 
-
 %%
 nelcs = length(rowlist);
 
 % close all
-hfig = figure('WindowState','maximized');
+hfig = figure('WindowState','maximized','Color','w'); box off
 
-if ~plot_brains_on_row2
-    for ielc = 1:nelcs
-        srt_row = rowlist(ielc) 
-        subplot(nplotrows,nelcs/nplotrows,ielc);
+for ielc = 1:nelcs
+    srt_row_ind = rowlist(ielc) 
+    srt_tbl_row = srt(srt_row_ind,:); 
 
-        plot_resp_timecourse_seq
-    
-        if ~isempty(ylimits)
-            ylim(ylimits)
-        end
-        if ~isempty(xlimits)
-            xlim(xlimits)
-        end
+    subind = find(string(subs.sub) == srt_tbl_row.sub{1});
+    trials_tmp = subs.trials{subind}; % temporary copy of trials table
 
-    
+    subplot(nplotrows,ceil(nelcs/nplotrows),ielc);
+     plot_resp_timecourse_seq(srt_tbl_row,trials_tmp,op); % in ieeg_ft_funcs_am repo
+
+    if ~isempty(ylimits)
+        ylim(ylimits)
     end
-elseif plot_brains_on_row2
-    for ielc = 1:nelcs
-        thisrow = rowlist(ielc);
-        subplot(2,nelcs,ielc)
-        srt_row = thisrow;
-        plot_resp_timecourse_seq
-    
-        if ~isempty(ylimits)
-            ylim(ylimits)
-        end
-        if ~isempty(xlimits)
-            xlim(xlimits)
-        end
+    if ~isempty(xlimits)
+        xlim(xlimits)
+    end
 
-        subplot(2, nelcs, nelcs+ielc)
-        plot_sorted_resp_mni_on_ctx
-
-    end    
 end
+
  

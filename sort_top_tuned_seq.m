@@ -12,7 +12,7 @@
 % param = 'p_prod_learn';
 
 % param = 'p_prod_nn_v_nat';
-param = 'p_prep_nn_v_nat';
+% param = 'p_prep_nn_v_nat';
 
 % param = 'p_prep_novel_vs_trained';
 % param = 'p_prod_novel_vs_trained';
@@ -22,7 +22,7 @@ param = 'p_prep_nn_v_nat';
 
 % param = 'p_stim_syl';
 % param = 'p_prep_syl';
-% param = 'p_prod_syl';
+param = 'p_prod_syl';
 
 % param = 'p_stim_rime';
 % param = 'p_prep_rime';

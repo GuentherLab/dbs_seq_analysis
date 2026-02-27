@@ -47,7 +47,7 @@ regiondef = {   'SMC',  {'1','2','3a','3b','4','6v','6d','43','55b','PEF','FEF',
 
 alpha = 0.05; 
 
-analyze_responsive_elcs_only = 0;
+analyze_responsive_elcs_only = 1;
 
 
 show_barplot = 0; 
@@ -57,10 +57,11 @@ param_name = param;
 full_param_string = param; 
 
 compare_areal_tuning()
-    hfig = figure('Color','w'); box off
+
 
 
 %%
+    hfig = figure('Color','w'); box off
 for iregion = 1:size(regiondef,1)
     region_selected = regiondef{iregion,1};
 
@@ -68,8 +69,29 @@ for iregion = 1:size(regiondef,1)
 
     resp_slct = resp_temp(strcmp(resp_temp.region, region_selected),:);
     
-    means_to_plot = [mean(resp_slct.sign_prep_nn_minus_nat), mean(resp_slct.sign_prod_nn_minus_nat)]; 
-    erbar = [std(resp_slct.sign_prep_nn_minus_nat), std(resp_slct.sign_prod_nn_minus_nat)] ./ sqrt(height(resp_slct)); 
+
+
+% 
+%     means_to_plot = [mean(resp_slct.sign_prep_nn_minus_nat), mean(resp_slct.sign_prod_nn_minus_nat)]; 
+%     erbar = [std(resp_slct.sign_prep_nn_minus_nat), std(resp_slct.sign_prod_nn_minus_nat)] ./ sqrt(height(resp_slct)); 
+%     
+%     hbar = bar(means_to_plot); 
+%     hold on
+%     hax = gca; 
+%     hax.XTickLabel = {'prep';'prod'};
+%     h_ebar = errorbar(means_to_plot, erbar); 
+%         h_ebar.LineWidth = 0.8;
+%         h_ebar.LineStyle = 'none';
+%         h_ebar.Color = [0 0 0];
+%     
+%     ylabel({'mean sign of response', '(nonnative minus native)'})
+
+
+
+
+
+    means_to_plot = [mean(resp_slct.sign_prep_novel_minus_trained), mean(resp_slct.sign_prod_novel_minus_trained)]; 
+    erbar = [std(resp_slct.sign_prep_novel_minus_trained), std(resp_slct.sign_prod_novel_minus_trained)] ./ sqrt(height(resp_slct)); 
     
     hbar = bar(means_to_plot); 
     hold on
@@ -80,7 +102,12 @@ for iregion = 1:size(regiondef,1)
         h_ebar.LineStyle = 'none';
         h_ebar.Color = [0 0 0];
     
-    ylabel({'mean sign of response', '(nonnative minus native)'})
+    ylabel({'mean sign of response', '(novel minus trained)'})
+
+
+
+
+
     
     title(region_selected)
 end

@@ -6,7 +6,7 @@
 %% analysis parameters
 %%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before visual stim onset.... this comes before aud stim onset in dbsseq
 %%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
-base_win_sec = [1, 0.3]; 
+base_win_sec = [0.5, 0.1]; 
 stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
 % for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
@@ -15,7 +15,9 @@ trial_end_post_speech_win = 0.6; % end the trial this long after speech offset i
 
 use_vibration_denoised_data = 0; 
 
-responsivity_alpha = 0.05; % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
+% consider electrodes responsive if they have above-baseline responses during one response epoch at this level
+% responsivity_alpha = 0.05; 
+responsivity_alpha = 0.03; 
 
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
