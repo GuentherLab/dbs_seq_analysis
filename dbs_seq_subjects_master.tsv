@@ -13,5 +13,5 @@ analyze	sub	task_version	diagnosis	ecog_target	dbs_target	notes
 1	DM1049	4	ET		VIM	
 1	DM1050	4	ET		VIM	
 1	DM1051	4	PD		STN	
-0	DM1052	4	PD		GPi	include once fully processed
-0	DM1054	4NL	PD		GPi	include once fully processed
+1	DM1052	4NL	PD		GPi	
+1	DM1054	4NL	PD		GPi	

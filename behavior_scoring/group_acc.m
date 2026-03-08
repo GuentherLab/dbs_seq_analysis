@@ -1,6 +1,6 @@
 %%%% plot/analyze accuracy from all subjects
 
-% clear
+clear
 
 setpaths_dbs_seq()
 
