@@ -7,8 +7,8 @@ setpaths_dbs_seq()
 % subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
 subject_list_filename = [PATH_DBSSEQ_CODE, filesep, 'dbs_seq_subjects_master.tsv']; 
 
-resp_signal = 'hg'; ARTIFACT_CRIT = 'E'; rereference_method = 'CMR';
-% resp_signal = 'beta'; ARTIFACT_CRIT = 'F';  rereference_method = 'none';
+% resp_signal = 'hg'; ARTIFACT_CRIT = 'E'; rereference_method = 'CMR';
+resp_signal = 'beta'; ARTIFACT_CRIT = 'F';  rereference_method = 'none';
 
 % rereference_method = 'CTAR';
 
@@ -28,7 +28,7 @@ subnums = [...
     1049;... % 
 % % % %     1050;... % finish b06
 % % % %     1051;... % finish b06
-% % % %     1052;... % finish b06    
+    1052;... % 
 % % % % %     1054;... % finish b06  
     ];
 
