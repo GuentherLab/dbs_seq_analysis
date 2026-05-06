@@ -1,17 +1,17 @@
 analyze	sub	task_version	diagnosis	ecog_target	dbs_target	notes
-1	DM1005	1	Dys	STG_L, IFG_L	Gpi_L	
-1	DM1007	1	ET	STG_L, IFG_L	VIM_L	
-1	DM1008	1	Dys	STG_L, IFG_L	GPi_LR	
-1	DM1024	4	ET	STG_L, IFG_L	VIM_L	
-1	DM1025	4	ET	STG_L, IFG_L	VIM_L	
-1	DM1037	4	PD	STG_L, IFG_L	STN_L	
+1	DM1005	1	Dys	"STG_L, IFG_L"	Gpi_L	
+1	DM1007	1	ET	"STG_L, IFG_L"	VIM_L	
+1	DM1008	1	Dys	"STG_L, IFG_L"	GPi_LR	
+1	DM1024	4	ET	"STG_L, IFG_L"	VIM_L	
+1	DM1025	4	ET	"STG_L, IFG_L"	VIM_L	
+1	DM1037	4	PD	"STG_L, IFG_L"	STN_L	
 1	DM1044	4	PD		STN	
-1	DM1045	4	PD		STN	
+1	DM1045	4	PD		STN	still need to decide how to handle change of reference during the run
 1	DM1046	4	PD		STN (but no subctx LFP)	
 1	DM1047	4	PD		STN	
 1	DM1048	4	PD	IFG and SMA attempt	STN	
 1	DM1049	4	ET		VIM	
-1	DM1050	4	ET		VIM	
+0	DM1050	4	ET		VIM	"poor behavioral performance (low go-trial accuracy, 83% failed stops); bad localization due to missing third pin tip"
 1	DM1051	4	PD		STN	
 1	DM1052	4NL	PD		GPi	
 1	DM1054	4NL	PD		GPi	

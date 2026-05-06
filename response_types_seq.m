@@ -28,7 +28,7 @@ vardefault('rereference_method','CTAR');
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
-%%% CRITERIA E parameter valus
+%%% CRITERIA E parameter values
 PATH_DER = [PATH_DATA filesep 'derivatives'];
 PATH_DER_SUB = [PATH_DER filesep 'sub-' op.sub];  
 PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
