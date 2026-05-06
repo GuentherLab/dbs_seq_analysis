@@ -5,9 +5,10 @@
 
 %% analysis parameters
 %%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before visual stim onset.... this comes before aud stim onset in dbsseq
+%%% ......... 1047 has missing visual_onset trials, so use audio onset instead which is very reliably 1.0sec after visual_onset
 %%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
-base_win_sec = [0.5, 0.1]; 
-stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
+base_win_sec = [1.5, 1.1]; % use [1.5, 1.1] if aligning to audio stim onset to achieve [0.5 0.1] before visual stim onset.... visual stim onset is missing for trials in 1047
+stim_window_extend_end = 0.3; % for re[1.5, 1.1]sponses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
 % for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
 speech_window_extend_start = 0.15;  
@@ -107,12 +108,12 @@ cel_tr = cell(ntrials,1);
 % info about our trial timing analysis window
 trials = renamevars(trials,{'starts','ends','duration'}, {'t_prod_on','t_prod_off','dur_prod'}); % make it clear that these times demarcate speech production window
 trials.id = [];
-trials.t_vis_syl_on = trials_with_stim_timing.visual_onset; 
+trials.t_vis_syl_on = trials_with_stim_timing.visual_onset; % these are nan for half of trials in DM1047
 trials.t_aud_syl_on = trials_with_stim_timing.audio_onset;
 trials.t_aud_syl_off = trials_with_stim_timing.audio_offset;
 trials.t_aud_go_on = trials_with_stim_timing.audio_go_onset;
 trials.t_aud_go_off = trials_with_stim_timing.audio_go_offset;
-trials.starts = trials.t_vis_syl_on - base_win_sec(1); % trial starts at beginning of baseline window - before vis onset, which comes earlier than audio stim in dbsseeq 
+trials.starts = trials.t_aud_syl_on - base_win_sec(1); % trial starts at beginning of baseline window - before vis onset, which comes 1sec earlier than audio stim in dbsseeq 
 trials.ends = trials.t_prod_off + trial_end_post_speech_win; % trial ends at fixed time after voice offset
 trials.duration = trials.ends - trials.starts; 
 

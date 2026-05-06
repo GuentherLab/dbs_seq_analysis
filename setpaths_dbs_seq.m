@@ -6,7 +6,7 @@
   if strcmp(compname, 'NSSBML01') % if working on TURBO (BML server computer)
       PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
      PATH_IEEG_FT_FUNCS_AM = 'C:\Users\amsmeier\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
-     PATH_DBSSEQ_CODE = 'C:\Users\amsmeier\dbs_seq_analysis'; 
+     PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
      PATH_LEADDBS = 'C:\Program Files\LeadDBS_Classic'; % classic, not updated version, is used for preprocessing
      PATH_SPM = 'C:\Program Files\SPM\spm12'; 
