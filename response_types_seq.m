@@ -136,7 +136,7 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
     trials.times{itrial} = D_wavpow.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
     % get trial-relative baseline time indices; window time-locked to first stim onset
-    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < [trials.t_vis_syl_on(itrial) - base_win_sec(2)]; 
+    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < trials.starts(itrial) + [base_win_sec(1) - base_win_sec(2)]; 
     stim_inds = D_wavpow.time{itrial} > trials.t_vis_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_aud_syl_off(itrial) + stim_window_extend_end; % starts at vis onset, stop before vis offset (at aud offset)
     prep_inds = D_wavpow.time{itrial} > trials.t_aud_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; % this period includes go beep
     prod_inds = D_wavpow.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{itrial} < trials.t_prod_off(itrial);     
