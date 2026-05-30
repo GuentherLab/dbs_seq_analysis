@@ -197,7 +197,7 @@ elseif ~strcmp(op.rereference_method,'none')
     % end
     cfg.method = op.rereference_method; % 
     cfg.percent = 50; %percentage of 'extreme' channels in group to trim 
-    D_sel_filt_trial_mask_ref = bml_rereference(cfg,D_sel_filt_trial_mask);
+    D_sel_filt_trial_mask_ref = bml_rereference_RD(cfg,D_sel_filt_trial_mask);
 end
 
 
