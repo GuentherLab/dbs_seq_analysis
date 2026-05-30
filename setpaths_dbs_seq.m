@@ -1,6 +1,6 @@
 %%%% set paths for AM dbs-seq analysis depending on computer
 
-[~,compname] = system('hostname'); compname = string(deblank(compname));
+compname = getenv('COMPUTERNAME'); 
 
 %%%%% paths differentiated by matlab running locally vs. on server
   if strcmp(compname, 'NSSBML01') % if working on TURBO (BML server computer)
@@ -12,7 +12,7 @@
      PATH_SPM = 'C:\Program Files\SPM\spm12'; 
      PATH_ECOG_LOCALIZATION = 'C:\Program Files\Brain-Modulation-Lab\ECoG_localization'; % scripts for registering ecog to DBS... probably Turbo only
 
- elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with files local on AM computers 
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER'})) % if working with files local on AM computers 
      PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
      PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
@@ -23,7 +23,7 @@
      PATH_ECOG_LOCALIZATION = ''; % scripts for registering ecog to DBS... probably Turbo only
 
   else 
-     error('computer name not recognized; please add computer to setpaths_dbs_triplet.m')
+     error('computer name not recognized; please add computer to setpaths_dbs_seq.m')
  end
 
  %%%% paths differentiated by whether or not Y drive on Turbo is available
