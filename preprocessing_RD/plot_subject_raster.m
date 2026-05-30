@@ -8,7 +8,7 @@ DENOISING = 'CMR_SVD_c2'; % none, CMR, CMR_SVD_c2
 
 rank = 1; % 0, 1
 BW = 2; % 2, 10
-file = "all"; % "raw" "notch" "notch mask" "power"
+file = "raw"; % "all"; %  "notch" "notch mask" "power"
 
 SUBJECT_LIST = {'DM1005','DM1007','DM1008','DM1024','DM1025','DM1037'};
 SUBJECT_LIST = {'DM1025'};
@@ -16,7 +16,7 @@ SUBJECT_LIST = {'DM1025'};
 % check computer, set paths accordingly
 compname = getenv('COMPUTERNAME'); 
 if any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER','NSSBML01'})) % AM computer or Turbo
-    setpaths_dbs_seq
+    setpaths_dbs_seq()
 else % Rohan's computer
      PATH_DER = '/Volumes/Nexus4/DBS/derivatives'
 end
@@ -27,7 +27,7 @@ for i_sub = 1:numel(SUBJECT_LIST)
     
     switch file
         case "raw"
-            load([PATH DER '/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
+            load([PATH_DER '/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
             y = [D.trial{:}];
 
         case "notch"
