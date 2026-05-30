@@ -13,13 +13,21 @@ file = "all"; % "raw" "notch" "notch mask" "power"
 SUBJECT_LIST = {'DM1005','DM1007','DM1008','DM1024','DM1025','DM1037'};
 SUBJECT_LIST = {'DM1025'};
 
+% check computer, set paths accordingly
+compname = getenv('COMPUTERNAME'); 
+if any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER','NSSBML01'})) % AM computer or Turbo
+    setpaths_dbs_seq
+else % Rohan's computer
+     PATH_DER = '/Volumes/Nexus4/DBS/derivatives'
+end
+
 %%
 for i_sub = 1:numel(SUBJECT_LIST)
     sub = SUBJECT_LIST{i_sub};
     
     switch file
         case "raw"
-            load(['/Volumes/Nexus4/DBS/derivatives/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
+            load([PATH DER '/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
             y = [D.trial{:}];
 
         case "notch"
@@ -32,13 +40,13 @@ for i_sub = 1:numel(SUBJECT_LIST)
             y = [D_sel_filt_trial_mask.trial{:}];
 
         case "power"
-            load(['/Volumes/Nexus4/DBS/derivatives/sub-',sub,'/fieldtrip/sub-',sub,'_ses-',SESSION,'_task-',TASK,'_ft-',BAND,'-trial_ar-',REF,'_ref-',DENOISING,'_not-denoised.mat'])    
+            load([PATH_DER 'sub-',sub,'/fieldtrip/sub-',sub,'_ses-',SESSION,'_task-',TASK,'_ft-',BAND,'-trial_ar-',REF,'_ref-',DENOISING,'_not-denoised.mat'])    
              y = [D_wavpow.trial{:}];
              % clearvars D_wavpow.trial
         case "all"
-            load(['/Volumes/Nexus4/DBS/derivatives/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
+            load([PATH_DER '/sub-' sub '/fieldtrip/sub-' sub '_ses-intraop_task-smsl_ft-raw.mat'], 'D')
             load(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'])
-            load(['/Volumes/Nexus4/DBS/derivatives/sub-',sub,'/fieldtrip/sub-',sub,'_ses-',SESSION,'_task-',TASK,'_ft-',BAND,'-trial_ar-',REF,'_ref-',DENOISING,'_not-denoised.mat']) 
+            load([PATH_DER '/sub-',sub,'/fieldtrip/sub-',sub,'_ses-',SESSION,'_task-',TASK,'_ft-',BAND,'-trial_ar-',REF,'_ref-',DENOISING,'_not-denoised.mat']) 
     end
 end
 
