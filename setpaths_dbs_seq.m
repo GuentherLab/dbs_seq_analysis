@@ -36,7 +36,7 @@ compname = getenv('COMPUTERNAME');
      PATH_AVERAGE_MNI = 'Z:/DBS/DBS_subject_lists/MNI_ICBM_2009b_NLIN_ASYM/cortex/CortexLowRes_15000V.mat';
      PATH_SUBCORT_ATLAS_VIM = 'C:\Program Files\LeadDBS_Classic\leaddbs\templates\space\MNI_ICBM_2009b_NLIN_ASYM\atlases\DISTAL (Ewert 2017)/atlas_index.mat';
      PATH_STN_ATLAS = 'Z:\Resources\STN-Atlas\atlas_index.mat';
- elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','amsmeier'})) % if working with local data - not stored on server
+ elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER'})) % if working with local data - not stored on server
      PATH_DATA = 'D:\DBS_MGH'; %%% may not have a copy on all machines.... use the SSD for faster load times
      PATH_RESULTS = [PATH_DATA filesep 'groupanalyses\task-smsl\gotrials'];
      PATH_AVERAGE_MNI = [PATH_RESULTS filesep 'atlases' filesep 'CortexLowRes_15000V_MNI_ICBM_2009b_NLIN_ASYM.mat']; 
