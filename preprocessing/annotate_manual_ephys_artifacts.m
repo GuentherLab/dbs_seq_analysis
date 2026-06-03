@@ -737,3 +737,71 @@ update_plot();
     end
 end 
 % annotate_manual_ephys_artifacts
+
+%% claude prompts:
+% create a matlab function ‘annotate_manual_ephys_artifacts’ that does the following.
+% i have a fieldtrip variable stored in a file with filepath formatted as: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\fieldtrip\sub-[SUBJECT]_ses-intraop_task-smsl_ft-raw_trial.mat
+% 
+% function should take ‘op’ structure. if op.sub ([SUBJECT] above)  is not supplied, make a popup, prefilled with ‘DM1005’, where user can fill it in. 
+% 
+% open the fieldtrip file.within D.trial{1}, rows are electrodes, columns are timepoints. look up file formatting in fieldtrip to understand. before loading, display the filepath of the fieldtirp file and its size, and the time loading started. Once it’s loaded, display the time it took to load it. 
+% 
+% when it’s loaded, create a gui which displays the timecourses of a set of channels. there should be 2 main viewmodes: timecourse and raster. in both of these, x axis is time. rows should display activity of a set of channels. in the raster, color = magnitude, y axis = channel, x axis = time. default to ‘parula’ colormap; include a dropdown to choose from 15 different popular colormaps. in the ‘timecourse’ version, each row shows the timecourse of a channel as black on white background; within that row, y axis shows magnitude of that channel at each timepoint. 
+% 
+% use the ‘labels’ field of the fieldtrip object to label the rows corresponding to each channel. use ‘time’ field from the fieldtrip variable to label x axis. 
+% 
+% include parameter op.n_chans_raster (default to 40) and op.n_chans_timecourse (default to 20) which determine how many channels to include on the screen at once. 
+% 
+% The user should be able to select groups of [time x channel] rectangles. in raster mode, they should then be able to click and drag a portion of the raster, to select rectangular groups of coordinates (channel x timepoints). these should stay visibly selected with a gray border after the user has made a selection, so that the user can highlight multiple groups of coordinates. this should work basically the same for timecourses, except that portions of timecourse plots across 1 or more channels will get highlighted at once. When a group is selected in raster mode, it should be surrounded by a gray box. When selected in timecourse mode, the times x channels should be highlighted in light gray. 
+% 
+% when the gui is first opened, create a table variable called ‘artifact’ with the following columns:
+% -id - double -  just a number indicating the row of the table [1 to nrows]
+% -starts - double - time of the start of the artifactual window in global time coordinates [GTC] - seconds since midnight on the day of the experiment
+% -ends - double - end of the artifact window, also in GTC
+% -duration - double - starts minus ends
+% -label - string - channel name - must correspond to a label in the ‘label’ field in the fieldtrip object
+% 
+% The ultimate output of this GUI is intended to be a .tsv table in this format. 
+% 
+% include a button ‘add selected artifact’. when this is clicked, then all grey selections should turn red and stay red unless they are removed. additionally, add all selected [times x channels] to the artifact table. This should add one row per channel selected; the starts, ends, and duration values in this row should indicate the time selected. however, if any of these [time x channels] are contiguous with a row already in the table, combine the two into a single row in the artifact table. once the rows have been added to the artifact table, sort the table - first by ‘starts’ then by ‘label’ to break ties. do this combination of artifact tables and updating of the plot with a subfunction ‘combine_artifact_tables’, which we will also use later. 
+% 
+% include a button for ‘remove selected artifact’. The user should be able to highlight [time x channel]s that have already been added to the artifact table (as part of the grey rectangle they are selecting). When ‘remove selected artifact’ is clicked, then all selected [time x channels] should be removed from the artifact table, and the red outline/highlight around them should be removed. if this would remove more than one non-contiguous groups of [time x channels], bring up a popup dialogue box asking “Remove multiple groups of time x channels?” with ‘yes’ and ‘no’ options. Do the removal if ‘yes’ is selected. If ‘no’ is selected, then don’t do the removal, but keep the gray selection box/highlight where it is. 
+% 
+% in the gui, include a dropdown, which lists chunks of trials [chunks sized at op.n_chans_raster or op.n_chans_timecourse]. when the user selects a chunk of trials, switch the display that chunk of channels. in the listing of channels in dropdown, list the first and last channel (e.g. “ecog_101 - dbs_52”). 
+% 
+% when switching between raster and timecourse mode, make sure to update the red outlines/highlights based on the current contents of the artifact table. also keep the gray ‘curent selection’ box where it is on the same [time x channel]s. The currently-viewed channels will likely not be the same, due to the different number of channels per view, so pick the channel group that overlaps the most with the previous view. some selected channels in the previous view may not be visible anymore, so remove those from the selected [time x channel]s. 
+% 
+% the gui should have an option ‘load artifact mask’. when this is pressed, if the artifact table is currently non-empty - if any [time x channel]s are highlighted in red - display a dialogue box saying “Artifact table is not empty. Add loaded table to current selection?” with ‘yes’ and ‘no’ options. this ‘load artifact mask’ option should open a dialogue to load a file. start by trying to look in the following folder: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\annot\
+% 
+% This should look for files with ‘artifact’ in the name which end with ‘.tsv’. First load this into matabl as a variable called ‘artifact_loaded’. It should have the same columns as described above in the ‘artifact’ table. Then, give an error dialogue box if any of the following are true (and display the problem) [do not output an actual matlab error, just display the dialogue box and delete the ‘artifact_loaded’ variable]:
+% -table has zero rows
+% -missing any of the 4 column variables, or they are an unexpected class
+% -durations are not equal to starts minus ends
+% -durations are zero or less or are nans
+% -any of the ‘label’s do not match a label in the fieldtrip object
+% -any of the time windows exist outside of the time windows indicated by the fieldtrip ‘time’ field [meaning they are outside the time range of what we have loaded from the fieldtrip file]
+% 
+% If there are additional columns, remove them from the table. If the table passes the checks, then add its columns to the current ‘artifact’ variable, via the ‘combine_artifact_tables’ subfunction described above, which should also update the plot. if no artifacts have been added in the current work session [nothing has been highlighted in red], this should function the same, because the loaded artifact table will be added to the zero-row artifact table. then delete the ‘artifact_loaded’ variable, because its info should be copied to the ‘artifact’ variable. 
+% 
+% Include a button ‘save artifact mask’. When this is clicked, open a file browser dialogue box. start in the same folder we load artifact tables from. the default file savename is:
+% sub-[SUBJECT]_ses-intraop_task-smsl_artifact-manual.tsv
+% 
+% this save subfunction should always warn about overwriting - though this should already be included if it’s a normal windows file-saving dialogue box. 
+% 
+% put all buttons, fields, and menus stacked on the left side; rasters/timecourses to the right.
+
+
+% output a modified version of this script [not word doc] with these changes:
+% -disable to ability to select multiple boxes at once. once a selection is made, erase the previous [gray] selections.
+% -allow a keyboard shortcut - when user presses “a”, the selected grey box becomes an artifact box. also change the label on the ‘add artifact’ button to “Add artifact (a)” to indicate this.
+% -add keyboard shortcut “r” for remove selected artifact; update the button to add “ (r)" to the end of the button label.
+% -always start in ‘timecourse’ view mode, not raster
+% -change the expected end of the fieldtip file string from '_ses-intraop_task-smsl_ft-raw_trial.mat' to 'ses-intraop_task-smsl_ft-raw.mat'
+% -add a button ‘zoom selection’ and ‘zoom full’. when ‘zoom selection’ is clicked, change the time we are looking at and the channels we are looking at to only the selected [time x channel]s.. ‘zoom full’ should zoom
+% ---include keyboard shortcut ‘=’ for zoom selection, and shortcut ‘-’ for zoom full. add these shortcut keys to the button labels.
+% 
+% -when trying to load load an artifact table, add a check: look for a string at the beginning of the artifact table name which will be ‘sub-[SUBJECT]’. if [SUBJECT] isn’t the same as what we currently have loaded for op.sub, show both of them to the user in a dialogue box, and give option to proceed or to not load artifact mask.
+% -add 2 fillable fields on the side of the gui that display the values of  op.n_chans_timecourse and  op.n_chans_raster. the user should be able to edit these values, then click an ‘update’ button next to them which changes these values. this should immediately change the number of channels currently being viewed, and also update what is shown in the dropdown menus to selecting chunks of channels.
+% -change how the values of the raster are mapped to colors: they should always be relative to values within the channel itself, so that extreme values in one channel don’t make values in other channels all appear to be zero
