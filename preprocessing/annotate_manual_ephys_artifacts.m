@@ -1,4 +1,4 @@
-function annotate_manual_ephys_artifacts_temp(op)
+function annotate_manual_ephys_artifacts(op)
 %ANNOTATE_MANUAL_EPHYS_ARTIFACTS  Interactive GUI for manual annotation of
 %   intra-operative ephys artifacts in a FieldTrip raw structure.
 %
@@ -35,7 +35,7 @@ if ~isfield(op,'n_chans_timecourse'),  op.n_chans_timecourse = 20; end
 %% 1.  Subject ID
 %==========================================================================
 if ~isfield(op,'sub') || isempty(op.sub)
-    ans_ = inputdlg('Enter subject ID:','Subject ID',1,{'DM1005'});
+    ans_ = inputdlg('Enter subject ID:','Subject ID',1,{'DM10'});
     if isempty(ans_), return; end
     op.sub = strtrim(ans_{1});
 end
