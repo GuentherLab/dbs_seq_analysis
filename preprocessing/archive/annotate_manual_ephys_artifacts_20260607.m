@@ -738,7 +738,7 @@ update_plot();
 end 
 % annotate_manual_ephys_artifacts
 
-%% claude prompts:
+%% claude/gemini prompts:
 % create a matlab function ‘annotate_manual_ephys_artifacts’ that does the following.
 % i have a fieldtrip variable stored in a file with filepath formatted as: 
 % Y:\DBS\derivatives\sub-[SUBJECT]\fieldtrip\sub-[SUBJECT]_ses-intraop_task-smsl_ft-raw_trial.mat
