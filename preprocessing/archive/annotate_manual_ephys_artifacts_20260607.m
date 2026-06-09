@@ -123,12 +123,15 @@ lp = uipanel(fig, ...
     'BackgroundColor',[0.87 0.87 0.87],'FontSize',9);
 % Stacking helpers
 ny_ = 0.985;  ch_ = 0.035;  dh_ = 0.040;
-
-% View mode Toggle
+% View mode
 yp_ = ny_-ch_; ny_ = ny_-dh_;
-btn_viewmode = uicontrol(lp,'Style','pushbutton', ...
+uicontrol(lp,'Style','text','String','View mode:', ...
+    'Units','normalized','Position',[0.05 yp_ 0.90 ch_], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
+yp_ = ny_-ch_; ny_ = ny_-dh_;
+dd_view = uicontrol(lp,'Style','popupmenu', ...
+    'String',{'Raster','Timecourse'}, 'Value', 2, ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@viewmode_cb);
-
 % Colormap
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 lbl_cmap = uicontrol(lp,'Style','text','String','Colormap:', ...
@@ -137,7 +140,6 @@ lbl_cmap = uicontrol(lp,'Style','text','String','Colormap:', ...
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 dd_cmap = uicontrol(lp,'Style','popupmenu','String',CMAPS, ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@cmap_cb);
-
 % Channel count modifiers
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','text','String','N Visible Chans Raster:', ...
@@ -155,7 +157,6 @@ yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','pushbutton','String','Update Chans', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@update_chans_cb);
 ny_ = ny_ - 0.010;   % spacer
-
 % Channel group
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','text','String','Channel group:', ...
@@ -165,7 +166,6 @@ yp_ = ny_-ch_; ny_ = ny_-dh_;
 dd_chunk = uicontrol(lp,'Style','popupmenu','String',{'...'}, ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@chunk_cb);
 ny_ = ny_ - 0.018;   % spacer
-
 % Zoom controls
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','pushbutton','String','Zoom selection (=)', ...
@@ -176,7 +176,6 @@ uicontrol(lp,'Style','pushbutton','String','Zoom full (-)', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_], ...
     'Callback',@zoom_full_cb);
 ny_ = ny_ - 0.018;   % spacer
-
 % Artifact action buttons
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','pushbutton','String','Add artifact (a)', ...
@@ -186,50 +185,41 @@ yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','pushbutton','String','Remove selected artifact (r)', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@remove_artifact_cb);
 ny_ = ny_ - 0.018;   % spacer
-
 % File buttons
 yp_ = ny_-ch_; ny_ = ny_-dh_;
-uicontrol(lp,'Style','pushbutton','String','Load artifact mask (o)', ...
+uicontrol(lp,'Style','pushbutton','String','Load artifact mask', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@load_artifact_cb);
 yp_ = ny_-ch_; % last row
-uicontrol(lp,'Style','pushbutton','String','Save artifact mask (k)', ...
+uicontrol(lp,'Style','pushbutton','String','Save artifact mask', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@save_artifact_cb);
-
 % ── Main axes ─────────────────────────────────────────────────────────────
 ax = axes(fig,'Units','normalized', ...
     'Position',[LP_W+0.04, 0.08, 1-LP_W-0.06, 0.88]);
 %==========================================================================
 %% 5.  Initialise display
 %==========================================================================
-update_viewmode_button();
 update_chunk_dropdown();
 update_plot();
-
 %==========================================================================
 %%   ═══════════  N E S T E D   F U N C T I O N S  ═══════════
 %==========================================================================
-
 % ── Simple helpers ────────────────────────────────────────────────────────
     function n = n_per_chunk()
         if strcmp(viewmode,'raster'), n = op.n_chans_raster;
         else,                         n = op.n_chans_timecourse; end
     end
-
     function nc = n_chunks()
         nc = ceil(n_chans / n_per_chunk());
     end
-
     function vis = get_vis_chans()
         npc = n_per_chunk();
         s   = (cur_chunk-1)*npc + 1;
         e   = min(s+npc-1, n_chans);
         vis = s:e;
     end
-
     function gi = lbl2idx(lbl)
         gi = find(strcmp(ch_labels, char(lbl)), 1);
     end
-
 % ── Chunk dropdown ────────────────────────────────────────────────────────
     function update_chunk_dropdown()
         npc  = n_per_chunk();
@@ -244,7 +234,6 @@ update_plot();
         cur_chunk = max(1, min(cur_chunk, nc));
         dd_chunk.Value  = cur_chunk;
     end
-
     function update_chans_cb(~,~)
         v_rast = str2double(ed_raster.String);
         v_time = str2double(ed_timecourse.String);
@@ -255,7 +244,6 @@ update_plot();
         clip_sels_to_vis();
         update_plot();
     end
-
 % ── Main plot ─────────────────────────────────────────────────────────────
     function update_plot()
         delete(findobj(fig,'Type','colorbar'));
@@ -264,7 +252,6 @@ update_plot();
         hold(ax,'on');
         vis   = get_vis_chans();
         n_vis = numel(vis);
-
         % ── RASTER ───────────────────────────────────────────────────────
         if strcmp(viewmode,'raster')
             set(lbl_cmap,'Visible','on');
@@ -279,7 +266,6 @@ update_plot();
             imagesc(ax, time_vec, 1:n_vis, vis_data);
             colormap(ax, cur_cmap);
             try cbh = colorbar(ax); cbh.FontSize = 8; catch; end
-            
             for ai = 1:height(artifact)
                 gi = lbl2idx(artifact.label(ai));
                 if isempty(gi), continue; end
@@ -294,12 +280,10 @@ update_plot();
                 rect_outline(SEL(si).t_start, SEL(si).t_end, ...
                              li1-0.5, li2+0.5, [0.25 0.25 0.25], 2.0);
             end
-
         % ── TIMECOURSE ───────────────────────────────────────────────────
         else
             set(lbl_cmap,'Visible','off');
             set(dd_cmap, 'Visible','off');
-            
             for ai = 1:height(artifact)
                 gi = lbl2idx(artifact.label(ai));
                 if isempty(gi), continue; end
@@ -334,7 +318,6 @@ update_plot();
                 plot(ax, t_d, sig_n, 'Color','k', 'LineWidth',0.5);
             end
         end
-
         % ── Common formatting ─────────────────────────────────────────────
         yticks(ax, 1:n_vis);
         yticklabels(ax, ch_labels(vis));
@@ -359,17 +342,14 @@ update_plot();
         ax.Layer   = 'top';
         drawnow limitrate;
     end
-
     function rect_outline(t0,t1,y0,y1,clr,lw)
         plot(ax,[t0 t1 t1 t0 t0],[y0 y0 y1 y1 y0], ...
             '-','Color',clr,'LineWidth',lw,'HitTest','off');
     end
-
     function rect_fill(t0,t1,y0,y1,fc,ec,lw)
         patch(ax,[t0 t1 t1 t0],[y0 y0 y1 y1], ...
             fc,'EdgeColor',ec,'LineWidth',lw,'FaceAlpha',0.50,'HitTest','off');
     end
-
     function [li1,li2] = sel2local(sel,vis,n_vis)
         inr = vis(vis >= sel.ch_start & vis <= sel.ch_end);
         if isempty(inr), li1=NaN; li2=NaN; return; end
@@ -378,7 +358,6 @@ update_plot();
         li1 = max(1,min(n_vis,li1));
         li2 = max(1,min(n_vis,li2));
     end
-
 % ── Key Press / Zoom Callbacks ────────────────────────────────────────────
     function key_press_cb(~, event)
         switch event.Character
@@ -390,15 +369,8 @@ update_plot();
                 zoom_sel_cb();
             case '-'
                 zoom_full_cb();
-            case 'm'
-                viewmode_cb();
-            case 'o'
-                load_artifact_cb();
-            case 'k'
-                save_artifact_cb();
         end
     end
-
     function zoom_sel_cb(~,~)
         if isempty(SEL), return; end
         vis = get_vis_chans();
@@ -409,40 +381,21 @@ update_plot();
         custom_ylim = [li1 - 0.5, li2 + 0.5];
         update_plot();
     end
-
     function zoom_full_cb(~,~)
         custom_xlim = [];
         custom_ylim = [];
         update_plot();
     end
-
 % ── View-mode / chunk / colormap callbacks ────────────────────────────────
-    function update_viewmode_button()
-        % Uses HTML to give the active state a background tint, green text, and larger font size.
-        if strcmp(viewmode, 'timecourse')
-            btn_str = '<html><span style="background-color:#d4edda; color:#007A33; font-size:1.15em;"><b>&nbsp;Timecourse&nbsp;</b></span> // Raster (m)</html>';
-        else
-            btn_str = '<html>Timecourse // <span style="background-color:#d4edda; color:#007A33; font-size:1.15em;"><b>&nbsp;Raster&nbsp;</b></span> (m)</html>';
-        end
-        set(btn_viewmode, 'String', btn_str);
-    end
-
     function viewmode_cb(~,~)
         old_vis = get_vis_chans();
-        if strcmp(viewmode, 'timecourse')
-            viewmode = 'raster';
-        else
-            viewmode = 'timecourse';
-        end
-        
-        update_viewmode_button();
+        if dd_view.Value==1, viewmode='raster'; else, viewmode='timecourse'; end
         custom_xlim = []; custom_ylim = [];
         cur_chunk = best_chunk_for(old_vis);
         update_chunk_dropdown();
         clip_sels_to_vis();
         update_plot();
     end
-
     function best = best_chunk_for(old_vis)
         npc=n_per_chunk(); nc=n_chunks();
         best=1; bn=-1;
@@ -452,7 +405,6 @@ update_plot();
             if ov>bn, bn=ov; best=ci; end
         end
     end
-
     function clip_sels_to_vis()
         if isempty(SEL), return; end
         vis=get_vis_chans();
@@ -464,18 +416,15 @@ update_plot();
         end
         SEL=SEL(keep);
     end
-
     function chunk_cb(~,~)
         cur_chunk=dd_chunk.Value;
         custom_xlim = []; custom_ylim = [];
         update_plot();
     end
-
     function cmap_cb(~,~)
         cur_cmap=CMAPS{dd_cmap.Value};
         update_plot();
     end
-
 % ── Mouse callbacks ───────────────────────────────────────────────────────
     function btn_down_cb(~,~)
         cp=ax_coords_clamped();
@@ -489,7 +438,6 @@ update_plot();
             'FaceColor','none','EdgeColor',[0.20 0.20 0.20], ...
             'LineWidth',1.5,'LineStyle','--','HitTest','off');
     end
-
     function btn_motion_cb(~,~)
         if ~is_dragging, return; end
         cp=ax_coords_raw();
@@ -500,7 +448,6 @@ update_plot();
             set(rband_h,'XData',[x0 x1 x1 x0],'YData',[y0 y0 y1 y1]);
         end
     end
-
     function btn_up_cb(~,~)
         if ~is_dragging, return; end
         is_dragging=false;
@@ -525,20 +472,17 @@ update_plot();
                      'ch_start',vis(li_lo),'ch_end',vis(li_hi));
         update_plot();
     end
-
     function cp=ax_coords_clamped()
         cp=ax_coords_raw();
         if isempty(cp), return; end
         xl=sort(xlim(ax)); yl=sort(ylim(ax));
         if cp(1)<xl(1)||cp(1)>xl(2)||cp(2)<yl(1)||cp(2)>yl(2), cp=[]; end
     end
-
     function cp=ax_coords_raw()
         pt=ax.CurrentPoint;
         if isempty(pt), cp=[]; return; end
         cp=[pt(1,1), pt(1,2)];
     end
-
 % ── Add artifact ──────────────────────────────────────────────────────────
     function add_artifact_cb(~,~)
         if isempty(SEL)
@@ -549,7 +493,6 @@ update_plot();
         if height(rows)==0, update_plot(); return; end
         combine_artifact_tables(rows);
     end
-
     function rows=sels_to_rows(sels)
         rows=mk_empty_table();
         for si=1:numel(sels)
@@ -559,7 +502,6 @@ update_plot();
             end
         end
     end
-
 % ── Remove artifact ───────────────────────────────────────────────────────
     function remove_artifact_cb(~,~)
         if isempty(SEL)
@@ -613,7 +555,6 @@ update_plot();
         artifact.id=(1:height(artifact))';
         update_plot();
     end
-
     function out=sub_interval(ivs,rm_s,rm_e)
         out=zeros(0,2);
         for k=1:size(ivs,1)
@@ -626,7 +567,6 @@ update_plot();
             end
         end
     end
-
     function result=is_multi_group(idx)
         n=numel(idx);
         if n<=1, result=false; return; end
@@ -657,7 +597,6 @@ update_plot();
         end
         result=n_comp>1;
     end
-
 % ── combine_artifact_tables ───────────────────────────────────────────────
     function combine_artifact_tables(new_rows)
         artifact=[artifact; new_rows];
@@ -682,7 +621,6 @@ update_plot();
         artifact =merged;
         update_plot();
     end
-
 % ── Load artifact mask ────────────────────────────────────────────────────
     function load_artifact_cb(~,~)
         if height(artifact)>0
@@ -731,7 +669,6 @@ update_plot();
         al=al(:,{'id','starts','ends','duration','label'});
         combine_artifact_tables(al);
     end
-
     function probs=validate_art_table(T)
         probs={};
         if height(T)==0
@@ -772,7 +709,6 @@ update_plot();
                 sum(bad_t),time_vec(1),time_vec(end));
         end
     end
-
 % ── Save artifact mask ────────────────────────────────────────────────────
     function save_artifact_cb(~,~)
         annot_dir   =fullfile('Y:\DBS','derivatives',['sub-' op.sub],'annot');
@@ -788,18 +724,84 @@ update_plot();
             errordlg(sprintf('Save failed:\n%s',ME.message),'Save Error');
         end
     end
-
 % ── Table utilities ───────────────────────────────────────────────────────
     function T=mk_empty_table()
         T=table(zeros(0,1,'double'),zeros(0,1,'double'), ...
                 zeros(0,1,'double'),zeros(0,1,'double'),strings(0,1), ...
                 'VariableNames',{'id','starts','ends','duration','label'});
     end
-
     function row=mk_row(id_,t0_,t1_,lbl_char)
         row=table(double(id_),double(t0_),double(t1_),double(t1_-t0_), ...
                   string(lbl_char), ...
                   'VariableNames',{'id','starts','ends','duration','label'});
     end
+end 
+% annotate_manual_ephys_artifacts
 
-end
+%% claude prompts:
+% create a matlab function ‘annotate_manual_ephys_artifacts’ that does the following.
+% i have a fieldtrip variable stored in a file with filepath formatted as: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\fieldtrip\sub-[SUBJECT]_ses-intraop_task-smsl_ft-raw_trial.mat
+% 
+% function should take ‘op’ structure. if op.sub ([SUBJECT] above)  is not supplied, make a popup, prefilled with ‘DM1005’, where user can fill it in. 
+% 
+% open the fieldtrip file.within D.trial{1}, rows are electrodes, columns are timepoints. look up file formatting in fieldtrip to understand. before loading, display the filepath of the fieldtirp file and its size, and the time loading started. Once it’s loaded, display the time it took to load it. 
+% 
+% when it’s loaded, create a gui which displays the timecourses of a set of channels. there should be 2 main viewmodes: timecourse and raster. in both of these, x axis is time. rows should display activity of a set of channels. in the raster, color = magnitude, y axis = channel, x axis = time. default to ‘parula’ colormap; include a dropdown to choose from 15 different popular colormaps. in the ‘timecourse’ version, each row shows the timecourse of a channel as black on white background; within that row, y axis shows magnitude of that channel at each timepoint. 
+% 
+% use the ‘labels’ field of the fieldtrip object to label the rows corresponding to each channel. use ‘time’ field from the fieldtrip variable to label x axis. 
+% 
+% include parameter op.n_chans_raster (default to 40) and op.n_chans_timecourse (default to 20) which determine how many channels to include on the screen at once. 
+% 
+% The user should be able to select groups of [time x channel] rectangles. in raster mode, they should then be able to click and drag a portion of the raster, to select rectangular groups of coordinates (channel x timepoints). these should stay visibly selected with a gray border after the user has made a selection, so that the user can highlight multiple groups of coordinates. this should work basically the same for timecourses, except that portions of timecourse plots across 1 or more channels will get highlighted at once. When a group is selected in raster mode, it should be surrounded by a gray box. When selected in timecourse mode, the times x channels should be highlighted in light gray. 
+% 
+% when the gui is first opened, create a table variable called ‘artifact’ with the following columns:
+% -id - double -  just a number indicating the row of the table [1 to nrows]
+% -starts - double - time of the start of the artifactual window in global time coordinates [GTC] - seconds since midnight on the day of the experiment
+% -ends - double - end of the artifact window, also in GTC
+% -duration - double - starts minus ends
+% -label - string - channel name - must correspond to a label in the ‘label’ field in the fieldtrip object
+% 
+% The ultimate output of this GUI is intended to be a .tsv table in this format. 
+% 
+% include a button ‘add selected artifact’. when this is clicked, then all grey selections should turn red and stay red unless they are removed. additionally, add all selected [times x channels] to the artifact table. This should add one row per channel selected; the starts, ends, and duration values in this row should indicate the time selected. however, if any of these [time x channels] are contiguous with a row already in the table, combine the two into a single row in the artifact table. once the rows have been added to the artifact table, sort the table - first by ‘starts’ then by ‘label’ to break ties. do this combination of artifact tables and updating of the plot with a subfunction ‘combine_artifact_tables’, which we will also use later. 
+% 
+% include a button for ‘remove selected artifact’. The user should be able to highlight [time x channel]s that have already been added to the artifact table (as part of the grey rectangle they are selecting). When ‘remove selected artifact’ is clicked, then all selected [time x channels] should be removed from the artifact table, and the red outline/highlight around them should be removed. if this would remove more than one non-contiguous groups of [time x channels], bring up a popup dialogue box asking “Remove multiple groups of time x channels?” with ‘yes’ and ‘no’ options. Do the removal if ‘yes’ is selected. If ‘no’ is selected, then don’t do the removal, but keep the gray selection box/highlight where it is. 
+% 
+% in the gui, include a dropdown, which lists chunks of trials [chunks sized at op.n_chans_raster or op.n_chans_timecourse]. when the user selects a chunk of trials, switch the display that chunk of channels. in the listing of channels in dropdown, list the first and last channel (e.g. “ecog_101 - dbs_52”). 
+% 
+% when switching between raster and timecourse mode, make sure to update the red outlines/highlights based on the current contents of the artifact table. also keep the gray ‘curent selection’ box where it is on the same [time x channel]s. The currently-viewed channels will likely not be the same, due to the different number of channels per view, so pick the channel group that overlaps the most with the previous view. some selected channels in the previous view may not be visible anymore, so remove those from the selected [time x channel]s. 
+% 
+% the gui should have an option ‘load artifact mask’. when this is pressed, if the artifact table is currently non-empty - if any [time x channel]s are highlighted in red - display a dialogue box saying “Artifact table is not empty. Add loaded table to current selection?” with ‘yes’ and ‘no’ options. this ‘load artifact mask’ option should open a dialogue to load a file. start by trying to look in the following folder: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\annot\
+% 
+% This should look for files with ‘artifact’ in the name which end with ‘.tsv’. First load this into matabl as a variable called ‘artifact_loaded’. It should have the same columns as described above in the ‘artifact’ table. Then, give an error dialogue box if any of the following are true (and display the problem) [do not output an actual matlab error, just display the dialogue box and delete the ‘artifact_loaded’ variable]:
+% -table has zero rows
+% -missing any of the 4 column variables, or they are an unexpected class
+% -durations are not equal to starts minus ends
+% -durations are zero or less or are nans
+% -any of the ‘label’s do not match a label in the fieldtrip object
+% -any of the time windows exist outside of the time windows indicated by the fieldtrip ‘time’ field [meaning they are outside the time range of what we have loaded from the fieldtrip file]
+% 
+% If there are additional columns, remove them from the table. If the table passes the checks, then add its columns to the current ‘artifact’ variable, via the ‘combine_artifact_tables’ subfunction described above, which should also update the plot. if no artifacts have been added in the current work session [nothing has been highlighted in red], this should function the same, because the loaded artifact table will be added to the zero-row artifact table. then delete the ‘artifact_loaded’ variable, because its info should be copied to the ‘artifact’ variable. 
+% 
+% Include a button ‘save artifact mask’. When this is clicked, open a file browser dialogue box. start in the same folder we load artifact tables from. the default file savename is:
+% sub-[SUBJECT]_ses-intraop_task-smsl_artifact-manual.tsv
+% 
+% this save subfunction should always warn about overwriting - though this should already be included if it’s a normal windows file-saving dialogue box. 
+% 
+% put all buttons, fields, and menus stacked on the left side; rasters/timecourses to the right.
+
+
+% output a modified version of this script [not word doc] with these changes:
+% -disable to ability to select multiple boxes at once. once a selection is made, erase the previous [gray] selections.
+% -allow a keyboard shortcut - when user presses “a”, the selected grey box becomes an artifact box. also change the label on the ‘add artifact’ button to “Add artifact (a)” to indicate this.
+% -add keyboard shortcut “r” for remove selected artifact; update the button to add “ (r)" to the end of the button label.
+% -always start in ‘timecourse’ view mode, not raster
+% -change the expected end of the fieldtip file string from '_ses-intraop_task-smsl_ft-raw_trial.mat' to 'ses-intraop_task-smsl_ft-raw.mat'
+% -add a button ‘zoom selection’ and ‘zoom full’. when ‘zoom selection’ is clicked, change the time we are looking at and the channels we are looking at to only the selected [time x channel]s.. ‘zoom full’ should zoom
+% ---include keyboard shortcut ‘=’ for zoom selection, and shortcut ‘-’ for zoom full. add these shortcut keys to the button labels.
+% 
+% -when trying to load load an artifact table, add a check: look for a string at the beginning of the artifact table name which will be ‘sub-[SUBJECT]’. if [SUBJECT] isn’t the same as what we currently have loaded for op.sub, show both of them to the user in a dialogue box, and give option to proceed or to not load artifact mask.
+% -add 2 fillable fields on the side of the gui that display the values of  op.n_chans_timecourse and  op.n_chans_raster. the user should be able to edit these values, then click an ‘update’ button next to them which changes these values. this should immediately change the number of channels currently being viewed, and also update what is shown in the dropdown menus to selecting chunks of channels.
+% -change how the values of the raster are mapped to colors: they should always be relative to values within the channel itself, so that extreme values in one channel don’t make values in other channels all appear to be zero
