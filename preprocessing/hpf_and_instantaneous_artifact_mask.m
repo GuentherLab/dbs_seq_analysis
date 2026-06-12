@@ -3,6 +3,7 @@ function [D_out, cfg_out] = hpf_and_instantaneous_artifact_mask(D, cfg)
 % Outputs: D
 % Description: Identifies instantaneous artifacts and masks them. Then performs HPF
 
+vardefault('cfg',struct);
 field_default('cfg', 'spike_dur', 0.1) % duration of spike artifact in seconds
 field_default('cfg', 'iqr_thr', 3) % threshold to identify outliers
 
