@@ -16,8 +16,9 @@ diff_sig = diff(og_sig,1,2);                                % diff_sig contains 
 m = 2*round(cfg.spike_dur*D_out.fsample/2) + 1; % force m to be odd
 diff_sig_smoothed = convn(diff_sig(:,max(1,min(size(diff_sig,2),1-(m-1)/2:size(diff_sig,2)+(m-1)/2))), hanning(m)', 'valid');
 
-[iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);                     % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3)
-                                                  
+% [iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);   % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3) (REQUIRES >=R2024a)
+iqr_diff = iqr(diff_sig_smoothed,2);
+qart_diff = prctile(diff_sig_smoothed, [25; 75], 2);
 
 % RECONSTRUCTED SIGNAL
 diff_sig_mask = diff_sig_smoothed > qart_diff(:,2)+cfg.iqr_thr*iqr_diff | diff_sig_smoothed < qart_diff(:,1)-cfg.iqr_thr*iqr_diff; % crops derivatives beyond minimum/maximum values
