@@ -4,8 +4,9 @@ function [D_out, cfg_out] = hpf_and_instantaneous_artifact_mask(D, cfg)
 % Description: Identifies instantaneous artifacts and masks them. Then performs HPF
 
 vardefault('cfg',struct);
-field_default('cfg', 'spike_dur', 0.1) % duration of spike artifact in seconds
-field_default('cfg', 'iqr_thr', 3) % threshold to identify outliers
+field_default('cfg', 'spike_dur', 0.1) % estimated duration of a spike artifact in seconds, from spike onset to peak
+field_default('cfg', 'iqr_thr', 3) % threshold to identify outliers (e.g. outlier > 75th percentile + iqr_thr*interquartile range)
+field_default('cfg', 'f_c', 2) % % Cutoff frequency for high-pass filter
 
 D_out = D; 
 
@@ -27,8 +28,7 @@ diff_sig(diff_sig_mask) = 0;
 og_sig = cumsum([zeros(size(diff_sig,1),1), diff_sig],2);   % reconstructs original signal by cumulative sum (temporal integral)
 
 % HPF
-f_c = 2; % cutoff freq
-k = 1/(1 + 2*pi*f_c/D_out.fsample); % first order IIR
+k = 1/(1 + 2*pi*cfg.f_c/D_out.fsample); % first order IIR
 for n=2:size(diff_sig,2)
     og_sig(:,n) = k*og_sig(:,n-1) + k*diff_sig(:,n-1); % HPF
 end

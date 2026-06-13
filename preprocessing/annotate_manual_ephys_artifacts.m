@@ -87,19 +87,20 @@ fprintf('  Cleaning done: %.2f s\n\n', seconds(t_clean1 - t_clean0));
 %==========================================================================
 %% 3.  Shared state  (accessed/modified by nested functions)
 %==========================================================================
-viewmode  = 'timecourse';    % 'raster' | 'timecourse' (Default changed)
+viewmode  = 'timecourse';    % 'raster' | 'timecourse'
 cur_chunk = 1;
 % Custom zoom limits
 custom_xlim = [];
 custom_ylim = [];
+% Trace Scaling values
+raw_scale_val = 1.0;
+clean_scale_val = 1.0;
 % Artifact table
 artifact = table( ...
     zeros(0,1,'double'), zeros(0,1,'double'), ...
     zeros(0,1,'double'), zeros(0,1,'double'), strings(0,1), ...
     'VariableNames',{'id','starts','ends','duration','label'});
 % Current gray selections – struct array
-%   .t_start, .t_end   : global time [s]
-%   .ch_start, .ch_end : global channel index (1-based)
 SEL = struct('t_start',{},'t_end',{},'ch_start',{},'ch_end',{});
 % Rubber-band drag state
 is_dragging = false;
@@ -114,7 +115,7 @@ MAX_TC_PTS = 5000;  % max displayed time-points per trace (timecourse mode)
 %==========================================================================
 %% 4.  Build figure & controls
 %==========================================================================
-LP_W = 0.17;   % fractional figure width for left panel
+LP_W = 0.19;   % fractional figure width for left panel
 fig = figure( ...
     'Name',          ['Artifact Annotator  |  sub-' op.sub], ...
     'NumberTitle',   'off', ...
@@ -131,28 +132,26 @@ lp = uipanel(fig, ...
     'Position',[0 0 LP_W 1], ...
     'BackgroundColor',[0.87 0.87 0.87],'FontSize',9);
 % Stacking helpers
-ny_ = 0.985;  ch_ = 0.035;  dh_ = 0.040;
+ny_ = 0.985;  ch_ = 0.028;  dh_ = 0.032;
 
 % View mode Toggle
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 btn_viewmode = uicontrol(lp,'Style','pushbutton', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@viewmode_cb);
 
-% Legend
+% Legend (Changed to style 'text' to safely handle HTML)
 yp_ = ny_-ch_; ny_ = ny_-dh_;
-uicontrol(lp,'Style','text','String','Traces: Black = Raw, Blue = Cleaned', ...
+uicontrol(lp,'Style','text','String','<html><b>Traces: Black = Raw, <font color="blue">Blue = cleaned</font></b></html>', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_], ...
-    'FontWeight','bold', 'ForegroundColor', [0 0 0.8], ...
-    'HorizontalAlignment','center','BackgroundColor',[0.87 0.87 0.87]);
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
 
 % Colormap
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 lbl_cmap = uicontrol(lp,'Style','text','String','Colormap:', ...
-    'Units','normalized','Position',[0.05 yp_ 0.90 ch_], ...
+    'Units','normalized','Position',[0.05 yp_ 0.40 ch_], ...
     'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
-yp_ = ny_-ch_; ny_ = ny_-dh_;
 dd_cmap = uicontrol(lp,'Style','popupmenu','String',CMAPS, ...
-    'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@cmap_cb);
+    'Units','normalized','Position',[0.45 yp_ 0.50 ch_],'Callback',@cmap_cb);
 
 % Channel count modifiers
 yp_ = ny_-ch_; ny_ = ny_-dh_;
@@ -170,6 +169,30 @@ ed_timecourse = uicontrol(lp,'Style','edit','String',num2str(op.n_chans_timecour
 yp_ = ny_-ch_; ny_ = ny_-dh_;
 uicontrol(lp,'Style','pushbutton','String','Update Chans', ...
     'Units','normalized','Position',[0.05 yp_ 0.90 ch_],'Callback',@update_chans_cb);
+ny_ = ny_ - 0.010;   % spacer
+
+% Trace Scaling Controls
+yp_ = ny_-ch_; ny_ = ny_-dh_;
+uicontrol(lp,'Style','text','String','Raw scaling:', ...
+    'Units','normalized','Position',[0.05 yp_ 0.45 ch_], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
+ed_raw_scale = uicontrol(lp,'Style','text','String',num2str(raw_scale_val,'%.2f'), ...
+    'Units','normalized','Position',[0.50 yp_ 0.15 ch_], 'BackgroundColor','w');
+uicontrol(lp,'Style','pushbutton','String','▲', ...
+    'Units','normalized','Position',[0.68 yp_ 0.12 ch_],'Callback',@(~,~) scale_cb('raw', 0.25));
+uicontrol(lp,'Style','pushbutton','String','▼', ...
+    'Units','normalized','Position',[0.82 yp_ 0.12 ch_],'Callback',@(~,~) scale_cb('raw', -0.25));
+
+yp_ = ny_-ch_; ny_ = ny_-dh_;
+uicontrol(lp,'Style','text','String','Cleaned scaling:', ...
+    'Units','normalized','Position',[0.05 yp_ 0.45 ch_], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
+ed_clean_scale = uicontrol(lp,'Style','text','String',num2str(clean_scale_val,'%.2f'), ...
+    'Units','normalized','Position',[0.50 yp_ 0.15 ch_], 'BackgroundColor','w');
+uicontrol(lp,'Style','pushbutton','String','▲', ...
+    'Units','normalized','Position',[0.68 yp_ 0.12 ch_],'Callback',@(~,~) scale_cb('clean', 0.25));
+uicontrol(lp,'Style','pushbutton','String','▼', ...
+    'Units','normalized','Position',[0.82 yp_ 0.12 ch_],'Callback',@(~,~) scale_cb('clean', -0.25));
 ny_ = ny_ - 0.010;   % spacer
 
 % Channel group
@@ -217,29 +240,60 @@ uicontrol(lp,'Style','pushbutton','String','Save artifact mask (k)', ...
 
 % Sub-panel for Cleaning Config
 pnl_clean = uipanel(lp, 'Title','Cleaning Config', 'Units','normalized', ...
-    'Position',[0.02 0.02 0.96 0.22], 'BackgroundColor',[0.87 0.87 0.87]);
+    'Position',[0.02 0.01 0.96 0.23], 'BackgroundColor',[0.87 0.87 0.87]);
 
-uicontrol(pnl_clean,'Style','text','String','spike_dur:', ...
-    'Units','normalized','Position',[0.05 0.65 0.45 0.25], ...
-    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
+tt_spike = 'estimated duration of a spike artifact in seconds, from spike onset to peak';
+tt_iqr   = 'threshold to identify outliers (e.g. outlier > 75th percentile + iqr_thr*interquartile range)';
+tt_fc    = 'Cutoff frequency for high-pass filter';
+
+% Expected spike dur (s)
+uicontrol(pnl_clean,'Style','text','String','Expected spike dur (s):', ...
+    'Units','normalized','Position',[0.02 0.73 0.65 0.20], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87], ...
+    'TooltipString', tt_spike);
 ed_spike_dur = uicontrol(pnl_clean,'Style','edit', ...
     'String',num2str(cleaning_func_cfg_out.spike_dur), ...
-    'Units','normalized','Position',[0.50 0.65 0.40 0.25]);
+    'Units','normalized','Position',[0.70 0.73 0.25 0.20], ...
+    'TooltipString', tt_spike);
 
-uicontrol(pnl_clean,'Style','text','String','iqr_thresh:', ...
-    'Units','normalized','Position',[0.05 0.35 0.45 0.25], ...
-    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87]);
-ed_iqr_thresh = uicontrol(pnl_clean,'Style','edit', ...
-    'String',num2str(cleaning_func_cfg_out.iqr_thresh), ...
-    'Units','normalized','Position',[0.50 0.35 0.40 0.25]);
+% Outlier IQR threshold
+uicontrol(pnl_clean,'Style','text','String','Outlier IQR threshold:', ...
+    'Units','normalized','Position',[0.02 0.48 0.65 0.20], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87], ...
+    'TooltipString', tt_iqr);
+ed_iqr_thr = uicontrol(pnl_clean,'Style','edit', ...
+    'String',num2str(cleaning_func_cfg_out.iqr_thr), ...
+    'Units','normalized','Position',[0.70 0.48 0.25 0.20], ...
+    'TooltipString', tt_iqr);
+
+% High pass cutoff (Hz)
+init_fc = '0';
+if isfield(cleaning_func_cfg_out, 'f_c')
+    init_fc = num2str(cleaning_func_cfg_out.f_c);
+end
+
+uicontrol(pnl_clean,'Style','text','String','High pass cutoff (Hz):', ...
+    'Units','normalized','Position',[0.02 0.23 0.65 0.20], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87], ...
+    'TooltipString', tt_fc);
+ed_fc = uicontrol(pnl_clean,'Style','edit', ...
+    'String',init_fc, ...
+    'Units','normalized','Position',[0.70 0.23 0.25 0.20], ...
+    'TooltipString', tt_fc);
 
 uicontrol(pnl_clean,'Style','pushbutton','String','Update cleaned traces', ...
-    'Units','normalized','Position',[0.05 0.05 0.90 0.25], ...
+    'Units','normalized','Position',[0.05 0.02 0.90 0.18], ...
     'Callback',@update_clean_cb);
+
+% ── Selection Information Text (under plots) ──────────────────────────────
+txt_sel_info = uicontrol(fig, 'Style','text', 'Units','normalized', ...
+    'Position',[LP_W+0.04, 0.02, 0.6, 0.04], 'HorizontalAlignment','left', ...
+    'BackgroundColor', [0.93 0.93 0.93], 'FontSize', 10, ...
+    'String', 'Selection: None');
 
 % ── Main axes ─────────────────────────────────────────────────────────────
 ax = axes(fig,'Units','normalized', ...
-    'Position',[LP_W+0.04, 0.08, 1-LP_W-0.06, 0.88]);
+    'Position',[LP_W+0.04, 0.09, 1-LP_W-0.06, 0.87]);
 %==========================================================================
 %% 5.  Initialise display
 %==========================================================================
@@ -312,40 +366,80 @@ update_plot();
         end
     end
 
+% ── Scaling Callback ──────────────────────────────────────────────────────
+    function scale_cb(type, delta)
+        if strcmp(type, 'raw')
+            raw_scale_val = max(0.1, raw_scale_val + delta);
+            ed_raw_scale.String = num2str(raw_scale_val, '%.2f');
+        else
+            clean_scale_val = max(0.1, clean_scale_val + delta);
+            ed_clean_scale.String = num2str(clean_scale_val, '%.2f');
+        end
+        update_plot();
+    end
+
 % ── Update Cleaning Config ────────────────────────────────────────────────
     function update_clean_cb(~,~)
         cfg = struct();
         val_spike = str2double(ed_spike_dur.String);
-        val_iqr = str2double(ed_iqr_thresh.String);
+        val_iqr = str2double(ed_iqr_thr.String);
+        val_fc = str2double(ed_fc.String);
         
-        if isnan(val_spike) || isnan(val_iqr)
+        if isnan(val_spike) || isnan(val_iqr) || isnan(val_fc)
             errordlg('Invalid cleaning parameters (must be numeric).','Invalid Input');
             return;
         end
         
         cfg.spike_dur = val_spike;
-        cfg.iqr_thresh = val_iqr;
+        cfg.iqr_thr = val_iqr;
+        cfg.f_c = val_fc;
         
         set(fig, 'pointer', 'watch'); drawnow;
+        
+        % Setup dialog without a progress bar, but with a timer
+        dlg = dialog('Name', 'Please wait', 'Position', [500 500 250 80]);
+        txt_dlg = uicontrol(dlg, 'Style', 'text', 'Position', [20 20 210 40], ...
+            'String', 'Updating cleaned traces... 0.0 s', 'FontSize', 10);
+        t0 = tic;
+        tmr = timer('ExecutionMode','fixedSpacing', 'Period',0.1, ...
+                    'TimerFcn', @(~,~) update_stopwatch_dlg(txt_dlg, t0));
+        start(tmr);
+
         try
             [D_cleaned_new, cfg_out_new] = hpf_and_instantaneous_artifact_mask(D, cfg);
             data_mat_clean = D_cleaned_new.trial{1};
             
             ed_spike_dur.String = num2str(cfg_out_new.spike_dur);
-            ed_iqr_thresh.String = num2str(cfg_out_new.iqr_thresh);
+            ed_iqr_thr.String = num2str(cfg_out_new.iqr_thr);
+            if isfield(cfg_out_new, 'f_c')
+                ed_fc.String = num2str(cfg_out_new.f_c);
+            end
         catch ME
+            stop(tmr); delete(tmr);
+            if isgraphics(dlg), close(dlg); end
             set(fig, 'pointer', 'arrow');
             errordlg(sprintf('Cleaning function failed:\n%s', ME.message), 'Cleaning Error');
             return;
         end
+        
+        stop(tmr); delete(tmr);
+        if isgraphics(dlg), close(dlg); end
+        
         set(fig, 'pointer', 'arrow');
         update_plot();
+    end
+
+    function update_stopwatch_dlg(txt_dlg, t0)
+        if isgraphics(txt_dlg)
+            el = toc(t0);
+            txt_dlg.String = sprintf('Updating cleaned traces...\nElapsed time: %.1f s', el);
+        end
     end
 
 % ── Main plot ─────────────────────────────────────────────────────────────
     function update_plot()
         delete(findobj(fig,'Type','colorbar'));
-        ax.Position = [LP_W+0.04, 0.08, 1-LP_W-0.06, 0.88];
+        ax.Position = [LP_W+0.04, 0.09, 1-LP_W-0.06, 0.87];
         cla(ax);
         hold(ax,'on');
         vis   = get_vis_chans();
@@ -364,7 +458,14 @@ update_plot();
             end
             imagesc(ax, time_vec, 1:n_vis, vis_data);
             colormap(ax, cur_cmap);
-            try cbh = colorbar(ax); cbh.FontSize = 8; catch; end
+            try 
+                cbh = colorbar(ax); 
+                cbh.FontSize = 8; 
+                % Apply decimal formatting safely to colorbar only
+                cbh.Ruler.TickLabelFormat = '%.1f'; 
+                cbh.Ruler.Exponent = 0; 
+            catch
+            end
             
             for ai = 1:height(artifact)
                 gi = lbl2idx(artifact.label(ai));
@@ -419,8 +520,13 @@ update_plot();
                 s = std(sig(:));
                 if s < eps('single'), s = 1; end
                 
-                sig_n       = (sig       - mean(sig))       ./ (6*s) + ki;
-                sig_clean_n = (sig_clean - mean(sig_clean)) ./ (6*s) + ki;
+                s_clean = std(sig_clean(:));
+                if s_clean < eps('single'), s_clean = 1; end
+                
+                % Scale the raw signal
+                sig_n       = (sig       - mean(sig))       ./ (6*s)       * raw_scale_val   + ki;
+                % Scale the cleaned signal by its own std so it fills the space similarly
+                sig_clean_n = (sig_clean - mean(sig_clean)) ./ (6*s_clean) * clean_scale_val + ki;
                 
                 plot(ax, t_d, sig_n,       'Color','k', 'LineWidth',0.5);
                 plot(ax, t_d, sig_clean_n, 'Color','b', 'LineWidth',0.5);
@@ -449,7 +555,24 @@ update_plot();
         ax.YDir    = 'reverse';   % channel 1 at top
         ax.FontSize = 8;
         ax.Layer   = 'top';
+        
+        % Only format the XAxis mathematically to avoid wiping out manual strings on YAxis
+        ax.XAxis.TickLabelFormat = '%.1f';
+        ax.XAxis.Exponent = 0;
+        
         drawnow limitrate;
+        update_selection_info();
+    end
+
+    function update_selection_info()
+        if isempty(SEL)
+            txt_sel_info.String = 'Selection: None';
+        else
+            dur = SEL(1).t_end - SEL(1).t_start;
+            % The .ch_start and .ch_end properties hold the global channel index
+            n_ch = abs(SEL(1).ch_end - SEL(1).ch_start) + 1;
+            txt_sel_info.String = sprintf('Selection: Duration = %.3f s, Channels selected = %d', dur, n_ch);
+        end
     end
 
     function rect_outline(t0,t1,y0,y1,clr,lw)
@@ -510,7 +633,6 @@ update_plot();
 
 % ── View-mode / chunk / colormap callbacks ────────────────────────────────
     function update_viewmode_button()
-        % Uses HTML to give the active state a background tint, green text, and larger font size.
         if strcmp(viewmode, 'timecourse')
             btn_str = '<html><span style="background-color:#d4edda; color:#007A33; font-size:1.15em;"><b>&nbsp;Timecourse&nbsp;</b></span> // Raster (m)</html>';
         else
@@ -895,3 +1017,97 @@ update_plot();
     end
 
 end
+
+%% claude/gemini prompts:
+% create a matlab function ‘annotate_manual_ephys_artifacts’ that does the following.
+% i have a fieldtrip variable stored in a file with filepath formatted as: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\fieldtrip\sub-[SUBJECT]_ses-intraop_task-smsl_ft-raw_trial.mat
+% 
+% function should take ‘op’ structure. if op.sub ([SUBJECT] above)  is not supplied, make a popup, prefilled with ‘DM1005’, where user can fill it in. 
+% 
+% open the fieldtrip file.within D.trial{1}, rows are electrodes, columns are timepoints. look up file formatting in fieldtrip to understand. before loading, display the filepath of the fieldtirp file and its size, and the time loading started. Once it’s loaded, display the time it took to load it. 
+% 
+% when it’s loaded, create a gui which displays the timecourses of a set of channels. there should be 2 main viewmodes: timecourse and raster. in both of these, x axis is time. rows should display activity of a set of channels. in the raster, color = magnitude, y axis = channel, x axis = time. default to ‘parula’ colormap; include a dropdown to choose from 15 different popular colormaps. in the ‘timecourse’ version, each row shows the timecourse of a channel as black on white background; within that row, y axis shows magnitude of that channel at each timepoint. 
+% 
+% use the ‘labels’ field of the fieldtrip object to label the rows corresponding to each channel. use ‘time’ field from the fieldtrip variable to label x axis. 
+% 
+% include parameter op.n_chans_raster (default to 40) and op.n_chans_timecourse (default to 20) which determine how many channels to include on the screen at once. 
+% 
+% The user should be able to select groups of [time x channel] rectangles. in raster mode, they should then be able to click and drag a portion of the raster, to select rectangular groups of coordinates (channel x timepoints). these should stay visibly selected with a gray border after the user has made a selection, so that the user can highlight multiple groups of coordinates. this should work basically the same for timecourses, except that portions of timecourse plots across 1 or more channels will get highlighted at once. When a group is selected in raster mode, it should be surrounded by a gray box. When selected in timecourse mode, the times x channels should be highlighted in light gray. 
+% 
+% when the gui is first opened, create a table variable called ‘artifact’ with the following columns:
+% -id - double -  just a number indicating the row of the table [1 to nrows]
+% -starts - double - time of the start of the artifactual window in global time coordinates [GTC] - seconds since midnight on the day of the experiment
+% -ends - double - end of the artifact window, also in GTC
+% -duration - double - starts minus ends
+% -label - string - channel name - must correspond to a label in the ‘label’ field in the fieldtrip object
+% 
+% The ultimate output of this GUI is intended to be a .tsv table in this format. 
+% 
+% include a button ‘add selected artifact’. when this is clicked, then all grey selections should turn red and stay red unless they are removed. additionally, add all selected [times x channels] to the artifact table. This should add one row per channel selected; the starts, ends, and duration values in this row should indicate the time selected. however, if any of these [time x channels] are contiguous with a row already in the table, combine the two into a single row in the artifact table. once the rows have been added to the artifact table, sort the table - first by ‘starts’ then by ‘label’ to break ties. do this combination of artifact tables and updating of the plot with a subfunction ‘combine_artifact_tables’, which we will also use later. 
+% 
+% include a button for ‘remove selected artifact’. The user should be able to highlight [time x channel]s that have already been added to the artifact table (as part of the grey rectangle they are selecting). When ‘remove selected artifact’ is clicked, then all selected [time x channels] should be removed from the artifact table, and the red outline/highlight around them should be removed. if this would remove more than one non-contiguous groups of [time x channels], bring up a popup dialogue box asking “Remove multiple groups of time x channels?” with ‘yes’ and ‘no’ options. Do the removal if ‘yes’ is selected. If ‘no’ is selected, then don’t do the removal, but keep the gray selection box/highlight where it is. 
+% 
+% in the gui, include a dropdown, which lists chunks of trials [chunks sized at op.n_chans_raster or op.n_chans_timecourse]. when the user selects a chunk of trials, switch the display that chunk of channels. in the listing of channels in dropdown, list the first and last channel (e.g. “ecog_101 - dbs_52”). 
+% 
+% when switching between raster and timecourse mode, make sure to update the red outlines/highlights based on the current contents of the artifact table. also keep the gray ‘curent selection’ box where it is on the same [time x channel]s. The currently-viewed channels will likely not be the same, due to the different number of channels per view, so pick the channel group that overlaps the most with the previous view. some selected channels in the previous view may not be visible anymore, so remove those from the selected [time x channel]s. 
+% 
+% the gui should have an option ‘load artifact mask’. when this is pressed, if the artifact table is currently non-empty - if any [time x channel]s are highlighted in red - display a dialogue box saying “Artifact table is not empty. Add loaded table to current selection?” with ‘yes’ and ‘no’ options. this ‘load artifact mask’ option should open a dialogue to load a file. start by trying to look in the following folder: 
+% Y:\DBS\derivatives\sub-[SUBJECT]\annot\
+% 
+% This should look for files with ‘artifact’ in the name which end with ‘.tsv’. First load this into matabl as a variable called ‘artifact_loaded’. It should have the same columns as described above in the ‘artifact’ table. Then, give an error dialogue box if any of the following are true (and display the problem) [do not output an actual matlab error, just display the dialogue box and delete the ‘artifact_loaded’ variable]:
+% -table has zero rows
+% -missing any of the 4 column variables, or they are an unexpected class
+% -durations are not equal to starts minus ends
+% -durations are zero or less or are nans
+% -any of the ‘label’s do not match a label in the fieldtrip object
+% -any of the time windows exist outside of the time windows indicated by the fieldtrip ‘time’ field [meaning they are outside the time range of what we have loaded from the fieldtrip file]
+% 
+% If there are additional columns, remove them from the table. If the table passes the checks, then add its columns to the current ‘artifact’ variable, via the ‘combine_artifact_tables’ subfunction described above, which should also update the plot. if no artifacts have been added in the current work session [nothing has been highlighted in red], this should function the same, because the loaded artifact table will be added to the zero-row artifact table. then delete the ‘artifact_loaded’ variable, because its info should be copied to the ‘artifact’ variable. 
+% 
+% Include a button ‘save artifact mask’. When this is clicked, open a file browser dialogue box. start in the same folder we load artifact tables from. the default file savename is:
+% sub-[SUBJECT]_ses-intraop_task-smsl_artifact-manual.tsv
+% 
+% this save subfunction should always warn about overwriting - though this should already be included if it’s a normal windows file-saving dialogue box. 
+% 
+% put all buttons, fields, and menus stacked on the left side; rasters/timecourses to the right.
+
+
+% output a modified version of this script [not word doc] with these changes:
+% -disable to ability to select multiple boxes at once. once a selection is made, erase the previous [gray] selections.
+% -allow a keyboard shortcut - when user presses “a”, the selected grey box becomes an artifact box. also change the label on the ‘add artifact’ button to “Add artifact (a)” to indicate this.
+% -add keyboard shortcut “r” for remove selected artifact; update the button to add “ (r)" to the end of the button label.
+% -always start in ‘timecourse’ view mode, not raster
+% -change the expected end of the fieldtip file string from '_ses-intraop_task-smsl_ft-raw_trial.mat' to 'ses-intraop_task-smsl_ft-raw.mat'
+% -add a button ‘zoom selection’ and ‘zoom full’. when ‘zoom selection’ is clicked, change the time we are looking at and the channels we are looking at to only the selected [time x channel]s.. ‘zoom full’ should zoom
+% ---include keyboard shortcut ‘=’ for zoom selection, and shortcut ‘-’ for zoom full. add these shortcut keys to the button labels.
+% 
+% -when trying to load load an artifact table, add a check: look for a string at the beginning of the artifact table name which will be ‘sub-[SUBJECT]’. if [SUBJECT] isn’t the same as what we currently have loaded for op.sub, show both of them to the user in a dialogue box, and give option to proceed or to not load artifact mask.
+% -add 2 fillable fields on the side of the gui that display the values of  op.n_chans_timecourse and  op.n_chans_raster. the user should be able to edit these values, then click an ‘update’ button next to them which changes these values. this should immediately change the number of channels currently being viewed, and also update what is shown in the dropdown menus to selecting chunks of channels.
+% -change how the values of the raster are mapped to colors: they should always be relative to values within the channel itself, so that extreme values in one channel don’t make values in other channels all appear to be zero
+
+% make these modifications to the artifact annotation script at the bottom:
+% -instead of just 1 trace per channel, I want there to generally be 2 overlaid traces. the first trace is the raw data, as before. the second trace - ‘cleaned data’ - will be a version of this raw data that has gone through a process of high pass filtering and cleaned of artifacts. the HPF and cleaning will be entirely performed by an external cleaning function, ‘hpf_and_instantaneous_artifact_mask.m’. do not make this cleaning function, it already exists.
+% -the cleaning function takes (arg 1) the fieldtrip structure (generally called something like ‘D’ or “D_raw’) which the provided GUI script already loads. the cleaning function also takes (arg 2) an optional cfg configuration structure; it can be called without providing this cfg, in which case the cleaning function sets defaults for all parameters listed in the cfg structure.
+% -the cleaning function has 1 outputs: cleaned data ‘D_cleaned’ (out 1) and config structure ‘cfg_out’ (out 2). by getting cfg_out, we can see what were set as defaults in cfg if we didn’t provide specifications. 
+% -when the gui is started and the raw fieldtrip data is loaded, run the cleaning function, using the loaded raw fieldtrip data as the first input, and no cfg structure input. name the first output of the cleaning D_cleaned and the second output cleaning_func_cfg_out. then, for each channel, plot the trace of the raw data (which the old version of the gui script already did) in black and overlay it with the cleaned version of that trace in blue. add a legend to the left-side control panel of the gui indicating colors and raw vs. cleaned
+% -add a sub-panel to the lower part of the left side panel in the gui. this contains a field for each of the parameters of the cleaning function. it also contains a button ‘Update cleaned traces’. when the gui is first started and the cleaning function is run, get the second output of that function (cleaning_func_cfg_out) and use it to pre-populate the fields for each cfg param, so the user knows what defaults were used. the user can then edit these fields and click ‘Update’ button, which should re-run the cleaning function with the new cfg parameters, get rid of the previous cleaned traces, and replace them with hte newly computed cleaned traces (leave the raw traces as-is). 
+% -the cfg field params are: spike_dur, iqr_thresh
+% 
+% that’s working. make the following further modifications:
+% -for each channel’s cleaned trace, scale it so that it occupies more of the vertical space available on that row. don’t change the raw traces. the reason for doing this scaling is that after high pass filtering, the cleaned traces look very flat and it’s hard to see deviations in y value in them. 
+% -after clicking the ‘update cleaned traces’ button, pop up a temporary box saying ‘Updating cleaned traces’ until they are updated and replotted. include a stopwatch timer in that box to show how long it’s taking to update them. 
+% -a third parameter expected to be in the cfg structure called ‘f_c’; include a field in the gui for updating this, like the other cfg parameters
+% -change the visible GUI labels associated with the fields for updating cfg params, because what these parameters is not transparent. use this mapping: spike_dur = ‘Expected spike dur (s)’..... iqr_thr = ‘Outlier IQR threshold’ ……. f_c = ‘High pass cutoff (Hz)’
+% ….
+% -when first listing the cfg params, include, somewhere, comments with these descriptions for them. also add tooltips so that when hovering over the field or the field label in the GUI, these descriptions pop up:
+% spike_dur % estimated duration of a spike artifact in seconds, from spike onset to peak
+% iqr_thr  % threshold to identify outliers (e.g. outlier > 75th percentile + iqr_thr*interquartile range)
+% f_c % Cutoff frequency for high-pass filter
+% 
+% make the following edits to this newest version:
+% -where it describes the blue/black traces, all of that text is currently blue. fix this by making it so that only “Blue = cleaned” is blue, the rest is black. 
+% -add text at the bottom of the right section of gui (under the bottom trace) that says the duration of the currently selected gray box and how many channels are selected
+% -in the left panel, add control for each of ‘Raw scaling’ and ‘Cleaned scaling’. These control the magnitude of scaling of each of the traces, for effectively scaling the y axes in a trace-specifc manner. These should display the current two values of the scaling, and have up and down arrows for each of them. Raw scaling will always start at 1. Cleaned scaling will be whatever you decided to set it at each time after running the cleaning function and updating the cleaned traces. For how much the up and down arrows increment, pick a sensible increment - the user should be able to click a few times and make the traces in question look significantly bigger or smaller. 
+% -change yticklabels - spell out all digits plus one decimal - not scientific notation
+% -in the popup box that appears during cleaning, keep the timer but get rid of the progress bar
