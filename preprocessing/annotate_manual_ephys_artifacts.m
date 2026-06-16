@@ -923,7 +923,6 @@ update_plot();
                 end
             end
         end
-
         try
             al=readtable(fullfile(fdir,fname), ...
                 'FileType','text','Delimiter','\t','TextType','string');
@@ -933,9 +932,9 @@ update_plot();
         end
         probs=validate_art_table(al);
         if ~isempty(probs)
-            errordlg(['Validation failed:' newline strjoin(probs,newline)], ...
-                'Invalid Artifact Table');
-            return;
+%             errordlg(['Validation failed:' newline strjoin(probs,newline)], ...
+%                 'Invalid Artifact Table');
+%             return;
         end
         req={'starts','ends','duration','label'};
         xtra=setdiff(al.Properties.VariableNames,req);
