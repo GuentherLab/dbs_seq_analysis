@@ -1,4 +1,4 @@
-function [D_out, cfg_out] = hpf_and_instantaneous_artifact_mask(D, cfg)
+function [D_out, diff_sig_mask, cfg_out] = hpf_and_instantaneous_artifact_mask(D, cfg)
 % Inputs: D, spike_dur, iqr_thr
 % Outputs: D
 % Description: Identifies instantaneous artifacts and masks them. Then performs HPF
