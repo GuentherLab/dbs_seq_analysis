@@ -19,7 +19,7 @@ load([PATH_DER, filesep, 'sub-',sub, filesep, 'fieldtrip', filesep, 'sub-',sub, 
 cfg = [];
 cfg.channel = 'ecog_L147'; 
 channel_data = ft_selectdata(cfg, D);
-save([tempdir, filesep, '0_3Hz oscillation example - ', sub, ' - ', cfg.channel],'D')
+save([tempdir, filesep, '0_3Hz oscillation example - ', sub, ' - ', cfg.channel],'channel_data')
 
 %%
 %%% message: 
@@ -37,4 +37,4 @@ load([PATH_DER, filesep, 'sub-',sub, filesep, 'fieldtrip', filesep, 'sub-',sub, 
 cfg = [];
 cfg.channel = {'ecog_L107', 'ecog_L108'}; 
 channel_data = ft_selectdata(cfg, D);
-save([tempdir, filesep, 'flattened high-amplitude raw trace example - ', sub, ' - ', cfg.channel{1}],'D')
+save([tempdir, filesep, 'flattened high-amplitude raw trace example - ', sub, ' - ', cfg.channel{1}],'channel_data')
