@@ -5,11 +5,7 @@
 
  %%
  % message:
-% % %  here’s the data for an example channel with the ~0.3Hz oscillation that was not removed by the cleaning function. 
-% % %  That updated function is also attached - I%m using the default parameters. 
-% % %  This artifact is visible in 5 channels in sub1052 and 20 channels in sub1054. 
-% % %  All ecog channels that don’t look like they have much activity aside from the oscillation, 
-% % %  .....so not too bad to just mask them all, but it might be useful to understand why the 2Hz high pass filter isn.t getting rid of the activity. 
+% % % % %  [no longer relevant - concern was due to plotting error]
 
 sub = 'DM1054';
 

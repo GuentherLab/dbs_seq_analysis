@@ -7,11 +7,12 @@ function annotate_manual_ephys_artifacts(cfg)
 %   annotate_manual_ephys_artifacts(cfg)
 %
 % cfg fields (all optional)
-%   .sub                – Subject ID string, e.g. 'DM1005'  (prompted if absent)
-%   .task               – Task string name, e.g. 'smsl'                ['smsl']
-%   .n_chans_raster     – Channels shown per screen in raster view     [40]
-%   .n_chans_timecourse – Channels shown per screen in timecourse view [20]
-%   .iqr_thr            – Interquartile range threshold for artifacts  [3]
+%   .sub                         – Subject ID string, e.g. 'DM1005'  (prompted if absent)
+%   .task                        – Task string name, e.g. 'smsl'                ['smsl']
+%   .n_chans_raster              – Channels shown per screen in raster view     [40]
+%   .n_chans_timecourse          – Channels shown per screen in timecourse view [20]
+%   .iqr_thr                     – Interquartile range threshold for artifacts  [3]
+%   .max_timecourse_sample_rate  - Target max downsample display rate (Hz)      [200]
 %
 % Input file
 %   Y:\DBS\derivatives\sub-<SUB>\fieldtrip\sub-<SUB>_ses-intraop_task-<TASK>_ft-raw.mat
@@ -29,23 +30,25 @@ function annotate_manual_ephys_artifacts(cfg)
 %% 0.  Defaults
 %==========================================================================
 if nargin < 1 || isempty(cfg), cfg = struct(); end
-if ~isfield(cfg,'task'),                cfg.task               = 'smsl'; end
-if ~isfield(cfg,'n_chans_raster'),      cfg.n_chans_raster     = 40; end
-if ~isfield(cfg,'n_chans_timecourse'),  cfg.n_chans_timecourse = 20; end
-if ~isfield(cfg,'iqr_thr'),             cfg.iqr_thr            = 3; end
+if ~isfield(cfg,'task'),                        cfg.task                        = 'smsl'; end
+if ~isfield(cfg,'n_chans_raster'),              cfg.n_chans_raster              = 40; end
+if ~isfield(cfg,'n_chans_timecourse'),          cfg.n_chans_timecourse          = 20; end
+if ~isfield(cfg,'iqr_thr'),                     cfg.iqr_thr                     = 3; end
+if ~isfield(cfg,'max_timecourse_sample_rate'),  cfg.max_timecourse_sample_rate  = 200; end
 
 %==========================================================================
 %% 1.  Subject ID & Task Dialog
 %==========================================================================
 if ~isfield(cfg,'sub') || isempty(cfg.sub) || ~isfield(cfg,'task') || isempty(cfg.task)
-    prompt = {'Enter subject ID:', 'Enter task:'};
+    prompt = {'Enter subject ID:', 'Enter task:', 'Max Timecourse Sample Rate (Hz):'};
     dlgtitle = 'Setup Configuration';
     dims = [1 35];
-    definput = {'DM10', 'smsl'};
+    definput = {'DM10', 'smsl', num2str(cfg.max_timecourse_sample_rate)};
     ans_ = inputdlg(prompt, dlgtitle, dims, definput);
     if isempty(ans_), return; end
     cfg.sub  = strtrim(ans_{1});
     cfg.task = strtrim(ans_{2});
+    cfg.max_timecourse_sample_rate = str2double(strtrim(ans_{3}));
 end
 %==========================================================================
 %% 2.  Load FieldTrip file
@@ -128,6 +131,9 @@ fprintf('  Cleaning done: %.2f s\n\n', seconds(t_clean1 - t_clean0));
 %==========================================================================
 %% 3.  Shared state  (accessed/modified by nested functions)
 %==========================================================================
+op = struct();
+op.max_timecourse_sample_rate = cfg.max_timecourse_sample_rate;
+
 viewmode  = 'timecourse';    % 'raster' | 'timecourse'
 cur_chunk = 1;
 % Custom zoom limits
@@ -152,7 +158,6 @@ rband_h     = [];   % graphics handle, [] = none
 CMAPS = {'parula','turbo','jet','hsv','hot','cool','spring','summer', ...
          'autumn','winter','gray','bone','copper','pink','colorcube'};
 cur_cmap   = 'parula';
-MAX_TC_PTS = 5000;  % max displayed time-points per trace (timecourse mode)
 
 %==========================================================================
 %% 4.  Build figure & controls
@@ -194,6 +199,13 @@ uicontrol(lp,'Style','text','String','Blue = Cleaned', ...
     'Units','normalized','Position',[0.56 yp_ 0.39 ch_], ...
     'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87], ...
     'FontWeight','bold', 'ForegroundColor',[0 0 0.8]);
+
+% Display Sample Rate Sub-Legend Text Box
+yp_ = ny_-ch_; ny_ = ny_-dh_;
+txt_fs_display = uicontrol(lp,'Style','text','String','Sample Rate: -- Hz', ...
+    'Units','normalized','Position',[0.05 yp_ 0.90 ch_], ...
+    'HorizontalAlignment','left','BackgroundColor',[0.87 0.87 0.87], ...
+    'FontWeight','bold', 'ForegroundColor','k');
 
 % Colormap Selector
 yp_ = ny_-ch_; ny_ = ny_-dh_;
@@ -529,6 +541,8 @@ update_plot();
         if strcmp(viewmode,'raster')
             set(lbl_cmap,'Visible','on');
             set(dd_cmap, 'Visible','on');
+            set(txt_fs_display, 'Visible', 'off');
+            
             vis_data = double(data_mat(vis,:));
             for i = 1:size(vis_data,1)
                 s = std(vis_data(i,:));
@@ -564,6 +578,25 @@ update_plot();
         else
             set(lbl_cmap,'Visible','off');
             set(dd_cmap, 'Visible','off');
+            set(txt_fs_display, 'Visible', 'on');
+            
+            % Compute original sample rate from data fields
+            dt = mean(diff(time_vec));
+            orig_fs = 1 / dt;
+            
+            % Downsample if rate exceeds the configured maximum limit
+            if orig_fs > op.max_timecourse_sample_rate
+                ds = max(1, round(orig_fs / op.max_timecourse_sample_rate));
+                t_d  = time_vec(1:ds:end);
+                idx_ = 1:ds:numel(time_vec);
+                display_fs = orig_fs / ds;
+            else
+                t_d  = time_vec;
+                idx_ = 1:numel(time_vec);
+                display_fs = orig_fs;
+            end
+            
+            set(txt_fs_display, 'String', sprintf('Sample Rate: %.1f Hz', display_fs));
             
             for ai = 1:height(artifact)
                 gi = lbl2idx(artifact.label(ai));
@@ -582,15 +615,7 @@ update_plot();
             for ki = 1:n_vis-1
                 yline(ax, ki+0.5, 'Color',[0.79 0.79 0.79], 'LineWidth',0.5);
             end
-            nt = numel(time_vec);
-            if nt > MAX_TC_PTS
-                ds   = floor(nt / MAX_TC_PTS);
-                t_d  = time_vec(1:ds:end);
-                idx_ = 1:ds:nt;
-            else
-                t_d  = time_vec;
-                idx_ = 1:nt;
-            end
+            
             for ki = 1:n_vis
                 sig       = double(data_mat(vis(ki), idx_));
                 sig_clean = double(data_mat_clean(vis(ki), idx_));
