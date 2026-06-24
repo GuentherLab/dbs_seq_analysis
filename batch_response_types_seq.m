@@ -26,10 +26,10 @@ subnums = [...
     1047;...
     1048;...
     1049;... % 
-% % % %     1050;... % finish b05, b06
+% % % %     1050;... % poor behavior and ecog localization - don't use
     1051;... % 
     1052;... % 
-    1054;... % finish a06, a08, b06
+    1054;... % 
     ];
 
 

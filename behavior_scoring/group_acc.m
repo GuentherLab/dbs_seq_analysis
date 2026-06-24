@@ -1,6 +1,7 @@
 %%%% plot/analyze accuracy from all subjects
 
-clear
+% clear
+% close all
 
 setpaths_dbs_seq()
 
@@ -25,20 +26,21 @@ for isub = 1:nsubs
 
 end
 
-subs_beh.acc_mean = mean([subs_beh.acc_native, subs_beh.acc_learned, subs_beh.acc_novel], 2); % avg across conditions, rather than across trials
-subs_beh.acc_nonnative = mean([subs_beh.acc_learned, subs_beh.acc_novel],2); 
+% use nanmean below to cover subjects who did non-learning task version - they will have nans for acc_learned
+subs_beh.acc_mean = nanmean([subs_beh.acc_native, subs_beh.acc_learned, subs_beh.acc_novel], 2); % avg across conditions, rather than across trials
+subs_beh.acc_nonnative = nanmean([subs_beh.acc_learned, subs_beh.acc_novel],2); 
 
 % compute subject-level stats which will be helpful to reference for other purposes
 subs_beh.learned_min_novel = subs_beh.acc_learned - subs_beh.acc_novel;
 subs_beh.nat_min_nn = subs_beh.acc_native - subs_beh.acc_nonnative; 
 subs_beh = movevars(subs_beh,{'sub','learned_min_novel','nat_min_nn','diagnosis','ecog_target'}, 'Before',1); 
-subs_beh_srt = sortrows(subs_beh,'learned_min_novel','descend'); % organize by best learning performance
+subs_beh_learned_min_novel = sortrows(subs_beh,'learned_min_novel','descend'); % organize by best learning performance
+subs_beh_abs = sortrows(subs_beh,'acc_mean','descend');      subs_beh_abs = movevars(subs_beh_abs, 'acc_mean', 'Before', 'learned_min_novel');
 
 acc_by_cond = [subs_beh.acc_novel, subs_beh.acc_learned, subs_beh.acc_native]; 
 acc_by_cond_normed = acc_by_cond - repmat(acc_by_cond(:,2),1,3); 
 
 %% plotting
-close all
 
 hfig = figure; hfig.Color = [1 1 1];
 subplot(1,2,1)
@@ -59,12 +61,12 @@ hxline = xline(0);
 
 %% stats tests
 
-[~, p_nn_vs_nat] = ttest(subs_beh.acc_nonnative, subs_beh.acc_native)
-[~, p_novel_vs_learned] = ttest(subs_beh.acc_novel, subs_beh.acc_learned)
+[~, p_nn_vs_nat] = ttest(subs_beh.acc_nonnative, subs_beh.acc_native);
+[~, p_novel_vs_learned] = ttest(subs_beh.acc_novel, subs_beh.acc_learned);
 
 within = table([1 2 3]', 'VariableNames', {'learncon'});
 rm = fitrm(subs_beh, 'acc_novel,acc_learned,acc_native ~ 1', 'WithinDesign', within);
-ranovatbl = ranova(rm, 'WithinModel', 'learncon')
+ranovatbl = ranova(rm, 'WithinModel', 'learncon');
 
 save(['Y:\DBS\groupanalyses\task-smsl\group_acc_20250728\group_acc_20250728'])
 savefig(['Y:\DBS\groupanalyses\task-smsl\group_acc_20250728\group_acc_20250728.fig'])

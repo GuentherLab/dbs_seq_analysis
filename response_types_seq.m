@@ -17,8 +17,8 @@ trial_end_post_speech_win = 0.6; % end the trial this long after speech offset i
 use_vibration_denoised_data = 0; 
 
 % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
-% responsivity_alpha = 0.05; 
-responsivity_alpha = 0.03; 
+% responsivity_alpha = 0.05; % uncorrected
+responsivity_alpha = 0.05 / 2^[3-1]; % bonf correction for 3 tests
 
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
@@ -258,3 +258,7 @@ resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add e
 resp.sub = cellstr(repmat(op.sub, nchans, 1));
 resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
+
+% right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans
+resp = resp(~contains(resp.chan,'dbs_R'),:);
+
