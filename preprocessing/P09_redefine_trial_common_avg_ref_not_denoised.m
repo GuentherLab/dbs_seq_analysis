@@ -82,7 +82,9 @@ diff_sig = diff(og_sig,1,2);                                % diff_sig contains 
 m = 2*round(spike_dur*D_annot.Fs/2) + 1; % force m to be odd
 diff_sig_smoothed = convn(diff_sig(:,max(1,min(size(diff_sig,2),1-(m-1)/2:size(diff_sig,2)+(m-1)/2))), hanning(m)', 'valid');
 
-[iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);                     % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3)
+% [iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);   % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3) (REQUIRES >=R2024a)
+iqr_diff = iqr(diff_sig_smoothed,2);
+qart_diff = prctile(diff_sig_smoothed, [25; 75], 2);
 iqr_thr = 3;                                                  % threshold to identify outliers
 
 
@@ -95,7 +97,10 @@ diff_sig(diff_sig_mask) = 0;
 
 % Apply Manual Artifact Mask
 % load artifact mask
-t = readtable(['/Volumes/Nexus4/DBS/derivatives/sub-', op.sub, '/annot/sub-',op.sub,'_ses-intraop_task-smsl_artifact-manual.tsv'], "FileType","text",'Delimiter', '\t');
+if exist('/Volumes/Nexus4/DBS/derivatives','dir') % if we're working in RD's local folder
+    PATH_DER = '/Volumes/Nexus4/DBS/derivatives'; 
+end
+t = readtable([PATH_DER, filesep, 'sub-', op.sub, filesep 'annot',filesep, 'sub-',op.sub,'_ses-intraop_task-smsl_artifact-manual.tsv'], "FileType","text",'Delimiter', '\t');
 
 % convert global time to samples
 t.starts_idx = zeros(size(t.starts));
@@ -142,7 +147,7 @@ cfg.dftfreq           = [60 120 180 240 300 360 420 480];
 cfg.dftbandwidth      = [1   1   1   1   1   1   1   1];
 cfg.dftneighbourwidth = [2   2   2   2   2   2   2   2];
 
-if 1
+if 0
     F = cfg.dftfreq;
     N = D_annot.nSamples2;
     Fs = D_annot.Fs;
@@ -152,19 +157,19 @@ if 1
     newF = reshape(newF,1,[]);
     % newF = [newF cfg.dftfreq(2:end)];
     cfg.dftfreq = newF;
-elseif 0
+elseif 1
     cfg.dftreplace='neighbour';
     cfg.dftbandwidth      = 0.05 * [ 1   1   1   1   1   1   1   1];
     cfg.dftneighbourwidth = 0.05 * [ 2   2   2   2   2   2   2   2];
 end
 
 
-% if 1 % && ~exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'],"file")
-%     D_sel_filt = ft_preprocessing(cfg,D_sel);
+if 1 % && ~exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'],"file")
+    D_sel_filt = ft_preprocessing(cfg,D_sel);
 %     save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'], 'D_sel_filt')
-% elseif exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_cont.mat'],"file")
+elseif exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_cont.mat'],"file")
 %     load(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'])
-% end
+end
 
 % % % Redefining trials
 % for dbs-seq/smsl, we will use experimenter keypress for trial start/end times
