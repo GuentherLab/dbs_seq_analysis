@@ -96,6 +96,8 @@ else
     elc_info = [elc_info, elc_info_blank];
 end
 
+stim_info = load_seq_stim_info(PATH_STIM_INFO_TABLE); % list of phonemes for all stim
+
 %% get responses in predefined epochs
 % 'base' = average durng pre-visual-stim baseline
 % all response values except 'base' are baseline-normalized by dividing by that trial's baseline average... 'base' records the absolute value of the baseline
@@ -116,6 +118,8 @@ trials.t_aud_go_off = trials_with_stim_timing.audio_go_offset;
 trials.starts = trials.t_aud_syl_on - base_win_sec(1); % trial starts at beginning of baseline window - before vis onset, which comes 1sec earlier than audio stim in dbsseeq 
 trials.ends = trials.t_prod_off + trial_end_post_speech_win; % trial ends at fixed time after voice offset
 trials.duration = trials.ends - trials.starts; 
+trials.cons = cell(ntrials,3); 
+trials.vow = cel_tr; 
 
 
 % table containing responses during epochs for each chan
@@ -123,7 +127,7 @@ cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
 resp = table(   D_wavpow.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
   'VariableNames', {'chan', 'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
 
-% extract epoch-related responses
+% extract epoch-related responses, get phonemes on each trial
 %%%% trials.times{itrial} use global time coordinates
 %%%% ....... start at a fixed baseline window before stim onset
 %%%% ....... end at a fixed time buffer after speech offset
@@ -159,6 +163,13 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
         % response during speech production
         resp.prod{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
     end    
+
+    % list individual phonemes
+    trials.cons(itrial,:) = stim_info.consonant(strcmp(trials.word{itrial},stim_info.orthography),:);
+    trials.vow(itrial) = stim_info.vowel(strcmp(trials.word{itrial},stim_info.orthography),:);    
+    trials.ons_clust{itrial} = trials.cons{itrial,1:2}; 
+    trials.rime{itrial} = strcat(trials.vow{itrial},trials.cons{itrial,3}); 
+
 end
 trials(:,{'audio_go_offset'}) = []; % renamed/redundant
 
@@ -168,11 +179,7 @@ trials.learn_con(find(trials.stim_condition==1)) = {'nn_train'};
 trials.learn_con(find(trials.stim_condition==2)) = {'nn_nov'};
 trials.learn_con(find(trials.stim_condition==3)) = {'nat'};
 trials = removevars(trials,{'stim_condition','run_id'});
-trials.ons_clust = cellfun(@(x)x(1:end-3),trials.word, 'UniformOutput',false);
-trials.rime = cellfun(@(x)x(end-1:end),trials.word, 'UniformOutput',false);
-trials.vow = cellfun(@(x)x(end-1),trials.word, 'UniformOutput',false);
-trials.coda = cellfun(@(x)x(end),trials.word, 'UniformOutput',false);
-trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error','word','ons_clust','rime','vow','coda'},'Before',1);
+trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error','word','cons','vow','ons_clust','rime'},'Before',1);
 
 %% test for response types 
 for ichan = 1:nchans
@@ -230,7 +237,7 @@ for ichan = 1:nchans
          [~, resp.p_prod_novel_vs_nat(ichan)] = ttest2( prod_resp_novel, prod_resp_nat );      
             resp.sign_prod_novel_minus_nat(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_nat) ); 
     
-         % preferential response for specific stim
+         % preferential response for specific stim/phonemes
         resp.p_stim_syl(ichan) = anova1(resp.stim{ichan}(good_trials),trials.word(good_trials),'off'); % include stop trials
         resp.p_prep_syl(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.word(good_gotrials),'off');
         resp.p_prod_syl(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.word(good_gotrials),'off');
@@ -239,7 +246,16 @@ for ichan = 1:nchans
         resp.p_prep_rime(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.rime(good_gotrials),'off'); 
         resp.p_prod_rime(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.rime(good_gotrials),'off');
 
-       
+        resp.p_stim_vow(ichan) = anova1(resp.stim{ichan}(good_trials),trials.vow(good_trials),'off'); % include stop trials
+        resp.p_prep_vow(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.vow(good_gotrials),'off'); 
+        resp.p_prod_vow(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.vow(good_gotrials),'off');
+
+       for iphon = 1:3
+           resp.p_stim_cons(ichan,iphon) = anova1(resp.stim{ichan}(good_trials),trials.cons(good_trials,iphon),'off'); 
+            resp.p_prep_cons(ichan,iphon) = anova1(resp.prep{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
+            resp.p_prod_cons(ichan,iphon) = anova1(resp.prod{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
+       end
+            
     end
 
     

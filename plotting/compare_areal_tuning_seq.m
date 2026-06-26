@@ -65,7 +65,7 @@ op.regiondef = {   'SMC',  {'1','2','3a','3b','4','6v','6d','43','55b','PEF','FE
                 };
 
 op.separate_individual_subs = 1; 
-op.analyze_responsive_elcs_only = 0;
+op.analyze_responsive_elcs_only = 1;
 
 % op.param = 'p_min_stim_prep_prod'; % general task responsivity
 % op.param = 'p_stim';
@@ -87,13 +87,28 @@ op.analyze_responsive_elcs_only = 0;
 % op.param = 'p_prod_novel_vs_nat';
 
 % op.param = 'p_stim_syl';
-op.param = 'p_prep_syl';
+% op.param = 'p_prep_syl';
 % op.param = 'p_prod_syl';
 
 % op.param = 'p_stim_rime';
 % op.param = 'p_prep_rime';
 % op.param = 'p_prod_rime';
 
+% op.param = {'p_stim_cons',1};
+% op.param = {'p_prep_cons',1};
+% op.param = {'p_prod_cons',1};
+
+% op.param = {'p_stim_cons',2};
+% op.param = {'p_prep_cons',2};
+% op.param = {'p_prod_cons',2};
+
+% op.param = {'p_stim_cons',3};
+% op.param = {'p_prep_cons',3};
+% op.param = {'p_prod_cons',3};
+
+% op.param = 'p_stim_vow';
+% op.param = 'p_prep_vow';
+op.param = 'p_prod_vow';
 
 % op.alpha = 0.01; 
 op.alpha = 0.05; 
