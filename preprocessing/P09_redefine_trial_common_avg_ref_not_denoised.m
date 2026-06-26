@@ -82,8 +82,9 @@ diff_sig = diff(og_sig,1,2);                                % diff_sig contains 
 m = 2*round(spike_dur*D_annot.Fs/2) + 1; % force m to be odd
 diff_sig_smoothed = convn(diff_sig(:,max(1,min(size(diff_sig,2),1-(m-1)/2:size(diff_sig,2)+(m-1)/2))), hanning(m)', 'valid');
 
-[iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);                     % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3)
-iqr_thr = 3;                                                  % threshold to identify outliers
+% [iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);   % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3) (REQUIRES >=R2024a)
+iqr_diff = iqr(diff_sig_smoothed,2);
+qart_diff = prctile(diff_sig_smoothed, [25; 75], 2);                                                % threshold to identify outliers
 
 
 % RECONSTRUCTED SIGNAL
