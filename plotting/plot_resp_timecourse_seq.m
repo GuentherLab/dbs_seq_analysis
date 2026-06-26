@@ -77,9 +77,21 @@ trials.is_nat = cell(height(trials),1);
 if isempty(op.sort_cond) % plot all trials in a single trace
     trial_conds = ones(height(trials),1); 
 elseif ~isempty(op.sort_cond)
-    trial_conds = trials{:,op.sort_cond}; 
+    if iscell(op.sort_cond) % if we need to select only 1 column from the table variable
+        trial_conds = trials{:,op.sort_cond{1}}(:,op.sort_cond{2}); 
+%         field_default('op','full_param_string',[op.param{1}, '_', num2str(op.param{2})]); % display name of the param - default to its name in resp table with index number
+    else
+        trial_conds = trials{:,op.sort_cond}; 
+%         field_default('op','full_param_string',op.param); % display name of the param - default to its name in resp table
+    end
+
+
+
 end
 
+%%% ......... 1047 has missing visual_onset trials, so use audio onset instead which is very reliably 1.0sec after visual_onset
+nanvistrials = isnan(trials.t_vis_syl_on);
+trials.t_vis_syl_on(nanvistrials) = trials.t_aud_syl_on(nanvistrials) + 1.0; 
 
  %% sort trials by condition, get average responses + error, plot
  [op, resp_grpd] = plot_resp_timecourse(trials, timecourses_unaligned, trial_conds, op); % from ieeg_ft_funcs_am repo - must be on path

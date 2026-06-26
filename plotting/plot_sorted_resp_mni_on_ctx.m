@@ -64,13 +64,13 @@ color_ep_cm = '#9EB859';% #EP CM
 %% make sorted version of resp table
 %%%% find and plot the electrodes which are best tuned for a given parameter
 
-param = 'p_prep_syl3';
+op.param = 'p_prep_syl3';
 
 % % % % % delete channels if they have nan for the following parameter
 % exclude_if_nan_param = 'p_prep';
 
-srt = sortrows(resp,param); 
-srt = movevars(resp,{param},'After','chan');
+srt = sortrows(resp,op.param); 
+srt = movevars(resp,{op.param},'After','chan');
 
 
 

@@ -107,8 +107,8 @@ op.analyze_responsive_elcs_only = 1;
 % op.param = {'p_prod_cons',3};
 
 % op.param = 'p_stim_vow';
-% op.param = 'p_prep_vow';
-op.param = 'p_prod_vow';
+op.param = 'p_prep_vow';
+% op.param = 'p_prod_vow';
 
 % op.alpha = 0.01; 
 op.alpha = 0.05; 

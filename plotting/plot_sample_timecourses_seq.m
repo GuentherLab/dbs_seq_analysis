@@ -1,16 +1,16 @@
 %%%% plot timecourses of example electrodes highly tuned for a given parameter
 % run sort_top_tuned_seq first to create srt table
 
-load('Y:\DBS\groupanalyses\task-smsl\gotrials\resp_all_subjects_hg_ref-CMR.mat')
-sort_top_tuned_seq(); 
+% load('Y:\DBS\groupanalyses\task-smsl\gotrials\resp_all_subjects_hg_ref-CMR.mat')
+% sort_top_tuned_seq(); 
 % close all
-clear op
+% clear op
 
 %% params
 
 % rowlist = 1; 
-rowlist = 1:6;
-% rowlist = 7:12; 
+% rowlist = 1:6;
+rowlist = 7:12; 
 % rowlist = 13:18; 
 % rowlist = 19:24; 
 % rowlist = 25:30; 
@@ -48,8 +48,11 @@ op.plot_go_trials_only = 1; % exclude STOP trials from plotting
 op.sort_cond = []; % plot all trials averaged as a single timecourse without sorting
 %     op.sort_cond = 'learn_con';
 %     op.sort_cond = 'is_nat';
-    op.sort_cond = 'word';
-    % op.sort_cond = 'vow';
+%     op.sort_cond = 'word';
+    op.sort_cond = {'cons',1}; 
+%     op.sort_cond = {'cons',2}; 
+%     op.sort_cond = {'cons',3}; 
+%     op.sort_cond = 'vow';
 %     op.sort_cond = 'word_accuracy';
 %     op.sort_cond = 'seq_accuracy';
 
