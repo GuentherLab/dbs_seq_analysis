@@ -73,52 +73,57 @@ cfg.remask_nan = true;
 cfg.value = 0;
 D_sel = bml_mask(cfg, D_sel);
 
-% % % Identify initial outliers and exclude
-diff_sig = D_sel.trial{:};
-diff_sig = diff(diff_sig,1,2);
-cs_diff_sig = cumsum(diff_sig, 2, 'omitmissing');
-cs_diff_sig = [zeros(size(cs_diff_sig,1),1) cs_diff_sig];
+% ORIGINAL SIGNAL
+spike_dur = 0.1; %100ms
+og_sig = cat(2,D_sel.trial{:});                             % og_sig contains an electrodes*timepoints matrix of "original values"
 
-m_sig = median(diff_sig,2,'omitnan');
-% std_sig = std(diff_sig,1,2,'omitnan'); % use interquartile range
-std_sig = iqr(diff_sig,2);
-n_std = 3;
+% IDENTIFY POTENTIAL OUTLIERS (as samples where diff_sig > Q3 + n_thr * IQR, or diff_sig < Q1 - n_thr * IQR)
+diff_sig = diff(og_sig,1,2);                                % diff_sig contains an electrodes*(timepoints-1) matrix of differences (temporal derivative)
+m = 2*round(spike_dur*D_annot.Fs/2) + 1; % force m to be odd
+diff_sig_smoothed = convn(diff_sig(:,max(1,min(size(diff_sig,2),1-(m-1)/2:size(diff_sig,2)+(m-1)/2))), hanning(m)', 'valid');
 
-og_sig = D_sel.trial{:};
-mask = abs(diff_sig - m_sig) > n_std*std_sig;
-% mask = abs(diff_sig - cs_diff_sig) > n_std*std_sig;
-mask = mask(:,[1:end, end]) | mask(:,[1, 1:end]) ;
-mask_new = mask;
+[iqr_diff,qart_diff] = iqr(diff_sig_smoothed,2);                     % iqr_diff: interquartile range of differences (IQR); qart_diff: first and third quartiles (Q1 & Q3)
+iqr_thr = 3;                                                  % threshold to identify outliers
 
-win_size = 500; win_step = 500; thresh = 0.3;
-for i_win = 1:(size(mask,2) - win_size)/win_step
-    i_win_range = (i_win-1)*win_step+1 : (i_win-1)*win_step+win_size;
 
-    n_outlier = sum(mask(:,i_win_range),2);    
-    mask_new(n_outlier/win_size>thresh,i_win_range) = 1;    
+% RECONSTRUCTED SIGNAL
+% Apply diff_sig_mask
+% diff_sig = max(min(diff_sig, qart_diff(:,2)+n_thr*iqr_diff),qart_diff(:,1)-n_thr*iqr_diff); % crops derivatives beyond minimum/maximum values
+diff_sig_mask = diff_sig_smoothed > qart_diff(:,2)+iqr_thr*iqr_diff | diff_sig_smoothed < qart_diff(:,1)-iqr_thr*iqr_diff;
+diff_sig(diff_sig_mask) = 0;
+
+
+% Apply Manual Artifact Mask
+% load artifact mask
+t = readtable(['/Volumes/Nexus4/DBS/derivatives/sub-', op.sub, '/annot/sub-',op.sub,'_ses-intraop_task-smsl_artifact-manual.tsv'], "FileType","text",'Delimiter', '\t');
+
+% convert global time to samples
+t.starts_idx = zeros(size(t.starts));
+t.ends_idx = zeros(size(t.ends));
+for i_t = 1:size(t,1)
+    [~, t.starts_idx(i_t)] = min(abs(t.starts(i_t) - D_sel.time{1}));
+    [~, t.ends_idx(i_t)] = min(abs(t.ends(i_t) - D_sel.time{1}));
 end
 
-%%
-% switch op.sub
-%     case 'DM1005'
-%         mask_new(2, 3.5*10^5:8*10^5) = 1;
-%     case 'DM1007'
-%         mask_new(10, 3.5*10^5:4.5*10^5) = 1;
-%         mask_new(85, [1:0.25*10^5 4.25*10^5:6.25*10^5]) = 1;        
-%     case 'DM1025'
-%         mask_new(74, 1.8*10^5:2*10^5) = 1;
-%     case 'DM1037'
-%         mask_new(24, 7.6*10^5:7.62*10^5) = 1;
-% end
-%%
-m_sig = median(og_sig,2,'omitnan');
-og_sig = og_sig - m_sig;
-og_sig(mask_new) = 0;
-% og_sig = og_sig + m_sig;
-og_sig = og_sig + cs_diff_sig + m_sig;
+% for each electrode, set value to zero from starts:end
+for i_t = 1:size(t,1)
+    diff_sig(strcmp(D_sel.label, t.label(i_t)), t.starts_idx(i_t):t.ends_idx(i_t)) = 0;
+end
+
+% apply
+og_sig = cumsum([zeros(size(diff_sig,1),1), diff_sig],2);   % reconstructs original signal by cumulative sum (temporal integral)
+
+% 
+f_c = 2; % cutoff freq
+k = 1/(1 + 2*pi*f_c/D_annot.Fs); % first order IIR
+for n=2:size(og_sig,2)    
+    og_sig(:,n) = k*og_sig(:,n-1) + k*diff_sig(:,n-1); % HPF
+    % og_sig(:,n) = og_sig(:,n-1) + k*(diff_sig(:,n) - og_sig(:,n-1)); % LPF    
+end
 
 D_sel.trial{:} = og_sig;
-clearvars diff_sig og_sig m_sig std_sig n_std
+% clearvars diff_sig og_sig m_sig std_sig n_std
+clearvars og_sig diff_sig diff_sig_mask diff_sig_smoothed iqr_diff qart_diff n_thr t
 
 
 % % % Applying high pass filter and line noise removal filter
@@ -133,9 +138,9 @@ cfg.hpfiltdir='twopass';
 cfg.dftfilter='yes';
 %%%% this interpolation option is causing an error with 3012, artifact criterion E
 % cfg.dftreplace='neighbour';  %using spectrum interpolation method Mewett et al 2004
-cfg.dftfreq           = [1 60 120 180 240 300 360 420 480];
-cfg.dftbandwidth      = [1 1   1   1   1   1   1   1   1];
-cfg.dftneighbourwidth = [2 2   2   2   2   2   2   2   2];
+cfg.dftfreq           = [60 120 180 240 300 360 420 480];
+cfg.dftbandwidth      = [1   1   1   1   1   1   1   1];
+cfg.dftneighbourwidth = [2   2   2   2   2   2   2   2];
 
 if 1
     F = cfg.dftfreq;
@@ -154,12 +159,12 @@ elseif 0
 end
 
 
-if 1 % && ~exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'],"file")
-    D_sel_filt = ft_preprocessing(cfg,D_sel);
-    save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'], 'D_sel_filt')
-elseif exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_cont.mat'],"file")
-    load(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'])
-end
+% if 1 % && ~exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'],"file")
+%     D_sel_filt = ft_preprocessing(cfg,D_sel);
+%     save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'], 'D_sel_filt')
+% elseif exist(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_cont.mat'],"file")
+%     load(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_' num2str(BW) 'Hz_cont.mat'])
+% end
 
 % % % Redefining trials
 % for dbs-seq/smsl, we will use experimenter keypress for trial start/end times
