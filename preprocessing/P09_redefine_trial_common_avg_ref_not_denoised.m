@@ -125,6 +125,7 @@ for n=2:size(og_sig,2)
     og_sig(:,n) = k*og_sig(:,n-1) + k*diff_sig(:,n-1); % HPF
     % og_sig(:,n) = og_sig(:,n-1) + k*(diff_sig(:,n) - og_sig(:,n-1)); % LPF    
 end
+og_sig = og_sig(:,1:end-1); % AM edit 2026-6-26 - we need to remove a column to match original number of columns
 
 D_sel.trial{:} = og_sig;
 % clearvars diff_sig og_sig m_sig std_sig n_std
