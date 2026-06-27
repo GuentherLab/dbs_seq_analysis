@@ -304,8 +304,15 @@ saveas(f,[PATH_FIGURES filesep 'sub-' op.sub '_P09_raw_filt_ref_xcorr_T1_' op.re
 
 
 % %% Generate and save PSD plots of Pre- and Post- Notch, and Artifact Rejection
-save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch.mat'],  'D_sel_filt_trial')
-save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_mask.mat'],  'D_sel_filt_trial_mask')
+if exist('/Users/rohandeshpande/Documents/School/Research/Code/data/ft','dir') % if working in RD local machine
+    save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch.mat'],  'D_sel_filt_trial')
+    save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_mask.mat'],  'D_sel_filt_trial_mask')
+else
+    save([PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',SESSION, '_ft-raw-notch'],'D_sel_filt_trial')
+    save([PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',SESSION, '_ft-raw-notch-mask'],'D_sel_filt_trial_mask')
+end
+
+
 % 
 % sublist ={...
 %      % 'DM1005';...
