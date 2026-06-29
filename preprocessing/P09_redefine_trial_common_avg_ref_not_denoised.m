@@ -1,6 +1,8 @@
 %%% do offline rereferencing of raw [HPF and line-noise filtered] signal after applying artifact masks
 %%% ... the function P08A09_detect_artifact_not_denoised must have been run first
 % protocol P09 for Pitt data; not yet assigned a protocol number for MGH data
+%
+% Rohan D. 2026 version
 
 function P09_redefine_trial_common_avg_ref_not_denoised(op)
 
@@ -12,7 +14,7 @@ format long
 %% Defining paths, loading artifact parameters
 vardefault('op',struct); % initialize options if not present
 field_default('op','sub','DM1005')
-field_default('op','art_crit','E'); % 'E' = 70-250hz high gamma; 'F' = beta; 'G' = other Rohan criterion? 
+field_default('op','art_crit','G'); % 'E' = 70-250hz high gamma; 'F' = beta; 'G' = new Rohan method
 field_default('op','do_high_pass_filter','yes'); % should a high pass filter be applied
     field_default('op','high_pass_filter_freq',1); %cutoff frequency of high pass filter, if one is to be used
 field_default('op','rereference_method','CTAR'); 
@@ -308,7 +310,7 @@ if exist('/Users/rohandeshpande/Documents/School/Research/Code/data/ft','dir') %
     save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch.mat'],  'D_sel_filt_trial')
     save(['/Users/rohandeshpande/Documents/School/Research/Code/data/ft/sub-' op.sub '_ft_notch_mask.mat'],  'D_sel_filt_trial_mask')
 else
-    save([PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',SESSION, '_ft-raw-notch'],'D_sel_filt_trial')
+    save([PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',SESSION, '_ft-raw-art-manual-crit-G-filt'],'D_sel_filt_trial')
     save([PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',SESSION, '_ft-raw-notch-mask'],'D_sel_filt_trial_mask')
 end
 
