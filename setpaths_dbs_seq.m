@@ -7,20 +7,24 @@ compname = getenv('COMPUTERNAME');
       PATH_BML = 'C:\Program Files\Brain-Modulation-Lab\bml'; 
      PATH_IEEG_FT_FUNCS_AM = 'Y:\Documents\Code\ieeg_ft_funcs_am'; % ieeg processing code shared across AM projects
      PATH_DBSSEQ_CODE = 'Y:\Documents\Code\dbs_seq_analysis'; 
-     PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
      PATH_LEADDBS = 'C:\Program Files\LeadDBS_Classic'; % classic, not updated version, is used for preprocessing
      PATH_SPM = 'C:\Program Files\SPM\spm12'; 
      PATH_ECOG_LOCALIZATION = 'C:\Program Files\Brain-Modulation-Lab\ECoG_localization'; % scripts for registering ecog to DBS... probably Turbo only
+
+     PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing      
+%      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
 
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER'})) % if working with files local on AM computers 
      PATH_CODE = 'C:\docs\code'; % AM laptop top directory for all code repos 
      PATH_BML = [PATH_CODE filesep 'bml']; 
      PATH_IEEG_FT_FUNCS_AM = [PATH_CODE filesep 'ieeg_ft_funcs_am']; % ieeg processing code shared across AM projects
      PATH_DBSSEQ_CODE = [PATH_CODE filesep 'dbs_seq_analysis'];; 
-     PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; % previously tried using remote Y drive version, but often causes matlab to freeze
      PATH_LEADDBS = [PATH_CODE filesep ]; % ? have a copy on local computer ? 
      PATH_SPM = [PATH_CODE, filesep, 'spm12']; 
      PATH_ECOG_LOCALIZATION = ''; % scripts for registering ecog to DBS... probably Turbo only
+
+     PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing 
+%      PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; % previously tried using remote Y drive version, but often causes matlab to freeze
 
   else 
      error('computer name not recognized; please add computer to setpaths_dbs_seq.m')
@@ -75,6 +79,10 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_LEADDBS;...
                 PATH_ECOG_LOCALIZATION;... 
     };
+
+%%%% make sure that we don't have any unintended fieldtrip folders in our path
+rmpath(genpath(fileparts(which('ft_defaults'))))
+
 addpath(paths_to_add{:});
 
 ft_defaults()
