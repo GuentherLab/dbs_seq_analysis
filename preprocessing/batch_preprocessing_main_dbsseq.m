@@ -57,23 +57,34 @@ for isub = 1:nsubs
     set_project_specific_variables(); % get sub-specific info
     load(FT_RAW_FILENAME, 'D')
 
+
+% need to add ephys channel selection here
+
+
     % apply manual artifact mask, run cleaning script, highpass filter, notch filter
 
     cfg = []; 
     D_sel_hpf_cleaned = hpf_and_instantaneous_artifact_mask(D,cfg);
 
     cfg = [];
-    D_sel_notch = notch_harmonics_filter(D_sel_hpf_cleaned,cfg);
-    1
+    [D_sel_notch, cfg_notch] = notch_harmonics_filter(D_sel_hpf_cleaned,cfg);
+    save([FT_FILE_PREFIX,'raw-filt_ar-G'],'D_sel_notch','cfg_notch')
 
     % rereferencing - save output
-
+    % important: set manual artifactual timepoints to nans here, not just zeroes
+    % .... so that zeroes don't affect CMR
+    % use rereference_ephys here.... either include plotting functions in that or make new plotting function
+    %%%% adapt the useful parts of Y:\Documents\Code\ieeg_ft_funcs_am\preprocessing\P09_redefine_trial_common_avg_ref_not_denoised.m
     
     % compute both hg and beta, save outputs
+    %%% AM note: edit multifreq_avg_pow to call envelope_wavpow in ieeg_ft/preprocessing instead of bml_envelope_wavpow
+
+    % key thing to look at: what does hg and beta power look like on the edges of artifact windows? 
+
+    % definitely need to re-nan the artifact windows after getting hg and beta
 
 
-
-
+% note - this was a wrapper for multifreq avg wavpow - see if it has anything important
 % % % % % % % %     P09_compute_wavpow_trials_not_denoised(op)
 
 
