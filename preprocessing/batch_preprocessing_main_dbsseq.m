@@ -10,8 +10,8 @@
 clear
 
 
-op.resp_signal = 'hg'; 
-% op.resp_signal = 'beta'; 
+% % % % % % op.resp_signal = 'hg'; 
+% % % % % % % op.resp_signal = 'beta'; 
 
 op.art_crit = 'G'; 
 
@@ -20,7 +20,7 @@ op.art_crit = 'G';
 op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
 
 
-op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before visual onset; gets unsed in redefine_trial
+op.time_buffer_before_epoch_trial_start = 1; % time buffer in sec before visual onset; ?? gets used in redefine_trial ??
 
 op.denoised = 0; 
 
@@ -53,11 +53,31 @@ for isub = 1:nsubs
 
     close all force
 
-    % apply manual artifact mask, run cleaning script, highpass filter, notch filter
-    clean_mask_hpf_notch_filter(op)
+    % load fieldtrip raw and select ephys channels
+    set_project_specific_variables(); % get sub-specific info
+    load(FT_RAW_FILENAME, 'D')
 
-% % % % % % %     P09_redefine_trial_common_avg_ref_not_denoised(op)
+    % apply manual artifact mask, run cleaning script, highpass filter, notch filter
+
+    cfg = []; 
+    D_sel_hpf_cleaned = hpf_and_instantaneous_artifact_mask(D,cfg);
+
+    cfg = [];
+    D_sel_notch = notch_harmonics_filter(D_sel_hpf_cleaned,cfg);
+    1
+
+    % rereferencing - save output
+
     
+    % compute both hg and beta, save outputs
+
+
+
+
 % % % % % % % %     P09_compute_wavpow_trials_not_denoised(op)
+
+
+
+
 end
  
