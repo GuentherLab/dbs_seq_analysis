@@ -97,9 +97,10 @@ set(0, 'DefaultAxesTickLabelInterpreter', 'none')
 format long
 
 vardefault('op',struct);
-field_default('op','art_crit','E'); % E = high gamma, F = beta
+field_default('op','art_crit','G'); % E = high gamma, F = beta
 
-PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_', op.art_crit]; % keep in repo to sync across devices
+%%%%% probably need to change or delete this for artifact G
+% % % PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_', op.art_crit]; % keep in repo to sync across devices
 
 
  clearvars compname paths_to_add PATH_CODE PATH_BML
