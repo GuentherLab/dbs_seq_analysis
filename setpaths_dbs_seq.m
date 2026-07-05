@@ -11,7 +11,6 @@ compname = getenv('COMPUTERNAME');
      PATH_SPM = 'C:\Program Files\SPM\spm12'; 
      PATH_ECOG_LOCALIZATION = 'C:\Program Files\Brain-Modulation-Lab\ECoG_localization'; % scripts for registering ecog to DBS... probably Turbo only
 
-     PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing      
 %      PATH_FIELDTRIP_CODE = 'Y:\Users\lbullock\MATLAB_external_libs_Turbo20230907\fieldtrip'; 
 
  elseif any(strcmp(compname, {'MSI','677-GUE-WL-0010','AMSMEIER'})) % if working with files local on AM computers 
@@ -22,10 +21,6 @@ compname = getenv('COMPUTERNAME');
      PATH_LEADDBS = [PATH_CODE filesep ]; % ? have a copy on local computer ? 
      PATH_SPM = [PATH_CODE, filesep, 'spm12']; 
      PATH_ECOG_LOCALIZATION = ''; % scripts for registering ecog to DBS... probably Turbo only
-
-     PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing 
-%      PATH_FIELDTRIP_CODE = [PATH_CODE filesep 'fieldtrip']; % previously tried using remote Y drive version, but often causes matlab to freeze
-
   else 
      error('computer name not recognized; please add computer to setpaths_dbs_seq.m')
  end
@@ -59,6 +54,7 @@ compname = getenv('COMPUTERNAME');
  PATH_RESULTS_FIGS = [PATH_RESULTS filesep 'figs']; 
  PATH_SUB_MASTER_TABLE = [PATH_DBSSEQ_CODE filesep 'dbs_seq_subjects_master.tsv']; 
  PATH_STIM_INFO_TABLE = [PATH_DBSSEQ_CODE, filesep, 'stim', filesep, 'stim_info_master_dbs_seq.xlsx']; 
+ PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'preprocessing', filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing      
  
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
@@ -80,13 +76,24 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
                 PATH_ECOG_LOCALIZATION;... 
     };
 
-%%%% make sure that we don't have any unintended fieldtrip folders in our path
-rmpath(genpath(fileparts(which('ft_defaults'))))
 
 addpath(paths_to_add{:});
 
-ft_defaults()
-bml_defaults()
+%%%% make sure that we don't have any unintended fieldtrip folders in our path
+if length(which('-all', 'ft_preprocessing')) > 1 % if there's an extra copy of fieldtrip on path
+    rmpath(genpath(fileparts(which('ft_defaults'))))
+    addpath(PATH_FIELDTRIP_CODE); % re-add correct path
+end
+
+% if ft_defaults hasn't been run in this session or needs to be rurn, run it
+if ~contains(path,[PATH_FIELDTRIP_CODE, filesep, 'connectivity'])
+    ft_defaults()
+end
+
+% if bml_defaults hasn't been run in this session or needs to be rurn, run it
+if ~contains(path,[PATH_BML, filesep, 'anat'])
+    bml_defaults()
+end
 
 addpath(fileparts(which('anova1'))); % make sure Matlab stats toolbox is on top, so that it's not superseded by fieldtrip/external/stats
 

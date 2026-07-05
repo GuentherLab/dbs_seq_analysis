@@ -1,9 +1,10 @@
+% this version runs as a script, assumes trialwise trials, and is assumed to use art crit E/F
+%   subsequent versions run as a function, assume input fieldtrip struct is a continuous run, and use art crit G
+
 % compute eletrode responses during specific trial epochs
 % look for electrodes with different responses to different conditions
 
 % clear
-
-function [resp, trials, op_out] = response_types_seq(op)
 
 %% analysis parameters
 %%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before visual stim onset.... this comes before aud stim onset in dbsseq
@@ -16,6 +17,7 @@ stim_window_extend_end = 0.3; % for re[1.5, 1.1]sponses during stimulus, add thi
 speech_window_extend_start = 0.15;  
 trial_end_post_speech_win = 0.6; % end the trial this long after speech offset in seconds
 
+use_vibration_denoised_data = 0; 
 
 % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
 % responsivity_alpha = 0.05; % uncorrected
@@ -24,26 +26,50 @@ responsivity_alpha = 0.05 / 2^[3-1]; % bonf correction for 3 tests
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
 field_default('op','sub','DM1007');
-field_default('op','resp_signal','hg'); 
-field_default('op','art_crit','G'); 
-field_default('op','rereference_method','CMR');
-
+vardefault('resp_signal','hg'); 
+vardefault('ARTIFACT_CRIT','E'); 
+vardefault('rereference_method','CTAR');
 SESSION = 'intraop';
 TASK = 'smsl'; 
 
-set_project_specific_variables() % subject-specific paths and variables
+%%% CRITERIA E parameter values
+PATH_DER = [PATH_DATA filesep 'derivatives'];
+PATH_DER_SUB = [PATH_DER filesep 'sub-' op.sub];  
+PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
+PATH_ANNOT = [PATH_DER_SUB filesep 'annot'];
+PATH_FIELDTRIP = [PATH_DER_SUB filesep 'fieldtrip'];
+PATH_AEC = [PATH_DER_SUB filesep 'aec']; 
+PATH_SCORING = [PATH_DER_SUB filesep 'analysis' filesep 'task-', TASK, '_scoring'];
+PATH_ANALYSIS = [PATH_DER_SUB filesep 'analysis'];
+PATH_TRIAL_AUDIO = [PATH_ANALYSIS filesep 'task-', TASK, '_trial-audio'];
+PATH_TRIAL_AUDIO_INTRAOP_GO = [PATH_TRIAL_AUDIO filesep 'ses-', SESSION, '_go-trials'];
+PATH_TRIAL_AUDIO_INTRAOP_STOP = [PATH_TRIAL_AUDIO filesep 'ses-', SESSION, '_stop-trials']; 
+
+PATH_SRC = [PATH_DATA filesep 'sourcedata'];
+PATH_SRC_SUB = [PATH_SRC filesep 'sub-' op.sub];  
+PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION]; 
+PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
+PATHS_TASK = strcat(PATH_SRC_SUB,filesep,{'ses-training';'ses-preop';'ses-intraop'},filesep,'task');
+
 
 
 %% load data 
-load([PATH_FIELDTRIP, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK,...
-    '_ft-', op.resp_signal, '.mat'])
+% cd(PATH_FIELDTRIP)
 
+if use_vibration_denoised_data
+    denoise_str = '_denoised';
+elseif ~use_vibration_denoised_data
+    denoise_str = '_not-denoised';
+end
+
+if ~exist('D_wavpow','var') % if fieldtrip object not yet loaded
+    load([PATH_FIELDTRIP, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK, '_ft-', resp_signal, '-trial_ar-',ARTIFACT_CRIT, '_ref-',rereference_method, denoise_str, '.mat'])
+%     D_wavpow = D_hg; % comment in for highgamma.... temporary fix
+end
 
 % % trial timing and electrode info
-trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' op.sub, '_ses-', SESSION, '_task-',TASK,...
-     '_annot-produced-syllables.tsv']);
-trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-',...
-    TASK, '_annot-trials.tsv']);
+trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' op.sub, '_ses-', SESSION, '_task-' TASK, '_annot-produced-syllables.tsv']);
+trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK, '_annot-trials.tsv']);
 
 electrodes_table_filename = [PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv'];
 
@@ -112,33 +138,33 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
     iblock = trials.block_id(itrial); 
     trial_id_in_block = trials.trial_id(itrial); % block-relative trial number
     
-    % get indices within the trial-specific set of timepoints of D_wavpow.time{1} that match our specified trial window
-    match_time_inds = D_wavpow.time{1} > trials.starts(itrial) & D_wavpow.time{1} < trials.ends(itrial); 
-    trials.times{itrial} = D_wavpow.time{1}(match_time_inds); % times in this redefined trial window... still using global time coordinates
+    % get indices within the trial-specific set of timepoints of D_wavpow.time{itrial} that match our specified trial window
+    match_time_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < trials.ends(itrial); 
+    trials.times{itrial} = D_wavpow.time{itrial}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
     % get trial-relative baseline time indices; window time-locked to first stim onset
-    base_inds = D_wavpow.time{1} > trials.starts(itrial) & D_wavpow.time{1} < trials.starts(itrial) + [base_win_sec(1) - base_win_sec(2)]; 
-    stim_inds = D_wavpow.time{1} > trials.t_vis_syl_on(itrial) & D_wavpow.time{1} < trials.t_aud_syl_off(itrial) + stim_window_extend_end; % starts at vis onset, stop before vis offset (at aud offset)
-    prep_inds = D_wavpow.time{1} > trials.t_aud_syl_off(itrial) & D_wavpow.time{1} < [trials.t_prod_on(itrial) - speech_window_extend_start]; % this period includes go beep
-    prod_inds = D_wavpow.time{1} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{1} < trials.t_prod_off(itrial);     
+    base_inds = D_wavpow.time{itrial} > trials.starts(itrial) & D_wavpow.time{itrial} < trials.starts(itrial) + [base_win_sec(1) - base_win_sec(2)]; 
+    stim_inds = D_wavpow.time{itrial} > trials.t_vis_syl_on(itrial) & D_wavpow.time{itrial} < trials.t_aud_syl_off(itrial) + stim_window_extend_end; % starts at vis onset, stop before vis offset (at aud offset)
+    prep_inds = D_wavpow.time{itrial} > trials.t_aud_syl_off(itrial) & D_wavpow.time{itrial} < [trials.t_prod_on(itrial) - speech_window_extend_start]; % this period includes go beep
+    prod_inds = D_wavpow.time{itrial} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{itrial} < trials.t_prod_off(itrial);     
 
     for ichan = 1:nchans
         % baseline activity and timecourse
         % use mean rather than nanmean, so that trials which had artifacts marked with NaNs will be excluded
-        resp.base{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
+        resp.base{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
     
         % get baseline-normalized trial timecourse
-       resp.timecourse{ichan}{itrial} =  D_wavpow.trial{1}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
+       resp.timecourse{ichan}{itrial} =  D_wavpow.trial{itrial}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
 
         % response during stim presentation (not go beep)
-        resp.stim{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
+        resp.stim{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
 
         % preparatory response
         %%%% prep period inds = after stim ends and before syllable prod onset
-        resp.prep{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
+        resp.prep{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
 
         % response during speech production
-        resp.prod{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
+        resp.prod{ichan}(itrial) = mean( D_wavpow.trial{itrial}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
     end    
 
     % list individual phonemes
@@ -252,8 +278,6 @@ resp.sub = cellstr(repmat(op.sub, nchans, 1));
 resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 
-% right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans if they're present
+% right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans
 resp = resp(~contains(resp.chan,'dbs_R'),:);
-
-op_out = op; 
 
