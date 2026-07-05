@@ -77,16 +77,12 @@ for isub = 1:nsubs
     cfg.mask_table = manual_artifact_table; 
     D_hpf_cleaned = hpf_and_instantaneous_artifact_mask(D_sel,cfg);
 
+    fprintf(['\n Notch filtering subject ',thissub,'\n'])
     cfg = [];
     [D_notch, cfg_notch] = notch_harmonics_filter(D_hpf_cleaned,cfg);
     save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit],'D_notch','cfg_notch')
 
     %% rereferencing - save output
-    % important: set manual artifactual timepoints to nans here, not just zeroes
-    % .... so that zeroes don't affect CMR
-    % use rereference_ephys here.... either include plotting functions in that or make new plotting function
-    %%%% adapt the useful parts of Y:\Documents\Code\ieeg_ft_funcs_am\preprocessing\P09_redefine_trial_common_avg_ref_not_denoised.m
-    
     elc_to_reref = electrodes(ismember(electrodes.name,D_sel.label),:);
 
     % first mask zeroes with nans so they don't affect other channels during rereferencing

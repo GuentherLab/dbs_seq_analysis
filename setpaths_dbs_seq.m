@@ -80,8 +80,11 @@ paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
 addpath(paths_to_add{:});
 
 %%%% make sure that we don't have any unintended fieldtrip folders in our path
-if length(which('-all', 'ft_preprocessing')) > 1 % if there's an extra copy of fieldtrip on path
-    rmpath(genpath(fileparts(which('ft_defaults'))))
+if length(which('-all', 'ft_preprocessing')) > 1 % if there's an extra copy of fieldtrip on path, get rid of them all
+    while ~isempty(which('-all', 'ft_preprocessing'))
+        rmpath(genpath(fileparts(which('ft_defaults'))))
+    end
+
     addpath(PATH_FIELDTRIP_CODE); % re-add correct path
 end
 
