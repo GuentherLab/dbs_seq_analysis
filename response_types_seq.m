@@ -26,7 +26,7 @@ setpaths_dbs_seq()
 field_default('op','sub','DM1007');
 field_default('op','resp_signal','hg'); 
 field_default('op','art_crit','G'); 
-field_default('op','rereference_method','CMR');
+field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
 
 SESSION = 'intraop';
 TASK = 'smsl'; 
@@ -126,19 +126,28 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
         % baseline activity and timecourse
         % use mean rather than nanmean, so that trials which had artifacts marked with NaNs will be excluded
         resp.base{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
+
+        % set up params for baselining
+        cfg = [];
+        cfg.baseval = resp.base{ichan}(itrial); 
+        cfg.method = op.baseline_method; 
     
         % get baseline-normalized trial timecourse
-       resp.timecourse{ichan}{itrial} =  D_wavpow.trial{1}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
+% % % % %        resp.timecourse{ichan}{itrial} =  D_wavpow.trial{1}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
+       resp.timecourse{ichan}{itrial} = do_baselining(D_wavpow.trial{1}(ichan, match_time_inds), cfg); 
 
         % response during stim presentation (not go beep)
-        resp.stim{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
+% % % %         resp.stim{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
+        resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
 
         % preparatory response
         %%%% prep period inds = after stim ends and before syllable prod onset
-        resp.prep{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
+% % % %         resp.prep{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
+        resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
 
         % response during speech production
-        resp.prod{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prod_inds) ) - resp.base{ichan}(itrial);
+% % % %         resp.prod{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prod_inds) ) - resp.base{ichan}(iRtrial);
+        resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
     end    
 
     % list individual phonemes
@@ -256,4 +265,17 @@ resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 resp = resp(~contains(resp.chan,'dbs_R'),:);
 
 op_out = op; 
+
+end
+
+%%%% takes a response (numerical array) and does baseline normalization used a specified method
+function normed_response = do_baselining(response,cfg)
+    switch cfg.method
+        case 'subtract'
+            normed_response = response - cfg.baseval; 
+
+        case 'subtract_then_divide'
+            normed_response = [response - cfg.baseval] / cfg.baseval; 
+    end
+end
 

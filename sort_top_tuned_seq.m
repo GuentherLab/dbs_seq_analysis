@@ -10,7 +10,7 @@
 
 
 % op.param = 'p_prep_learn';
-% op.param = 'p_prod_learn';
+op.param = 'p_prod_learn';
 
 % op.param = 'p_prep_nn_v_nat';
 % op.param = 'p_prod_nn_v_nat';
@@ -32,7 +32,7 @@
 
 % op.param = {'p_stim_cons',1};
 % op.param = {'p_prep_cons',1};
-op.param = {'p_prod_cons',1};
+% op.param = {'p_prod_cons',1};
 
 % op.param = {'p_stim_cons',2};
 % op.param = {'p_prep_cons',2};
