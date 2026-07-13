@@ -133,27 +133,23 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
         cfg.method = op.baseline_method; 
     
         % get baseline-normalized trial timecourse
-% % % % %        resp.timecourse{ichan}{itrial} =  D_wavpow.trial{1}(ichan, match_time_inds) - resp.base{ichan}(itrial); 
        resp.timecourse{ichan}{itrial} = do_baselining(D_wavpow.trial{1}(ichan, match_time_inds), cfg); 
 
         % response during stim presentation (not go beep)
-% % % %         resp.stim{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, stim_inds) ) - resp.base{ichan}(itrial);
         resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
 
         % preparatory response
         %%%% prep period inds = after stim ends and before syllable prod onset
-% % % %         resp.prep{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prep_inds) ) - resp.base{ichan}(itrial);
         resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
 
         % response during speech production
-% % % %         resp.prod{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, prod_inds) ) - resp.base{ichan}(iRtrial);
         resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
     end    
 
     % list individual phonemes
     trials.cons(itrial,:) = stim_info.consonant(strcmp(trials.word{itrial},stim_info.orthography),:);
     trials.vow(itrial) = stim_info.vowel(strcmp(trials.word{itrial},stim_info.orthography),:);    
-    trials.ons_clust{itrial} = trials.cons{itrial,1:2}; 
+    trials.ons_clust{itrial} = strrep(join(trials.cons(1,1:2)),' ',''); 
     trials.rime{itrial} = strcat(trials.vow{itrial},trials.cons{itrial,3}); 
 
 end
