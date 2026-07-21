@@ -110,7 +110,7 @@ vardefault('op',struct);
 field_default('op','art_crit','G'); % E = high gamma, F = beta
 
 %%%%% probably need to change or delete this for artifact G
-% % % PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_', op.art_crit]; % keep in repo to sync across devices
+% PATH_ARTIFACT = [PATH_DBSSEQ_CODE filesep 'P08_artifact_criteria_', op.art_crit]; % keep in repo to sync across devices
 
 
  clearvars compname paths_to_add PATH_CODE PATH_BML

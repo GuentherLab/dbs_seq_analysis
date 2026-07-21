@@ -7,11 +7,14 @@ setpaths_dbs_seq()
 % subject_list_filename = [PATH_DATA filesep 'participants.tsv'];
 subject_list_filename = [PATH_DBSSEQ_CODE, filesep, 'dbs_seq_subjects_master.tsv']; 
 
-op.art_crit = 'G'; 
-freq_bands_to_analyze = {'beta','hg'}; 
-op.denoise_string = '_not_denoised'; %%% comment out??
 
-op.rereference_method = 'CMR';
+freq_bands_to_analyze = {'beta','hg'}; 
+% freq_bands_to_analyze = {'beta'}; 
+% freq_bands_to_analyze = {'hg'}; 
+
+op.art_crit = 'G'; 
+op.denoise_string = '_not_denoised'; %%% comment out??
+op.rereference_method = 'CMR';   %%% maybe get rid of this - CMR is already set in preproc scripts, not here
 
 op.baseline_method = 'subtract_then_divide'; % options: 'divide_then_subtract','subtract'
 
@@ -24,7 +27,7 @@ subnums = [...
     1025;...
     1037;...
     1044;...
-    1045;... %
+    1045;... % problematic just for HG? 
     1046;...
     1047;...
     1048;...
@@ -33,7 +36,9 @@ subnums = [...
     1051;... % 
     1052;... % 
     1054;... % 
-    ];
+     ];
+
+% subnums = 1024;
 
 
 
@@ -63,7 +68,7 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     fprintf(['Compiling response tables in %s \n'], compiled_responses_filepath);
     resp_all = table; 
     for isub = 1:nsubs
-        op.sub = subs.sub{isub}
+        op.sub = subs.sub{isub};
         load([PATH_RESULTS, filesep, op.sub, '_responses_', op.resp_signal, '_ref-',op.rereference_method],'resp','trials','op')
         resp_all = [resp_all; resp];
         subs.trials{isub} = trials; 

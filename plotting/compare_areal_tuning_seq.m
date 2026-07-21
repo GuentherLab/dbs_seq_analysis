@@ -15,18 +15,20 @@ op.newfig = 1;
 op.separate_individual_subs = 1; 
 op.analyze_responsive_elcs_only = 1;
 
-% op.param = 'p_min_stim_prep_prod'; % general task responsivity
 % op.param = 'p_stim';
 % op.param = 'p_prep';
 % op.param = 'p_prod';
 
 
+% op.param = 'p_stim_learn';
 % op.param = 'p_prep_learn';
-% op.param = 'p_prod_learn';
+op.param = 'p_prod_learn';
 
+% op.param = 'p_stim_nn_v_nat';
 % op.param = 'p_prep_nn_v_nat';
-op.param = 'p_prod_nn_v_nat';
+% op.param = 'p_prod_nn_v_nat';
 
+% op.param = 'p_stim_novel_vs_trained';
 % op.param = 'p_prep_novel_vs_trained';
 % op.param = 'p_prod_novel_vs_trained';
 
@@ -61,9 +63,13 @@ op.param = 'p_prod_nn_v_nat';
 % op.alpha = 0.01; 
 op.alpha = 0.05; 
 
+
+% op.param = 'p_min_stim_prep_prod'; op.alpha = 1 - (1-0.05)^3; % general task responsivity..... 3 tests 
+% op.param = 'p_min_learn';  op.alpha = 1 - (1-0.05)^3; % 3 tests 
+
 op.bar_face_color = [0.5 0.5 0.5]; 
 
-subs_areastats = compare_areal_tuning(resp,op); % in ieeg_funcs_am
+[subs_areastats, areastats_all_subs] = compare_areal_tuning(resp,op); % in ieeg_funcs_am
 
 %%
 % % roi = 'SMC';

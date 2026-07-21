@@ -19,7 +19,7 @@ rowlist = 1:6;
 % rowlist = [2 3 4 6 7 8];
 % rowlist = [9 10 12 17 21 22];
 % rowlist = [1 7 13 19 25 31];
-% rowlist = [ 1 2 3 4 5 8];  
+% rowlist = [1 3 7 8 9 10];  
 % rowlist = [837:845];
 % rowlist = [847:852];
 
@@ -29,6 +29,9 @@ rowlist = 1:6;
 % rowlist = 269:274;
 % rowlist = 263:268;
 % rowlist = 269:274;
+
+
+% rowlist = find(strcmp(srt.sub,'DM1024') & ismember(srt.chan, {'ecog_L225', 'ecog_L226'}));
 
 % rowlist = round(linspace(1,height(srt),6)); % equally spaced elcs from the sorted table
 % rowlist = round(linspace(1000,height(srt),6));
@@ -45,8 +48,8 @@ nplotrows = 3;
 
 op.plot_go_trials_only = 1; % exclude STOP trials from plotting
 
-    op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
-%     op.sort_cond = 'learn_con';
+%     op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
+    op.sort_cond = 'learn_con';
 %     op.sort_cond = 'is_nat';
 %     op.sort_cond = 'word';
 %     op.sort_cond = {'cons',1}; 
@@ -87,14 +90,14 @@ nelcs = length(rowlist);
 hfig = figure('WindowState','maximized','Color','w'); box off
 
 for ielc = 1:nelcs
-    srt_row_ind = rowlist(ielc) 
+    srt_row_ind = rowlist(ielc) ;
     srt_tbl_row = srt(srt_row_ind,:); 
 
     subind = find(string(subs.sub) == srt_tbl_row.sub{1});
     trials_tmp = subs.trials{subind}; % temporary copy of trials table
 
     subplot(nplotrows,ceil(nelcs/nplotrows),ielc);
-     plot_resp_timecourse_seq(srt_tbl_row,trials_tmp,op); % in ieeg_ft_funcs_am repo
+    [trials,resp_grpd, align_stats, op_out] = plot_resp_timecourse_seq(srt_tbl_row,trials_tmp,op); % in ieeg_ft_funcs_am repo
 
     if ~isempty(ylimits)
         ylim(ylimits)

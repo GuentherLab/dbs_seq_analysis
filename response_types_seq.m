@@ -18,8 +18,8 @@ trial_end_post_speech_win = 0.6; % end the trial this long after speech offset i
 
 
 % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
-% responsivity_alpha = 0.05; % uncorrected
-responsivity_alpha = 0.05 / 2^[3-1]; % bonf correction for 3 tests
+responsivity_alpha = 0.05; % uncorrected
+% responsivity_alpha = 0.05 / 2^[3-1]; % bonf correction for 3 tests
 
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
@@ -36,7 +36,7 @@ set_project_specific_variables() % subject-specific paths and variables
 
 %% load data 
 load([PATH_FIELDTRIP, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK,...
-    '_ft-', op.resp_signal, '.mat'])
+    '_ft-', op.resp_signal, '.mat'],'D_wavpow')
 
 
 % % trial timing and electrode info
@@ -165,7 +165,7 @@ trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy',
 
 %% test for response types 
 for ichan = 1:nchans
-    good_trials = ~isnan(resp.base{ichan}); % non-artifactual trials for this channel
+    good_trials = ~isnan(resp.base{ichan}) & resp.base{ichan} ~= 0; % non-artifactual, non-zero-base trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
     zeros_vec = zeros(nnz(good_trials),1); 
     zeros_vec_gotrials = zeros(nnz(good_gotrials),1); 
@@ -173,6 +173,11 @@ for ichan = 1:nchans
     is_trained_trial = strcmp(trials.learn_con,'nn_train');
     is_native_trial = strcmp(trials.learn_con,'nat');
     if nnz(good_gotrials) > 1 % only do stats analysis if channel had >0 good go trials
+         stim_resp_novel = resp.stim{ichan}(good_gotrials & is_novel_trial);
+         stim_resp_trained = resp.stim{ichan}(good_gotrials & is_trained_trial);
+         stim_resp_nonnative = [stim_resp_novel; stim_resp_trained]; 
+         stim_resp_nat = resp.stim{ichan}(good_gotrials & is_native_trial);
+
          prep_resp_novel = resp.prep{ichan}(good_gotrials & is_novel_trial);
          prep_resp_trained = resp.prep{ichan}(good_gotrials & is_trained_trial);
          prep_resp_nonnative = [prep_resp_novel; prep_resp_trained]; 
@@ -184,10 +189,10 @@ for ichan = 1:nchans
          prod_resp_nat = resp.prod{ichan}(good_gotrials & is_native_trial);
         
         % above/below-baseline response during the stim period
-        [~, resp.p_stim(ichan)] = ttest2(resp.stim{ichan}(good_trials), zeros_vec_gotrials); 
+        [~, resp.p_stim(ichan)] = ttest2(resp.stim{ichan}(good_gotrials), zeros_vec_gotrials); 
 
         % above/below-baseline response during the prep period
-        [~, resp.p_prep(ichan)] = ttest2(resp.prep{ichan}(good_trials), zeros_vec); 
+        [~, resp.p_prep(ichan)] = ttest2(resp.prep{ichan}(good_gotrials), zeros_vec); 
     
         % above/below-baseline response during the production period
         [~, resp.p_prod(ichan)] = ttest2(resp.prod{ichan}(good_gotrials), zeros_vec); 
@@ -198,22 +203,29 @@ for ichan = 1:nchans
         resp.rspv(ichan) = resp.p_min_stim_prep_prod(ichan) < responsivity_alpha; 
 
          % preferential response for learning condition(s)
+        resp.p_stim_learn(ichan) = anova1(resp.stim{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
         resp.p_prep_learn(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
         resp.p_prod_learn(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
     
         % preference for native vs nonnative
-         resp.p_prep_nn_v_nat(ichan) = anova1(resp.prep{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+         resp.p_stim_nn_v_nat(ichan) = anova1(resp.stim{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+            resp.sign_stim_nn_minus_nat(ichan) = sign( nanmean(stim_resp_nonnative) - nanmean(stim_resp_nat) ); 
+        resp.p_prep_nn_v_nat(ichan) = anova1(resp.prep{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_prep_nn_minus_nat(ichan) = sign( nanmean(prep_resp_nonnative) - nanmean(prep_resp_nat) ); 
         resp.p_prod_nn_v_nat(ichan) = anova1(resp.prod{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_prod_nn_minus_nat(ichan) = sign( nanmean(prod_resp_nonnative) - nanmean(prod_resp_nat) ); 
 
          % preference for novel nonnative vs. trained nonnative (effect of training occurring only during Training phase... no natives)
+         [~, resp.p_stim_novel_vs_trained(ichan)] = ttest2( stim_resp_novel, stim_resp_trained );      
+            resp.sign_stim_novel_minus_trained(ichan) = sign( nanmean(stim_resp_novel) - nanmean(stim_resp_trained) ); 
          [~, resp.p_prep_novel_vs_trained(ichan)] = ttest2( prep_resp_novel, prep_resp_trained );      
             resp.sign_prep_novel_minus_trained(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_trained) ); 
          [~, resp.p_prod_novel_vs_trained(ichan)] = ttest2( prod_resp_novel, prod_resp_trained );      
             resp.sign_prod_novel_minus_trained(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_trained) ); 
 
          % preference for native vs nonnative novel (most well-leared vs. least well-learned)
+         [~, resp.p_stim_novel_vs_nat(ichan)] = ttest2( stim_resp_novel, stim_resp_nat );      
+            resp.sign_stim_novel_minus_nat(ichan) = sign( nanmean(stim_resp_novel) - nanmean(stim_resp_nat) ); 
          [~, resp.p_prep_novel_vs_nat(ichan)] = ttest2( prep_resp_novel, prep_resp_nat );      
             resp.sign_prep_novel_minus_nat(ichan) = sign( nanmean(prep_resp_novel) - nanmean(prep_resp_nat) ); 
          [~, resp.p_prod_novel_vs_nat(ichan)] = ttest2( prod_resp_novel, prod_resp_nat );      
@@ -236,13 +248,11 @@ for ichan = 1:nchans
            resp.p_stim_cons(ichan,iphon) = anova1(resp.stim{ichan}(good_trials),trials.cons(good_trials,iphon),'off'); 
             resp.p_prep_cons(ichan,iphon) = anova1(resp.prep{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
             resp.p_prod_cons(ichan,iphon) = anova1(resp.prod{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
-       end
-            
+       end     
     end
-
-    
-
 end
+
+resp.p_min_learn = min([resp.p_stim_learn, resp.p_prep_learn, resp.p_prod_learn],[],2);
     
 %% cleanup
 elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq

@@ -2,9 +2,9 @@
 %%% before running this script, should to have the _respones.mat file created by response_types_seq.m loaded into workspace first
 
 %% Loading paths
-ft_defaults
-bml_defaults
-format long
+% ft_defaults
+% bml_defaults
+% format long
 
 % clear
 % set(0,'DefaultFigureWindowStyle','docked')
@@ -92,14 +92,14 @@ inclusion_mode = 'thresh';
 % inclusion_var = 'p_prod_nn_v_nat';
 
 
-inclusion_var = 'p_prep_novel_vs_nat'; 
+% inclusion_var = 'p_prep_novel_vs_nat'; 
 % inclusion_var = 'p_prod_novel_vs_nat'; 
 
 % inclusion_var = 'p_prep_novel_vs_trained';
 % inclusion_var = 'p_prod_novel_vs_trained';
 
 
-% inclusion_var = 'p_prod_syl';
+inclusion_var = 'p_prod_syl';
 % inclusion_var = 'p_prep_syl';
 
 

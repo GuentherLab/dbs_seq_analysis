@@ -1,6 +1,8 @@
  %%%% find and plot the electrodes which are best tuned for a given parameter
  .... might need to run plot_top_electrodes_mni_on_ctx.m first
 
+[~, resp] = define_brain_regions(struct,resp); 
+
 
 
 % op.param = 'p_min_stim_prep_prod'; % general task responsivity
@@ -49,7 +51,7 @@ op.param = 'p_prod_learn';
 exclude_if_p_zero = 1; % delete channels if they have p=0 for the key parameter
 
 %%
-% load([PATH_RESULTS, filesep, 'resp_all_subjects.mat'])
+% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg_ref-CMR.mat'])
 
 
 if iscell(op.param) % if we need to select only 1 column from the table variable
@@ -79,3 +81,6 @@ end
 
 % srt = srt(string(srt.type) ~= "ECOG",:); % exclude ecog electrodes
 % srt = srt(string(srt.sub) ~= 'DM1037',:); % exclude specific subject
+
+% srt = srt(strcmp(srt.region,'SMC'),:); 
+srt = srt(strcmp(srt.region,'STG'),:); 
