@@ -54,7 +54,7 @@ compname = getenv('COMPUTERNAME');
  PATH_RESULTS_FIGS = [PATH_RESULTS filesep 'figs']; 
  PATH_SUB_MASTER_TABLE = [PATH_DBSSEQ_CODE filesep 'dbs_seq_subjects_master.tsv']; 
  PATH_STIM_INFO_TABLE = [PATH_DBSSEQ_CODE, filesep, 'stim', filesep, 'stim_info_master_dbs_seq.xlsx']; 
- PATH_FIELDTRIP_CODE = [PATH_DBSSEQ_CODE, filesep, 'preprocessing', filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing      
+ PATH_FIELDTRIP_CODE = [PATH_IEEG_FT_FUNCS_AM, filesep, 'preprocessing', filesep, 'fieldtrip-master-rd'];  % modified version for optimized filter functions for preprocessing      
  
 
 paths_to_add = {PATH_DATA;... % derivatives and (if on server) sourcedata
