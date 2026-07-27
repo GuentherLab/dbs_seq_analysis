@@ -22,7 +22,7 @@ op.analyze_responsive_elcs_only = 1;
 
 % op.param = 'p_stim_learn';
 % op.param = 'p_prep_learn';
-op.param = 'p_prod_learn';
+% op.param = 'p_prod_learn';
 
 % op.param = 'p_stim_nn_v_nat';
 % op.param = 'p_prep_nn_v_nat';
@@ -38,7 +38,7 @@ op.param = 'p_prod_learn';
 
 % op.param = 'p_stim_syl';
 % op.param = 'p_prep_syl';
-% op.param = 'p_prod_syl';
+op.param = 'p_prod_syl';
 
 % op.param = 'p_stim_rime';
 % op.param = 'p_prep_rime';
