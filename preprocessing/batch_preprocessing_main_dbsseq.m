@@ -23,8 +23,8 @@ op.rereference_method = 'CMR'; % common median... bml_rereference supports this 
 
 op.reref_extreme_trim_percent = 50; % during referencing, percentage of 'extreme' channels in group to trim 
 
-freq_bands_to_extract = {'beta','hg'}; 
-% freq_bands_to_extract = {'beta'}; 
+% freq_bands_to_extract = {'beta','hg'}; 
+freq_bands_to_extract = {'beta'}; 
 % freq_bands_to_extract = {'hg'}; 
 
 % ? not used ? 
@@ -51,7 +51,7 @@ sublist ={...
      'DM1052';...
      'DM1054';...
      };
-% sublist = {'DM1049'};
+
 setpaths_dbs_seq()
 
 nsubs = length(sublist);
