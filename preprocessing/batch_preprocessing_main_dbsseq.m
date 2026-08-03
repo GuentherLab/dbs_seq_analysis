@@ -102,13 +102,25 @@ for isub = 1:nsubs
         cfg.label_colname = 'label';
         D_notch_nanmask = bml_mask(cfg, D_notch); 
     
-        % do rereferencing
+        % do rereferencing ecog
         cfg_ref = [];
         cfg_ref.label = elc_to_reref.name;
         cfg_ref.group = elc_to_reref.connector;
         cfg_ref.method = op.rereference_method; 
         cfg_ref.percent = op.reref_extreme_trim_percent; 
-        D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
+            % ecog
+            cfg.channel={'ecog_*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
+
+            % dbs
+            cfg.channel={'dbs_L*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask);
+
+        % combine
+
+        % save
         save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref-',op.rereference_method],'D_ref','cfg_ref')
         
     % % % % % % % % % % % % % % % % %         % Replace from nan to zero
