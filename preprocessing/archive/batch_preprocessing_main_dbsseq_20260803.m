@@ -19,11 +19,11 @@ op.skip_to_automatic_artifact_detection = 0; % if true, load pre-made wavpow fie
 
 % op.rereference_method = 'none';
 % op.rereference_method = 'CTAR';
-% op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
+op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
 
-op.rereference_method_by_eltype = ...
-    {'ecog',    'CMR';...
-    'dbs',     '8chan_dbs_bipolar'};
+% op.rereference_method_by_eltype = ...
+%     {'ecog',    'CMR';...
+%     {'dbs',     '8chan_dbs_bipolar'};
 
 op.reref_extreme_trim_percent = 50; % during referencing, percentage of 'extreme' channels in group to trim 
 
@@ -60,11 +60,6 @@ setpaths_dbs_seq()
 
 nsubs = length(sublist);
 nbands = length(freq_bands_to_extract);
-
-
-op.rereference_method_by_eltype = cell2table(op.rereference_method_by_eltype,...
-    'VariableNames',{'el_type','reref_method'},'RowNames',op.rereference_method_by_eltype(:,1)); 
-
 for isub = 1:nsubs
     thissub = sublist{isub}
     op.sub = thissub;
@@ -111,44 +106,21 @@ for isub = 1:nsubs
         cfg.label_colname = 'label';
         D_notch_nanmask = bml_mask(cfg, D_notch); 
     
-% % % % % % % % % % % % % % %         % do rereferencing ecog
+        % do rereferencing ecog
+        cfg_ref = [];
+        cfg_ref.label = elc_to_reref.name;
+        cfg_ref.group = elc_to_reref.connector;
+        cfg_ref.method = op.rereference_method; 
+        cfg_ref.percent = op.reref_extreme_trim_percent; 
+            % ecog
+            cfg.channel={'ecog_*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
 
-% % % %         D_ref = struct; 
-
-        % do rereferencing for each electrode type
-        reftypes = op.rereference_method_by_eltype; 
-
-        for i_eltype = 1:height(reftypes)
-             elc_to_reref_type = elc_to_reref(contains(elc_to_reref.name,reftypes.el_type),:);
-
-            cfg_ref = [];
-            cfg_ref.label = elc_to_reref.name;
-            cfg_ref.group = elc_to_reref.connector;
-            cfg_ref.method = reftypes.reref_method{i_eltype}; 
-            cfg_ref.percent = op.reref_extreme_trim_percent; 
-            cfg.channel={[reftypes.el_type{i_eltype},'*']};
-            D_ref_temp = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
-
-            if i_eltype == 1
-                D_ref = D_ref_temp; clear D_ref_temp
-            elseif i_eltype > 1
-                cfg = []; 
-                D_ref = appenddata(cfg, D_ref_temp); 
-            end
-
-%             D_ref = [D_ref; D_ref_temp]; clear D_ref_temp % add this elc type to table
-
-
-%             % ecog
-%             cfg.channel={'ecog_*'};
-%             D_sel = ft_selectdata(cfg,D_notch_nanmask);
-%             
-% 
-%             % dbs
-%             cfg.channel={'dbs_L*'};
-%             D_sel = ft_selectdata(cfg,D_notch_nanmask);
-%             D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask);
-        end
+            % dbs
+            cfg.channel={'dbs_L*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask);
 
         % combine
 
