@@ -133,7 +133,7 @@ for isub = 1:nsubs
                 D_ref = D_ref_temp; clear D_ref_temp
             elseif i_eltype > 1
                 cfg = []; 
-                D_ref = appenddata(cfg, D_ref_temp); 
+                D_ref = ft_appenddata(cfg, D_ref_temp); 
             end
 
 %             D_ref = [D_ref; D_ref_temp]; clear D_ref_temp % add this elc type to table
@@ -153,7 +153,7 @@ for isub = 1:nsubs
         % combine
 
         % save
-        save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref-',op.rereference_method],'D_ref','cfg_ref')
+        save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref'],'D_ref','cfg_ref')
         
     % % % % % % % % % % % % % % % % %         % Replace from nan to zero
     % % % % % % % % % % % % % % % % %         cfg = [];
@@ -180,16 +180,16 @@ for isub = 1:nsubs
     
     
     
-        %%%%%%%%%%%%%%%%%%%%%%%%%   LOAD OR COMPUTE WAV POWER TIMECOURSES   %%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%   LOAD OR COMPUTE WAVE POWER TIMECOURSES   %%%%%%%%%%%%%%%%%%%%%%%%%
         %%% using 'param' as a hack to maintain compatibility w/ Triplet and backward compatibility:  ...
         ........ - load artifact parameters, but set all chantypes to have same params
         artparam = bml_annot_read_tsv([PATH_DBSSEQ_CODE, filesep, 'P08_artifact_criteria_',paramcode,...
             filesep, 'artifact_',paramcode,'_params.tsv']);
-            artparam = artparam(1,:); 
-            artparam.name{1} = 'all';
-            artparam.electrode_type{1} = '*'; % include all elc types
+%             artparam = artparam(1,:); 
+%             artparam.name{1} = 'all';
+%             artparam.electrode_type{1} = '*'; % include all elc types
     
-        if ~ op.skip_to_automatic_artifact_detection % compute wavpow timecourse, save over prior version if it exists
+        if ~op.skip_to_automatic_artifact_detection % compute wavpow timecourse, save over prior version if it exists
             cfg_wavpow = []; 
             cfg_wavpow.param = artparam;  
             D_wavpow_no_thresh_mask = multifreq_avg_power(cfg_wavpow, D_ref); % get power in band of interest
