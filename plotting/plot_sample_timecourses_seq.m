@@ -9,8 +9,8 @@
 %% params
 
 % rowlist = 1; 
-rowlist = 1:6;
-% rowlist = 7:12; 
+% rowlist = 1:6;
+rowlist = 7:12; 
 % rowlist = 13:18; 
 % rowlist = 19:24; 
 % rowlist = 25:30; 

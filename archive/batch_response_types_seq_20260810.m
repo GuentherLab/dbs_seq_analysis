@@ -52,14 +52,14 @@ nsubs = height(subs);
 nbands = length(freq_bands_to_analyze);
 for iband = 1:nbands % run full analysis, compile subjects, save results for all signals of interest
     op.resp_signal = freq_bands_to_analyze{iband};
-    compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects_', op.resp_signal]; 
+    compiled_responses_filepath = [PATH_RESULTS, filesep, 'resp_all_subjects_', op.resp_signal, '_ref-',op.rereference_method]; 
 
     % run response type analysis on each subject individually
     for isub = 1:nsubs    
         op.sub = subs.sub{isub}
         set_project_specific_variables(); % subject-specific paths and variables
         [resp, trials, op] = response_types_seq(op);
-        savefile = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal];
+        savefile = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal, '_ref-',op.rereference_method];
         save(savefile, 'trials','resp','op'); clear resp trials
     end
 
@@ -69,7 +69,7 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     resp_all = table; 
     for isub = 1:nsubs
         op.sub = subs.sub{isub};
-        load([PATH_RESULTS, filesep, op.sub, '_responses_', op.resp_signal],'resp','trials','op')
+        load([PATH_RESULTS, filesep, op.sub, '_responses_', op.resp_signal, '_ref-',op.rereference_method],'resp','trials','op')
         resp_all = [resp_all; resp];
         subs.trials{isub} = trials; 
     end

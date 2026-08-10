@@ -11,7 +11,7 @@ op.newfig = 1;
 
 
 
-op.analyze_responsive_elcs_only = 1; 
+op.analyze_responsive_elcs_only = 0; 
 op.analyze_tuned_elcs_only = 1;
 
 op.smooth_windowsize = 45; 
@@ -53,7 +53,7 @@ op.tuning_param = 'p_prod_learn';
 % op.tuning_param = 'p_stim_novel_vs_nat';
 % op.tuning_param = 'p_prep_novel_vs_nat';
 % op.tuning_param = 'p_prod_novel_vs_nat';
-6
+
 % op.tuning_param = 'p_stim_syl';
 % op.tuning_param = 'p_prep_syl';
 % op.tuning_param = 'p_prod_syl';
@@ -84,11 +84,11 @@ op.tuning_param = 'p_prod_learn';
 
 
 %% trial table varname for times used for time-locking responses
-op.time_align_var = 't_vis_syl_on'; % audio stim cue on
+% op.time_align_var = 't_vis_syl_on'; % audio stim cue on
 % op.time_align_var = 't_aud_go_on'; % go beep
-% op.time_align_var = 't_prod_on'; % speech onset
+op.time_align_var = 't_prod_on'; % speech onset
 
 
 op.leg_pos_adjust = 0.1;
 
-combine_plot_electrode_timecourses(resp,subs,op)
+combine_plot_electrode_timecourses(resp,subs,op);

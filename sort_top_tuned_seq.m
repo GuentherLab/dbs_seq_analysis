@@ -83,4 +83,7 @@ end
 % srt = srt(string(srt.sub) ~= 'DM1037',:); % exclude specific subject
 
 % srt = srt(strcmp(srt.region,'SMC'),:); 
-srt = srt(strcmp(srt.region,'STG'),:); 
+% srt = srt(strcmp(srt.region,'STG'),:); 
+srt = srt(strcmp(srt.region,'IFG/IFS'),:); 
+
+openvar('srt')

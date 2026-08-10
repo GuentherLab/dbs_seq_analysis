@@ -48,18 +48,18 @@ trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.su
 electrodes_table_filename = [PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv'];
 
 if exist(electrodes_table_filename, 'file')
-    elc_info_raw = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
-        elc_info_raw = renamevars(elc_info_raw,'name','chan');
+    elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
+        elc_info = renamevars(elc_info,'name','chan');
 else
     channels = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_ses-' SESSION '_channels.tsv']); %%%% for connector info
         channels.name = strrep(channels.name,'_Ll','_Lm'); % change name to match naming convention in electrodes table
     channels(channels.connector==0,:) = []; % channels with this connector label seem to be duplicates or unused
-    elc_info_raw = channels; 
-    elc_info_raw = renamevars(elc_info_raw,'name','chan');
+    elc_info = channels; 
+    elc_info = renamevars(elc_info,'name','chan');
 
     % fill in blank info for localization variables if electrodes table is not available
-    nancol = nan(height(elc_info_raw),1); 
-    celcol = cell(height(elc_info_raw),1); 
+    nancol = nan(height(elc_info),1); 
+    celcol = cell(height(elc_info),1); 
     elc_info_blank = table(...
         nancol, nancol, nancol, ...
         nancol, nancol, nancol, ...
@@ -70,31 +70,8 @@ else
         'mni_x','mni_y','mni_z',...
 	    'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
         'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'}); 
-    elc_info_raw = [elc_info_raw, elc_info_blank];
+    elc_info = [elc_info, elc_info_blank];
 end
-
-
-
-
-
-% rename dbs channels to match bipolar reref 'channels'
-dbs_elc_names = {'dbs_L1','dbs_L2A','dbs_L2B','dbs_L2C','dbs_L3A','dbs_L3B','dbs_L3C','dbs_L4'};
-dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'};
-mapElcToChan = containers.Map(dbs_elc_names, dbs_bipolar_chan_names);
-elc_info = elc_info_raw; 
-for i = 1:numel(elc_info.chan)
-    if isKey(mapElcToChan, elc_info.chan{i})
-        elc_info.chan{i} = mapElcToChan(elc_info.chan{i});
-    end
-end
-
-
-
-
-
-
-
-
 
 stim_info = load_seq_stim_info(PATH_STIM_INFO_TABLE); % list of phonemes for all stim
 

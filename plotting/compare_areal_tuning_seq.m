@@ -38,7 +38,7 @@ op.analyze_responsive_elcs_only = 1;
 
 % op.param = 'p_stim_syl';
 % op.param = 'p_prep_syl';
-op.param = 'p_prod_syl';
+% op.param = 'p_prod_syl';
 
 % op.param = 'p_stim_rime';
 % op.param = 'p_prep_rime';
@@ -46,7 +46,7 @@ op.param = 'p_prod_syl';
 
 % op.param = {'p_stim_cons',1};
 % op.param = {'p_prep_cons',1};
-% op.param = {'p_prod_cons',1};
+op.param = {'p_prod_cons',1};
 
 % op.param = {'p_stim_cons',2};
 % op.param = {'p_prep_cons',2};

@@ -17,10 +17,6 @@ op.art_crit = 'G'; %%% maybe change / get rid of this parameter - confusing to h
 
 op.skip_to_automatic_artifact_detection = 0; % if true, load pre-made wavpow fieldtrip files, and skip all steps before threshold-based artifact detection
 
-% op.rereference_method = 'none';
-% op.rereference_method = 'CTAR';
-% op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
-
 op.rereference_method_by_eltype = ...
     {'ecog',    'CMR';...
     'dbs',     '8chan_dbs_bipolar'};
