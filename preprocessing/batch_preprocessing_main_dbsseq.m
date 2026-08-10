@@ -111,9 +111,6 @@ for isub = 1:nsubs
         cfg.label_colname = 'label';
         D_notch_nanmask = bml_mask(cfg, D_notch); 
     
-% % % % % % % % % % % % % % %         % do rereferencing ecog
-
-% % % %         D_ref = struct; 
 
         % do rereferencing for each electrode type
         reftypes = op.rereference_method_by_eltype; 
@@ -133,35 +130,13 @@ for isub = 1:nsubs
                 D_ref = D_ref_temp; clear D_ref_temp
             elseif i_eltype > 1
                 cfg = []; 
-                D_ref = ft_appenddata(cfg, D_ref_temp); 
+                D_ref = ft_appenddata(cfg, D_ref_temp); % combine this eltype with all-types struct
             end
-
-%             D_ref = [D_ref; D_ref_temp]; clear D_ref_temp % add this elc type to table
-
-
-%             % ecog
-%             cfg.channel={'ecog_*'};
-%             D_sel = ft_selectdata(cfg,D_notch_nanmask);
-%             
-% 
-%             % dbs
-%             cfg.channel={'dbs_L*'};
-%             D_sel = ft_selectdata(cfg,D_notch_nanmask);
-%             D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask);
         end
-
-        % combine
 
         % save
         save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref'],'D_ref','cfg_ref')
         
-    % % % % % % % % % % % % % % % % %         % Replace from nan to zero
-    % % % % % % % % % % % % % % % % %         cfg = [];
-    % % % % % % % % % % % % % % % % %         cfg.annot = manual_artifact_table; % set manual artifacts to nan
-    % % % % % % % % % % % % % % % % %         cfg.complete_trial = false; % full run data, so can't mask individual trials
-    % % % % % % % % % % % % % % % % %         cfg.value = NaN; 
-    % % % % % % % % % % % % % % % % %         cfg.label_colname = 'label';
-    % % % % % % % % % % % % % % % % %         D_notch_nanmask = bml_mask(cfg, D_ref);
     end 
 
 %% get spectral power timecourses
