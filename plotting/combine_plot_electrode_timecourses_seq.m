@@ -12,7 +12,7 @@ op.newfig = 1;
 
 
 op.analyze_responsive_elcs_only = 1; 
-op.analyze_tuned_elcs_only = 0;
+op.analyze_tuned_elcs_only = 1;
 
 op.smooth_windowsize = 45; 
 
@@ -37,9 +37,9 @@ op.smooth_windowsize = 45;
 % op.tuning_param = 'p_prep';
 % op.tuning_param = 'p_prod';
 
-% op.tuning_param = 'p_min_learn'; 
+op.tuning_param = 'p_min_learn'; 
 % op.tuning_param = 'p_stim_learn';
-op.tuning_param = 'p_prep_learn';
+% op.tuning_param = 'p_prep_learn';
 % op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';

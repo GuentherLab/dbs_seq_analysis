@@ -75,7 +75,11 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     end
 
     resp = resp_all; clear resp_all; op = rmfield(op,'sub'); 
-    save(compiled_responses_filepath, 'resp','subs','op')
+                                                                    if op.save_aligned_timecourses
+                                                                        save(compiled_responses_filepath, 'resp','subs','op','-v7.3')
+                                                                    elseif ~op.save_aligned_timecourses
+                                                                        save(compiled_responses_filepath, 'resp','subs','op')
+                                                                    end
     fprintf(['Saved all-subject response table (good elcs only) in %s \n'], compiled_responses_filepath);
 
 end

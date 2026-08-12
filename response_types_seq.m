@@ -27,6 +27,9 @@ field_default('op','sub','DM1007');
 field_default('op','resp_signal','hg'); 
 field_default('op','art_crit','G'); 
 field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
+                            
+                            field_default('op','save_aligned_timecourses',0); 
+                            field_default('op','align_event_names',{'t_vis_syl_on','t_aud_go_on','t_prod_on'});
 
 SESSION = 'intraop';
 TASK = 'smsl'; 
@@ -114,8 +117,15 @@ trials.vow = cel_tr;
 
 % table containing responses during epochs for each chan
 cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
-resp = table(   D_wavpow.label, true(nchans,1), cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
-  'VariableNames', {'chan',     'bad_elc',        'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
+resp = table(   D_wavpow.label, true(nchans,1), cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    ...
+  'VariableNames', {'chan',     'bad_elc',        'base', 'timecourse',             'stim', 'prep', 'prod'   }); 
+
+                                % make tables for storing aligned timecourses
+                                if op.save_aligned_timecourses
+                                n_align_events = length(op.align_event_names); 
+                                aligntab = table(cell(n_align_events,1),cell(n_align_events,1),'VariableNames',{'trials','align_stats'},'RowNames',op.align_event_names);
+                                resp.timecourses_aligned = repmat({aligntab},nchans,1);
+                                end
 
 % extract epoch-related responses, get phonemes on each trial
 %%%% trials.times{itrial} use global time coordinates
@@ -157,6 +167,7 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
 
         % response during speech production
         resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
+
     end    
 
     % list individual phonemes
@@ -179,6 +190,25 @@ trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy',
 %% test for response types 
 resp.bad_elc = cellfun(@(x)all(isnan(x)),resp.base);
 for ichan = 1:nchans
+
+                        % get aligned timecourses
+                        if op.save_aligned_timecourses
+                        for i_ev = 1:n_align_events
+                            this_ev = op.align_event_names{i_ev};
+                            trials_to_align = trials;
+                            trials_to_align.resp_unaligned = resp.timecourse{ichan}; 
+
+                            cfg = [];
+                            cfg.time_align_var = this_ev; 
+                            [resp.timecourses_aligned{ichan}.trials{this_ev}, resp.timecourses_aligned{ichan}.align_stats{this_ev}]...
+                                = align_timecourses(trials_to_align,cfg);
+
+                            % convert to single to speed up saving/loading
+                            resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned = single(resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned); 
+                        end
+                        end
+
+                        % setup for tuning analysis
     good_trials = ~isnan(resp.base{ichan}) & resp.base{ichan} ~= 0; % non-artifactual, non-zero-base trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
     zeros_vec = zeros(nnz(good_trials),1); 
@@ -186,6 +216,7 @@ for ichan = 1:nchans
     is_novel_trial = strcmp(trials.learn_con,'nn_nov');
     is_trained_trial = strcmp(trials.learn_con,'nn_train');
     is_native_trial = strcmp(trials.learn_con,'nat');
+
     if nnz(good_gotrials) > 1 % only do stats analysis if channel had >0 good go trials
          stim_resp_novel = resp.stim{ichan}(good_gotrials & is_novel_trial);
          stim_resp_trained = resp.stim{ichan}(good_gotrials & is_trained_trial);
@@ -271,6 +302,11 @@ resp.p_min_learn = min([resp.p_stim_learn, resp.p_prep_learn, resp.p_prod_learn]
 %% cleanup
 elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
 
+                            if op.save_aligned_timecourses
+                            resp.timecourse = []; % remove to save space in saved table.... mostly redundant w/ timecourses_aligned
+                            resp = movevars(resp,{'timecourses_aligned'},'After','HCPMMP1_weight_2');
+                            end
+
 % add the following variables to the electrodes response table... use 'electrode' as key variable
 info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'mni_x','mni_y','mni_z',...
@@ -278,7 +314,7 @@ info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
 resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
 resp.sub = cellstr(repmat(op.sub, nchans, 1));
-resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
+                                      resp = movevars(resp,{'base','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 
 % right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans if they're present
