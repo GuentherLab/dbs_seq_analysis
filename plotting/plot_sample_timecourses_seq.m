@@ -9,8 +9,8 @@
 %% params
 
 % rowlist = 1; 
-% rowlist = 1:6;
-rowlist = 7:12; 
+rowlist = 1:6;
+% rowlist = 7:12; 
 % rowlist = 13:18; 
 % rowlist = 19:24; 
 % rowlist = 25:30; 
@@ -49,9 +49,9 @@ nplotrows = 3;
 op.plot_go_trials_only = 1; % exclude STOP trials from plotting
 
 %     op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
-    op.sort_cond = 'learn_con';
+%     op.sort_cond = 'learn_con';
 %     op.sort_cond = 'is_nat';
-%     op.sort_cond = 'word';
+    op.sort_cond = 'word';
 %     op.sort_cond = {'cons',1}; 
 %     op.sort_cond = {'cons',2}; 
 %     op.sort_cond = {'cons',3}; 

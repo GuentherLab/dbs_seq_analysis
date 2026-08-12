@@ -1,9 +1,13 @@
  
+% resp_not_rspv = resp(~resp.rspv,:);
+% resp_rspv = resp(resp.rspv,:);
+
+
  %%%% average timecourses of electrodes and plot
 
   %%% load resp_all_subjects first
 % setpaths_dbs_seq()
-% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg.mat'])
+% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg_ref-CMR.mat'])
 
 % close all
 
@@ -11,8 +15,8 @@ op.newfig = 1;
 
 
 
-op.analyze_responsive_elcs_only = 1; 
-op.analyze_tuned_elcs_only = 0;
+op.analyze_responsive_elcs_only = 0; 
+op.analyze_tuned_elcs_only = 1;
 
 op.smooth_windowsize = 45; 
 
@@ -39,8 +43,8 @@ op.smooth_windowsize = 45;
 
 % op.tuning_param = 'p_min_learn'; 
 % op.tuning_param = 'p_stim_learn';
-op.tuning_param = 'p_prep_learn';
-% op.tuning_param = 'p_prod_learn';
+% op.tuning_param = 'p_prep_learn';
+op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';
 % op.tuning_param = 'p_prep_nn_v_nat';
@@ -91,4 +95,4 @@ op.time_align_var = 't_prod_on'; % speech onset
 
 op.leg_pos_adjust = 0.1;
 
-[cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = combine_plot_electrode_timecourses(resp,subs,op);
+[cond_elc_rgn_not_rspv, align_stats_rgn_not_rspv, resp_grpd_rgn_not_rspv, cfg_rgn_not_rspv] = combine_plot_electrode_timecourses(resp_not_rspv,subs,op);

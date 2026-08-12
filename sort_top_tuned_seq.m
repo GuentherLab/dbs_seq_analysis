@@ -12,7 +12,7 @@
 
 
 % op.param = 'p_prep_learn';
-op.param = 'p_prod_learn';
+% op.param = 'p_prod_learn';
 
 % op.param = 'p_prep_nn_v_nat';
 % op.param = 'p_prod_nn_v_nat';
@@ -26,7 +26,7 @@ op.param = 'p_prod_learn';
 
 % op.param = 'p_stim_syl';
 % op.param = 'p_prep_syl';
-% op.param = 'p_prod_syl';
+op.param = 'p_prod_syl';
 
 % op.param = 'p_stim_rime';
 % op.param = 'p_prep_rime';
@@ -84,6 +84,7 @@ end
 
 % srt = srt(strcmp(srt.region,'SMC'),:); 
 % srt = srt(strcmp(srt.region,'STG'),:); 
-srt = srt(strcmp(srt.region,'IFG/IFS'),:); 
+% srt = srt(strcmp(srt.region,'IFG/IFS'),:); 
+srt = srt(strcmp(srt.region,'Thal'),:); 
 
 openvar('srt')

@@ -65,18 +65,18 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
 
     
     % combine responses from all subjects into one table
-    fprintf(['Compiling response tables in %s \n'], compiled_responses_filepath);
+    fprintf(['Compiling response tables (good elcs only) in %s \n'], compiled_responses_filepath);
     resp_all = table; 
     for isub = 1:nsubs
         op.sub = subs.sub{isub};
         load([PATH_RESULTS, filesep, op.sub, '_responses_', op.resp_signal],'resp','trials','op')
-        resp_all = [resp_all; resp];
+        resp_all = [resp_all; resp(~resp.bad_elc,:)];
         subs.trials{isub} = trials; 
     end
 
     resp = resp_all; clear resp_all; op = rmfield(op,'sub'); 
     save(compiled_responses_filepath, 'resp','subs','op')
-    fprintf(['Saved all-subject response table in %s \n'], compiled_responses_filepath);
+    fprintf(['Saved all-subject response table (good elcs only) in %s \n'], compiled_responses_filepath);
 
 end
 

@@ -73,10 +73,6 @@ else
     elc_info_raw = [elc_info_raw, elc_info_blank];
 end
 
-
-
-
-
 % rename dbs channels to match bipolar reref 'channels'
 dbs_elc_names = {'dbs_L1','dbs_L2A','dbs_L2B','dbs_L2C','dbs_L3A','dbs_L3B','dbs_L3C','dbs_L4'};
 dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'};
@@ -87,12 +83,6 @@ for i = 1:numel(elc_info.chan)
         elc_info.chan{i} = mapElcToChan(elc_info.chan{i});
     end
 end
-
-
-
-
-
-
 
 
 
@@ -124,8 +114,8 @@ trials.vow = cel_tr;
 
 % table containing responses during epochs for each chan
 cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
-resp = table(   D_wavpow.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
-  'VariableNames', {'chan', 'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
+resp = table(   D_wavpow.label, true(nchans,1), cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
+  'VariableNames', {'chan',     'bad_elc',        'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
 
 % extract epoch-related responses, get phonemes on each trial
 %%%% trials.times{itrial} use global time coordinates
@@ -187,6 +177,7 @@ trials = removevars(trials,{'stim_condition','run_id'});
 trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error','word','cons','vow','ons_clust','rime'},'Before',1);
 
 %% test for response types 
+resp.bad_elc = cellfun(@(x)all(isnan(x)),resp.base);
 for ichan = 1:nchans
     good_trials = ~isnan(resp.base{ichan}) & resp.base{ichan} ~= 0; % non-artifactual, non-zero-base trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
