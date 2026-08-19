@@ -19,7 +19,8 @@ op.skip_to_automatic_artifact_detection = 0; % if true, load pre-made wavpow fie
 
 op.rereference_method_by_eltype = ...
     {'ecog',    'CMR';...
-    'dbs',     '8chan_dbs_bipolar'};
+%     'dbs',     '8chan_dbs_bipolar'};
+    'dbs', '8chan_dbs_laplacian'};
 
 op.reref_extreme_trim_percent = 50; % during referencing, percentage of 'extreme' channels in group to trim 
 
@@ -51,7 +52,6 @@ sublist ={...
      'DM1052';...
      'DM1054';...
      };
-sublist = {'DM1008'};
 setpaths_dbs_seq()
 
 nsubs = length(sublist);

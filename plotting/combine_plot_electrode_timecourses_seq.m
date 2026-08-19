@@ -19,7 +19,7 @@ op.smooth_windowsize = 45;
 %% trial condition for grouping trials
 
 %     op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
-    op.sort_cond = 'learn_con';
+    op.sort_cond = 'learn_con';       op.sort_cond_vals = {'nat','nn_train','nn_nov'}; 
 %     op.sort_cond = 'is_nat';
 %     op.sort_cond = 'word';
 %     op.sort_cond = {'cons',1}; 
@@ -88,7 +88,11 @@ op.tuning_param = 'p_min_learn';
 % op.time_align_var = 't_aud_go_on'; % go beep
 op.time_align_var = 't_prod_on'; % speech onset
 
+op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on','t_prod_off'};
+op.include_xline_for_align_event = 0; 
 
-op.leg_pos_adjust = 0.1;
+op.leg_pos_adjust = -0.04; % legend hrz position
+op.xline_event_label_height = 0.8; 
 
+op.xline_events(2,:) = relabel_events(op.xline_events); % specify display labels
 [cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = combine_plot_electrode_timecourses(resp,subs,op);
