@@ -10,7 +10,7 @@ function [resp, trials, op_out] = response_types_seq(op)
 %%% ......... 1047 has missing visual_onset trials, so use audio onset instead which is very reliably 1.0sec after visual_onset
 %%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
 base_win_sec = [1.5, 1.1]; % use [1.5, 1.1] if aligning to audio stim onset to achieve [0.5 0.1] before visual stim onset.... visual stim onset is missing for trials in 1047
-stim_window_extend_end = 0.3; % for re[1.5, 1.1]sponses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
+stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
 % for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
 speech_window_extend_start = 0.15;  
@@ -27,8 +27,9 @@ field_default('op','sub','DM1007');
 field_default('op','resp_signal','hg'); 
 field_default('op','art_crit','G'); 
 field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
+field_default('op','max_timecourse_base_ratio',100); % in each trial, if ratio of timecourse avg to baseline is higher than this, exclude the trial
                             
-                            field_default('op','save_aligned_timecourses',0); 
+                            field_default('op','save_aligned_timecourses',0); %%%% still working on implementing this - how to save the mass all-subs file? 
                             field_default('op','align_event_names',{'t_vis_syl_on','t_aud_go_on','t_prod_on'});
 
 SESSION = 'intraop';
@@ -77,8 +78,9 @@ else
 end
 
 % rename dbs channels to match bipolar reref 'channels'
-dbs_elc_names = {'dbs_L1','dbs_L2A','dbs_L2B','dbs_L2C','dbs_L3A','dbs_L3B','dbs_L3C','dbs_L4'};
-dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'};
+dbs_elc_names =             {'dbs_L1', 'dbs_L2A',    'dbs_L2B',  'dbs_L2C',   'dbs_L3A',    'dbs_L3B',   'dbs_L3C',  'dbs_L4'};
+dbs_bipolar_chan_names = {'dbs_L1-ABC','dbs_L2A-BC','dbs_L2B-AC','dbs_L2C-AB','dbs_L3A-BC','dbs_L3B-AC','dbs_L3C-AB','dbs_L4-ABC'}; % laplacian
+        % % % % % % % dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'}; % strict 2-chan pairwise reref for ring elecs
 mapElcToChan = containers.Map(dbs_elc_names, dbs_bipolar_chan_names);
 elc_info = elc_info_raw; 
 for i = 1:numel(elc_info.chan)
@@ -158,15 +160,23 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
         % get baseline-normalized trial timecourse
        resp.timecourse{ichan}{itrial} = do_baselining(D_wavpow.trial{1}(ichan, match_time_inds), cfg); 
 
-        % response during stim presentation (not go beep)
-        resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
+       %%% if response looks artifactually high, set/leave all response values for this trials to nan
+       if max(resp.timecourse{ichan}{itrial}) > op.max_timecourse_base_ratio
 
-        % preparatory response
-        %%%% prep period inds = after stim ends and before syllable prod onset
-        resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
+           resp.timecourse{ichan}{itrial} = nan(size(resp.timecourse{ichan}{itrial}));
 
-        % response during speech production
-        resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
+       else 
+
+            % response during stim presentation (not go beep)
+            resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
+    
+            % preparatory response
+            %%%% prep period inds = after stim ends and before syllable prod onset
+            resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
+    
+            % response during speech production
+            resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
+       end
 
     end    
 
@@ -319,6 +329,9 @@ resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 
 % right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans if they're present
 resp = resp(~contains(resp.chan,'dbs_R'),:);
+
+% assign region labels
+resp = define_brain_regions(resp); 
 
 op_out = op; 
 

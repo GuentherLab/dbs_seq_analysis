@@ -4,7 +4,6 @@
   %%% load resp_all_subjects first
 % setpaths_dbs_seq()
 % load([PATH_RESULTS, filesep, 'resp_all_subjects_hg.mat'])
-
 % close all
 
 op.newfig = 1; 
@@ -37,9 +36,9 @@ op.smooth_windowsize = 45;
 % op.tuning_param = 'p_prep';
 % op.tuning_param = 'p_prod';
 
-op.tuning_param = 'p_min_learn'; 
+% op.tuning_param = 'p_min_learn'; 
 % op.tuning_param = 'p_stim_learn';
-% op.tuning_param = 'p_prep_learn';
+op.tuning_param = 'p_prep_learn';
 % op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';
@@ -79,17 +78,15 @@ op.tuning_param = 'p_min_learn';
 % op.tuning_param = 'p_prod_vow';
 
 
-
-
-
-
 %% trial table varname for times used for time-locking responses
 % op.time_align_var = 't_vis_syl_on'; % audio stim cue on
-% op.time_align_var = 't_aud_go_on'; % go beep
-op.time_align_var = 't_prod_on'; % speech onset
+op.time_align_var = 't_aud_go_on'; % go beep
+% op.time_align_var = 't_prod_on'; % speech onset
 
 op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on','t_prod_off'};
-op.include_xline_for_align_event = 0; 
+%     op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on'};
+
+op.include_xline_for_align_event = 1; 
 
 op.leg_pos_adjust = -0.04; % legend hrz position
 op.xline_event_label_height = 0.8; 
