@@ -1,16 +1,21 @@
  
+% resp_not_rspv = resp(~resp.rspv,:);
+% resp_rspv = resp(resp.rspv,:);
+
+
  %%%% average timecourses of electrodes and plot
 
   %%% load resp_all_subjects first
 % setpaths_dbs_seq()
-% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg.mat'])
+% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg_ref-CMR.mat'])
+
 % close all
 
 op.newfig = 1; 
 
 
 
-op.analyze_responsive_elcs_only = 1; 
+op.analyze_responsive_elcs_only = 0; 
 op.analyze_tuned_elcs_only = 1;
 
 op.smooth_windowsize = 45; 
@@ -18,7 +23,7 @@ op.smooth_windowsize = 45;
 %% trial condition for grouping trials
 
 %     op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
-    op.sort_cond = 'learn_con';       op.sort_cond_vals = {'nat','nn_train','nn_nov'}; 
+    op.sort_cond = 'learn_con';
 %     op.sort_cond = 'is_nat';
 %     op.sort_cond = 'word';
 %     op.sort_cond = {'cons',1}; 
@@ -38,8 +43,8 @@ op.smooth_windowsize = 45;
 
 % op.tuning_param = 'p_min_learn'; 
 % op.tuning_param = 'p_stim_learn';
-op.tuning_param = 'p_prep_learn';
-% op.tuning_param = 'p_prod_learn';
+% op.tuning_param = 'p_prep_learn';
+op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';
 % op.tuning_param = 'p_prep_nn_v_nat';
@@ -78,18 +83,16 @@ op.tuning_param = 'p_prep_learn';
 % op.tuning_param = 'p_prod_vow';
 
 
+
+
+
+
 %% trial table varname for times used for time-locking responses
 % op.time_align_var = 't_vis_syl_on'; % audio stim cue on
-op.time_align_var = 't_aud_go_on'; % go beep
-% op.time_align_var = 't_prod_on'; % speech onset
+% op.time_align_var = 't_aud_go_on'; % go beep
+op.time_align_var = 't_prod_on'; % speech onset
 
-op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on','t_prod_off'};
-%     op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on'};
 
-op.include_xline_for_align_event = 1; 
+op.leg_pos_adjust = 0.1;
 
-op.leg_pos_adjust = -0.04; % legend hrz position
-op.xline_event_label_height = 0.8; 
-
-op.xline_events(2,:) = relabel_events(op.xline_events); % specify display labels
-[cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = combine_plot_electrode_timecourses(resp,subs,op);
+[cond_elc_rgn_not_rspv, align_stats_rgn_not_rspv, resp_grpd_rgn_not_rspv, cfg_rgn_not_rspv] = combine_plot_electrode_timecourses(resp_not_rspv,subs,op);

@@ -17,10 +17,13 @@ op.art_crit = 'G'; %%% maybe change / get rid of this parameter - confusing to h
 
 op.skip_to_automatic_artifact_detection = 0; % if true, load pre-made wavpow fieldtrip files, and skip all steps before threshold-based artifact detection
 
-op.rereference_method_by_eltype = ...
-    {'ecog',    'CMR';...
-%     'dbs',     '8chan_dbs_bipolar'};
-    'dbs', '8chan_dbs_laplacian'};
+% op.rereference_method = 'none';
+% op.rereference_method = 'CTAR';
+op.rereference_method = 'CMR'; % common median... bml_rereference supports this but doesn't list it at the top of the function
+
+% op.rereference_method_by_eltype = ...
+%     {'ecog',    'CMR';...
+%     {'dbs',     '8chan_dbs_bipolar'};
 
 op.reref_extreme_trim_percent = 50; % during referencing, percentage of 'extreme' channels in group to trim 
 
@@ -52,18 +55,11 @@ sublist ={...
      'DM1052';...
      'DM1054';...
      };
-sublist ={...
-     'DM1008';...
-     };
+
 setpaths_dbs_seq()
 
 nsubs = length(sublist);
 nbands = length(freq_bands_to_extract);
-
-
-op.rereference_method_by_eltype = cell2table(op.rereference_method_by_eltype,...
-    'VariableNames',{'el_type','reref_method'},'RowNames',op.rereference_method_by_eltype(:,1)); 
-
 for isub = 1:nsubs
     thissub = sublist{isub}
     op.sub = thissub;
@@ -110,32 +106,34 @@ for isub = 1:nsubs
         cfg.label_colname = 'label';
         D_notch_nanmask = bml_mask(cfg, D_notch); 
     
+        % do rereferencing ecog
+        cfg_ref = [];
+        cfg_ref.label = elc_to_reref.name;
+        cfg_ref.group = elc_to_reref.connector;
+        cfg_ref.method = op.rereference_method; 
+        cfg_ref.percent = op.reref_extreme_trim_percent; 
+            % ecog
+            cfg.channel={'ecog_*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
 
-        % do rereferencing for each electrode type
-        reftypes = op.rereference_method_by_eltype; 
+            % dbs
+            cfg.channel={'dbs_L*'};
+            D_sel = ft_selectdata(cfg,D_notch_nanmask);
+            D_ref = bml_rereference_adapted(cfg_ref,D_notch_nanmask);
 
-        for i_eltype = 1:height(reftypes)
-             elc_to_reref_type = elc_to_reref(contains(elc_to_reref.name,reftypes.el_type),:);
-
-            cfg_ref = [];
-            cfg_ref.label = elc_to_reref.name;
-            cfg_ref.group = elc_to_reref.connector;
-            cfg_ref.method = reftypes.reref_method{i_eltype}; 
-            cfg_ref.percent = op.reref_extreme_trim_percent; 
-            cfg.channel={[reftypes.el_type{i_eltype},'*']};
-            D_ref_temp = bml_rereference_adapted(cfg_ref,D_notch_nanmask); 
-
-            if i_eltype == 1
-                D_ref = D_ref_temp; clear D_ref_temp
-            elseif i_eltype > 1
-                cfg = []; 
-                D_ref = ft_appenddata(cfg, D_ref_temp); % combine this eltype with all-types struct
-            end
-        end
+        % combine
 
         % save
-        save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref'],'D_ref','cfg_ref')
+        save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref-',op.rereference_method],'D_ref','cfg_ref')
         
+    % % % % % % % % % % % % % % % % %         % Replace from nan to zero
+    % % % % % % % % % % % % % % % % %         cfg = [];
+    % % % % % % % % % % % % % % % % %         cfg.annot = manual_artifact_table; % set manual artifacts to nan
+    % % % % % % % % % % % % % % % % %         cfg.complete_trial = false; % full run data, so can't mask individual trials
+    % % % % % % % % % % % % % % % % %         cfg.value = NaN; 
+    % % % % % % % % % % % % % % % % %         cfg.label_colname = 'label';
+    % % % % % % % % % % % % % % % % %         D_notch_nanmask = bml_mask(cfg, D_ref);
     end 
 
 %% get spectral power timecourses
@@ -154,16 +152,16 @@ for isub = 1:nsubs
     
     
     
-        %%%%%%%%%%%%%%%%%%%%%%%%%   LOAD OR COMPUTE WAVE POWER TIMECOURSES   %%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%   LOAD OR COMPUTE WAV POWER TIMECOURSES   %%%%%%%%%%%%%%%%%%%%%%%%%
         %%% using 'param' as a hack to maintain compatibility w/ Triplet and backward compatibility:  ...
         ........ - load artifact parameters, but set all chantypes to have same params
         artparam = bml_annot_read_tsv([PATH_DBSSEQ_CODE, filesep, 'P08_artifact_criteria_',paramcode,...
             filesep, 'artifact_',paramcode,'_params.tsv']);
-%             artparam = artparam(1,:); 
-%             artparam.name{1} = 'all';
-%             artparam.electrode_type{1} = '*'; % include all elc types
+            artparam = artparam(1,:); 
+            artparam.name{1} = 'all';
+            artparam.electrode_type{1} = '*'; % include all elc types
     
-        if ~op.skip_to_automatic_artifact_detection % compute wavpow timecourse, save over prior version if it exists
+        if ~ op.skip_to_automatic_artifact_detection % compute wavpow timecourse, save over prior version if it exists
             cfg_wavpow = []; 
             cfg_wavpow.param = artparam;  
             D_wavpow_no_thresh_mask = multifreq_avg_power(cfg_wavpow, D_ref); % get power in band of interest

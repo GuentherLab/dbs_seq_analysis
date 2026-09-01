@@ -10,7 +10,7 @@ function [resp, trials, op_out] = response_types_seq(op)
 %%% ......... 1047 has missing visual_onset trials, so use audio onset instead which is very reliably 1.0sec after visual_onset
 %%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
 base_win_sec = [1.5, 1.1]; % use [1.5, 1.1] if aligning to audio stim onset to achieve [0.5 0.1] before visual stim onset.... visual stim onset is missing for trials in 1047
-stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
+stim_window_extend_end = 0.3; % for re[1.5, 1.1]sponses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
 % for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
 speech_window_extend_start = 0.15;  
@@ -27,10 +27,6 @@ field_default('op','sub','DM1007');
 field_default('op','resp_signal','hg'); 
 field_default('op','art_crit','G'); 
 field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
-field_default('op','max_timecourse_base_ratio',100); % in each trial, if ratio of timecourse avg to baseline is higher than this, exclude the trial
-                            
-                            field_default('op','save_aligned_timecourses',0); %%%% still working on implementing this - how to save the mass all-subs file? 
-                            field_default('op','align_event_names',{'t_vis_syl_on','t_aud_go_on','t_prod_on'});
 
 SESSION = 'intraop';
 TASK = 'smsl'; 
@@ -52,18 +48,18 @@ trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.su
 electrodes_table_filename = [PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv'];
 
 if exist(electrodes_table_filename, 'file')
-    elc_info_raw = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
-        elc_info_raw = renamevars(elc_info_raw,'name','chan');
+    elc_info = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
+        elc_info = renamevars(elc_info,'name','chan');
 else
     channels = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_ses-' SESSION '_channels.tsv']); %%%% for connector info
         channels.name = strrep(channels.name,'_Ll','_Lm'); % change name to match naming convention in electrodes table
     channels(channels.connector==0,:) = []; % channels with this connector label seem to be duplicates or unused
-    elc_info_raw = channels; 
-    elc_info_raw = renamevars(elc_info_raw,'name','chan');
+    elc_info = channels; 
+    elc_info = renamevars(elc_info,'name','chan');
 
     % fill in blank info for localization variables if electrodes table is not available
-    nancol = nan(height(elc_info_raw),1); 
-    celcol = cell(height(elc_info_raw),1); 
+    nancol = nan(height(elc_info),1); 
+    celcol = cell(height(elc_info),1); 
     elc_info_blank = table(...
         nancol, nancol, nancol, ...
         nancol, nancol, nancol, ...
@@ -74,22 +70,8 @@ else
         'mni_x','mni_y','mni_z',...
 	    'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
         'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'}); 
-    elc_info_raw = [elc_info_raw, elc_info_blank];
+    elc_info = [elc_info, elc_info_blank];
 end
-
-% rename dbs channels to match bipolar reref 'channels'
-dbs_elc_names =             {'dbs_L1', 'dbs_L2A',    'dbs_L2B',  'dbs_L2C',   'dbs_L3A',    'dbs_L3B',   'dbs_L3C',  'dbs_L4'};
-dbs_bipolar_chan_names = {'dbs_L1-ABC','dbs_L2A-BC','dbs_L2B-AC','dbs_L2C-AB','dbs_L3A-BC','dbs_L3B-AC','dbs_L3C-AB','dbs_L4-ABC'}; % laplacian
-        % % % % % % % dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'}; % strict 2-chan pairwise reref for ring elecs
-mapElcToChan = containers.Map(dbs_elc_names, dbs_bipolar_chan_names);
-elc_info = elc_info_raw; 
-for i = 1:numel(elc_info.chan)
-    if isKey(mapElcToChan, elc_info.chan{i})
-        elc_info.chan{i} = mapElcToChan(elc_info.chan{i});
-    end
-end
-
-
 
 stim_info = load_seq_stim_info(PATH_STIM_INFO_TABLE); % list of phonemes for all stim
 
@@ -119,15 +101,8 @@ trials.vow = cel_tr;
 
 % table containing responses during epochs for each chan
 cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
-resp = table(   D_wavpow.label, true(nchans,1), cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    ...
-  'VariableNames', {'chan',     'bad_elc',        'base', 'timecourse',             'stim', 'prep', 'prod'   }); 
-
-                                % make tables for storing aligned timecourses
-                                if op.save_aligned_timecourses
-                                n_align_events = length(op.align_event_names); 
-                                aligntab = table(cell(n_align_events,1),cell(n_align_events,1),'VariableNames',{'trials','align_stats'},'RowNames',op.align_event_names);
-                                resp.timecourses_aligned = repmat({aligntab},nchans,1);
-                                end
+resp = table(   D_wavpow.label, cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    nans_ch,  ....
+  'VariableNames', {'chan', 'base', 'timecourse',             'stim', 'prep', 'prod', 'p_prep' }); 
 
 % extract epoch-related responses, get phonemes on each trial
 %%%% trials.times{itrial} use global time coordinates
@@ -160,24 +135,15 @@ for itrial = 1:ntrials % itrial is absolute index across sessions; does not equa
         % get baseline-normalized trial timecourse
        resp.timecourse{ichan}{itrial} = do_baselining(D_wavpow.trial{1}(ichan, match_time_inds), cfg); 
 
-       %%% if response looks artifactually high, set/leave all response values for this trials to nan
-       if max(resp.timecourse{ichan}{itrial}) > op.max_timecourse_base_ratio
+        % response during stim presentation (not go beep)
+        resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
 
-           resp.timecourse{ichan}{itrial} = nan(size(resp.timecourse{ichan}{itrial}));
+        % preparatory response
+        %%%% prep period inds = after stim ends and before syllable prod onset
+        resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
 
-       else 
-
-            % response during stim presentation (not go beep)
-            resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
-    
-            % preparatory response
-            %%%% prep period inds = after stim ends and before syllable prod onset
-            resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
-    
-            % response during speech production
-            resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
-       end
-
+        % response during speech production
+        resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
     end    
 
     % list individual phonemes
@@ -198,27 +164,7 @@ trials = removevars(trials,{'stim_condition','run_id'});
 trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy','block_id','rime_error','word','cons','vow','ons_clust','rime'},'Before',1);
 
 %% test for response types 
-resp.bad_elc = cellfun(@(x)all(isnan(x)),resp.base);
 for ichan = 1:nchans
-
-                        % get aligned timecourses
-                        if op.save_aligned_timecourses
-                        for i_ev = 1:n_align_events
-                            this_ev = op.align_event_names{i_ev};
-                            trials_to_align = trials;
-                            trials_to_align.resp_unaligned = resp.timecourse{ichan}; 
-
-                            cfg = [];
-                            cfg.time_align_var = this_ev; 
-                            [resp.timecourses_aligned{ichan}.trials{this_ev}, resp.timecourses_aligned{ichan}.align_stats{this_ev}]...
-                                = align_timecourses(trials_to_align,cfg);
-
-                            % convert to single to speed up saving/loading
-                            resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned = single(resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned); 
-                        end
-                        end
-
-                        % setup for tuning analysis
     good_trials = ~isnan(resp.base{ichan}) & resp.base{ichan} ~= 0; % non-artifactual, non-zero-base trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
     zeros_vec = zeros(nnz(good_trials),1); 
@@ -226,7 +172,6 @@ for ichan = 1:nchans
     is_novel_trial = strcmp(trials.learn_con,'nn_nov');
     is_trained_trial = strcmp(trials.learn_con,'nn_train');
     is_native_trial = strcmp(trials.learn_con,'nat');
-
     if nnz(good_gotrials) > 1 % only do stats analysis if channel had >0 good go trials
          stim_resp_novel = resp.stim{ichan}(good_gotrials & is_novel_trial);
          stim_resp_trained = resp.stim{ichan}(good_gotrials & is_trained_trial);
@@ -312,11 +257,6 @@ resp.p_min_learn = min([resp.p_stim_learn, resp.p_prep_learn, resp.p_prod_learn]
 %% cleanup
 elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
 
-                            if op.save_aligned_timecourses
-                            resp.timecourse = []; % remove to save space in saved table.... mostly redundant w/ timecourses_aligned
-                            resp = movevars(resp,{'timecourses_aligned'},'After','HCPMMP1_weight_2');
-                            end
-
 % add the following variables to the electrodes response table... use 'electrode' as key variable
 info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'mni_x','mni_y','mni_z',...
@@ -324,14 +264,11 @@ info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
 resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
 resp.sub = cellstr(repmat(op.sub, nchans, 1));
-                                      resp = movevars(resp,{'base','stim','prep','prod'},'After','HCPMMP1_weight_2');
+resp = movevars(resp,{'base','timecourse','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 
 % right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans if they're present
 resp = resp(~contains(resp.chan,'dbs_R'),:);
-
-% assign region labels
-resp = define_brain_regions(resp); 
 
 op_out = op; 
 
