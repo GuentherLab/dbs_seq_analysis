@@ -13,7 +13,7 @@ set(0,'DefaultFigureWindowStyle','normal')
 %% load electrode responses and mni coords
 PATH_DATASET = 'Y:\DBS';
 PATH_DBSSEQ_ANALYSIS = [PATH_DATASET '\groupanalyses\task-smsl\gotrials']; 
-% load([PATH_DBSSEQ_ANALYSIS filesep 'resp_all_subjects'])
+load([PATH_DBSSEQ_ANALYSIS filesep 'resp_all_subjects_hg'])
 
 n_elc = height(resp);
 
