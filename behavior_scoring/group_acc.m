@@ -14,6 +14,7 @@ plot_cond_labels = {'nonnative_novel','nonnative_learned','native'};
 for isub = 1:nsubs
     thissub = subs_beh.sub{isub}; 
     PATH_DER_SUB = [PATH_DER filesep 'sub-',thissub]; 
+    PATH_ANNOT = [PATH_DER_SUB, filesep 'annot']; 
     PATH_TRIAL_AUDIO = [PATH_DER_SUB, filesep 'analysis' filesep 'task-',task,'_trial-audio']; 
 
     % load go trial acc for this sub; add to subtable   
@@ -23,6 +24,12 @@ for isub = 1:nsubs
     subs_beh.acc_native(isub) = subdat.correct_prop_native; 
     subs_beh.acc_learned(isub) = subdat.correct_prop_learned; 
     subs_beh.acc_novel(isub) = subdat.correct_prop_novel; 
+
+    sub_go_dur_file =  [PATH_ANNOT filesep 'sub-',thissub, '_ses-',ses, '_task-',task, '_annot-produced-syllables.tsV'];
+    trials_timing = bml_annot_read_tsv(sub_go_dur_file); 
+    trials_timing_go = trials_timing(~trials_timing.is_stoptrial,:);
+    subs_beh.sp_dur_mean(isub) = nanmean(trials_timing_go.sp_off - trials_timing_go.sp_on); % average speech for go trials (correct and incorrect)
+    subs_beh.rt_mean(isub) = nanmean(trials_timing_go.sp_on - trials_timing_go.audio_go_offset + 0.05); %%% rt for go trials (correct and incorrect).... add 50ms because gobeep dur = 50ms
 
 end
 

@@ -15,6 +15,7 @@ freq_bands_to_analyze = {'beta','hg'};
 op.art_crit = 'G'; 
 op.denoise_string = '_not_denoised'; %%% comment out??
 
+op.keep_unwarped_timecourse = 0; % minimize file size
 
 op.baseline_method = 'subtract_then_divide'; % options: 'divide_then_subtract','subtract'
 
@@ -57,7 +58,7 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     % run response type analysis on each subject individually
     for isub = 1:nsubs    
         op.sub = subs.sub{isub}
-        set_project_specific_variables(); % subject-specific paths and variables
+%         set_project_specific_variables(); % subject-specific paths and variables
         [resp, trials, op] = response_types_seq(op);
         savefile = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal];
         save(savefile, 'trials','resp','op'); clear resp trials
@@ -75,11 +76,7 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     end
 
     resp = resp_all; clear resp_all; op = rmfield(op,'sub'); 
-                                                                    if op.save_aligned_timecourses
-                                                                        save(compiled_responses_filepath, 'resp','subs','op','-v7.3')
-                                                                    elseif ~op.save_aligned_timecourses
-                                                                        save(compiled_responses_filepath, 'resp','subs','op')
-                                                                    end
+    save(compiled_responses_filepath,'resp','subs','op') % may need to use '-v7.3' if resp size is larger than 2gb
     fprintf(['Saved all-subject response table (good elcs only) in %s \n'], compiled_responses_filepath);
 
 end

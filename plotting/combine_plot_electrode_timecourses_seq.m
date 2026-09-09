@@ -1,48 +1,28 @@
- 
- %%%% average timecourses of electrodes and plot
-
+ %%%% check whether there is a nonrandom distribution of significantly tuned electrodes across areas
   %%% load resp_all_subjects first
-% setpaths_dbs_seq()
-% load([PATH_RESULTS, filesep, 'resp_all_subjects_hg.mat'])
+% 
+
+% setpaths_dbs_seq(); load([PATH_RESULTS, filesep, 'resp_all_subjects_beta.mat'])
+% setpaths_dbs_seq(); load([PATH_RESULTS, filesep, 'resp_all_subjects_hg.mat'])
 % close all
+
+ %% params
 
 op.newfig = 1; 
 
+op.analyze_responsive_elcs_only = 1;
+op.analyze_tuned_elcs_only = 0;
 
-
-op.analyze_responsive_elcs_only = 1; 
-op.analyze_tuned_elcs_only = 1;
-
-op.smooth_windowsize = 45; 
-
-%% trial condition for grouping trials
-
-%     op.sort_cond = ''; % plot all trials averaged as a single timecourse without sorting
-    op.sort_cond = 'learn_con';       op.sort_cond_vals = {'nat','nn_train','nn_nov'}; 
-%     op.sort_cond = 'is_nat';
-%     op.sort_cond = 'word';
-%     op.sort_cond = {'cons',1}; 
-%     op.sort_cond = {'cons',2}; 
-%     op.sort_cond = {'cons',3}; 
-%     op.sort_cond = 'vow';
-%     op.sort_cond = 'word_accuracy';
-%     op.sort_cond = 'seq_accuracy';
-
-
-%% parameter for filtering out which electrodes to plot
-
-% op.tuning_param = 'p_min_stim_prep_prod'; % general task responsivity
 % op.tuning_param = 'p_stim';
 % op.tuning_param = 'p_prep';
 % op.tuning_param = 'p_prod';
 
-% op.tuning_param = 'p_min_learn'; 
 % op.tuning_param = 'p_stim_learn';
-op.tuning_param = 'p_prep_learn';
-% op.tuning_param = 'p_prod_learn';
+% op.tuning_param = 'p_prep_learn';
+op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';
-% op.tuning_param = 'p_prep_nn_v_nat';
+% op.tuning_param = 'p_prep_nn_v_nat'; 
 % op.tuning_param = 'p_prod_nn_v_nat';
 
 % op.tuning_param = 'p_stim_novel_vs_trained';
@@ -77,19 +57,37 @@ op.tuning_param = 'p_prep_learn';
 % op.tuning_param = 'p_prep_vow';
 % op.tuning_param = 'p_prod_vow';
 
+% op.tuning_param = 'p_min_stim_prep_prod'; 
+% op.tuning_param = 'p_min_learn';  
 
-%% trial table varname for times used for time-locking responses
-% op.time_align_var = 't_vis_syl_on'; % audio stim cue on
-op.time_align_var = 't_aud_go_on'; % go beep
-% op.time_align_var = 't_prod_on'; % speech onset
 
-op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on','t_prod_off'};
-%     op.xline_events = {'t_vis_syl_on','t_aud_syl_on','t_aud_go_on','t_prod_on'};
+op.sort_cond = 'learn_con'; op.sort_cond_vals = {'nat','nn_train','nn_nov'}; 
+% op.sort_cond = 'is_nat';  op.sort_cond_vals = [0 1]; % need to re-add the creation of this trials table variable in response_types_seq
+% op.sort_cond = 'word'; op.sort_cond_vals = {}; 
+% op.sort_cond = 'vow'; op.sort_cond_vals = {}; 
+% op.sort_cond = 'word_accuracy'; op.sort_cond_vals = [0 1]; 
+% op.sort_cond = 'seq_accuracy'; op.sort_cond_vals = [0 1]; 
 
-op.include_xline_for_align_event = 1; 
+%% Which epochs to label with text annotations?
+% If empty: label all epochs
+% If cell array: label only specified epochs
+%%%%%%%% dbs-seq epochs = 'prebase','base','postbase','visual_stim','vis_aud_stim','delay','prep','speech','postprod'
 
-op.leg_pos_adjust = -0.04; % legend hrz position
-op.xline_event_label_height = 0.8; 
+op.epochs_to_label = {'visual_stim','vis_audio_stim','speech'};  % Only show labels for these epochs
+% op.epochs_to_label = {};  % label all epochs
 
-op.xline_events(2,:) = relabel_events(op.xline_events); % specify display labels
-[cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = combine_plot_electrode_timecourses(resp,subs,op);
+% op.regions_to_plot  = {'SMC','IFG/IFS','Thal'};
+op.regions_to_plot = {}; % plot all regions
+
+%% Epoch visualization options
+op.epoch_colors = parula(height(op.epochs));  % or 'viridis', 'turbo', 'hsv', etc.
+op.epoch_alpha = 0.12;
+op.epoch_label_height = 0.92;
+op.epoch_label_fontsize = 8;
+
+%% ============ CALL MAIN FUNCTION ============
+[cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = ...
+    combine_plot_electrode_timecourses(resp, subs, op);
+
+
+

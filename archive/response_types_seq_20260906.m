@@ -6,33 +6,36 @@
 function [resp, trials, op_out] = response_types_seq(op)
 
 %% analysis parameters
+%%%% for baseline window, use the period from -base_win_sec(1) to -base_win_sec(2) before visual stim onset.... this comes before aud stim onset in dbsseq
+%%% ......... 1047 has missing visual_onset trials, so use audio onset instead which is very reliably 1.0sec after visual_onset
+%%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
+base_win_sec = [1.5, 1.1]; % use [1.5, 1.1] if aligning to audio stim onset to achieve [0.5 0.1] before visual stim onset.... visual stim onset is missing for trials in 1047
+stim_window_extend_end = 0.3; % for responses during stimulus, add this long in seconds to the analyzed 'stimulus period' after actual stim offset
 
-% for defining nonwarped trial timecourse durations, use this much time before/after visual onset/offset
-%%% this only affects how much data on each side gets saved for the purposes of plotting
-field_default('op','trial_time_buffer',[1, 2.5]); % use 2 sec because subjects in DAF often keeep speaking for a while after visual offset
+% for responses during speech, start the analyzed 'speech period' this early in seconds to capture pre-sound muscle activation; also end prep period this early
+speech_window_extend_start = 0.15;  
+trial_end_post_speech_win = 0.6; % end the trial this long after speech offset in seconds
+
 
 % consider electrodes responsive if they have above-baseline responses during one response epoch at this level
-field_default('op','responsivity_alpha',0.05); % uncorrected
-% field_default('op','responsivity_alpha',0.05 / 2^[3-1]); % bonf correction for 3 tests
-
+responsivity_alpha = 0.05; % uncorrected
+% responsivity_alpha = 0.05 / 2^[3-1]; % bonf correction for 3 tests
 
 %% Defining paths, loading parameters
 setpaths_dbs_seq()
+field_default('op','sub','DM1007');
 field_default('op','resp_signal','hg'); 
+field_default('op','art_crit','G'); 
 field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
-field_default('op','max_timecourse_base_ratio',50); % in each trial, if ratio of timecourse avg to baseline is higher than this, exclude the trial
+field_default('op','max_timecourse_base_ratio',100); % in each trial, if ratio of timecourse avg to baseline is higher than this, exclude the trial
+                            
+                            field_default('op','save_aligned_timecourses',0); %%%% still working on implementing this - how to save the mass all-subs file? 
+                            field_default('op','align_event_names',{'t_vis_syl_on','t_aud_go_on','t_prod_on'});
 
 SESSION = 'intraop';
 TASK = 'smsl'; 
-PATH_DER_SUB = [PATH_DER filesep 'sub-' op.sub];  
-PATH_PREPROC = [PATH_DER_SUB filesep 'preproc'];
-PATH_ANNOT = [PATH_DER_SUB filesep 'annot'];
-PATH_FIELDTRIP = [PATH_DER_SUB filesep 'fieldtrip']; % fieldtrip data, not fieldtrip code
 
-PATH_SRC_SUB = [PATH_SRC filesep 'sub-' op.sub];  
-PATH_SRC_SESS = [PATH_SRC_SUB filesep 'ses-' SESSION]; 
-PATH_AUDIO = [PATH_SRC_SESS filesep 'audio']; 
-PATH_TASK = [PATH_SRC_SESS filesep 'task']; 
+set_project_specific_variables() % subject-specific paths and variables
 
 
 %% load data 
@@ -86,66 +89,16 @@ for i = 1:numel(elc_info.chan)
     end
 end
 
+
+
 stim_info = load_seq_stim_info(PATH_STIM_INFO_TABLE); % list of phonemes for all stim
 
-
 %% get responses in predefined epochs
-
-
-
-
-
-
-%%% set up the config table for determining how to epoch ephys responses for this project
-% NB: strongly recommended to not include any expected gaps between epochs, and have dur_fix('trial') equal to the sum of the durations of the other epochs
-...... or else subsequent time labels on trial plots will likely be wrong
-% all response values except 'base' are baseline-normalized by dividing by that trial's baseline average... 'base' records the absolute value of the baseline
-% 
-%%%% for baseline window in dbsseq, we measure from aud onset, 
-......     even though the intended target for baseline is slightly before vis onset, because some subjects (DM1047) are missing some vis onset timing market
-......     and we know that audio onset very reliably comes 1sec after visual onest
-%%% baseline should end at least a few 100ms before visual stim onset in order to not include anticipatory activity in baseline
-epochs = table({'prebase';'base';'postbase';'visual_stim';'vis_audio_stim';'delay';'prep';'speech';'postprod'},'VariableNames',{'epoch'});
-epochs.Properties.RowNames = epochs.epoch;
-epochs.onset = cell(height(epochs),1);
-epochs.offset = cell(height(epochs),1);
-epochs.dur_fix = nan(height(epochs),1); 
-epochs.dur_fix('prebase') = 0.6;
-    epochs.onset{'prebase'} = {'t_aud_syl_on',-2};          % pre-base buffer
-    epochs.offset{'prebase'} = {'t_aud_syl_on',-1.5};
-epochs.dur_fix('base') = 0.4;
-    epochs.onset{'base'} = {'t_aud_syl_on',-1.5};          % 'base' = average during pre-visual-stim baseline
-    epochs.offset{'base'} = {'t_aud_syl_on',-1.1};
-epochs.dur_fix('postbase') = 0.1;
-    epochs.onset{'postbase'} = {'t_aud_syl_on',-1.1};          % spacer between baseline and vis stim on
-    epochs.offset{'postbase'} = {'t_aud_syl_on',-1};
-epochs.dur_fix('visual_stim') = 1;                      % vis-stim-only; next epoch is both vis and aud
-    epochs.onset{'visual_stim'} = {'t_aud_syl_on',-1}; 
-    epochs.offset{'visual_stim'} = {'t_aud_syl_on',0}; 
-epochs.dur_fix('vis_audio_stim') = 0.38; %%% times when both visual and auditory stim are on; actual aud stim file length is 380ms
-    epochs.onset{'vis_audio_stim'} =  't_aud_syl_on'; 
-    epochs.offset{'vis_audio_stim'} = 't_aud_syl_off';
-epochs.dur_fix('delay') = 0.8; % approx time between audio stim offset and go beep onset; has +-250ms jitter
-    epochs.onset{'delay'} = 't_aud_syl_off'; 
-    epochs.offset{'delay'} = 't_aud_go_on'; 
-epochs.dur_fix('prep') = 0.7; % estimated reaction time - between go-on and speech osnet
-    epochs.onset{'prep'} = 't_aud_go_on'; 
-    epochs.offset{'prep'} = 't_prod_on'; 
-epochs.dur_fix('speech') = 0.5; % approx avg speech duration... stim audio target = 380ms
-    epochs.onset{'speech'} = 't_prod_on'; 
-    epochs.offset{'speech'} = 't_prod_off'; 
-    epochs.early_overlap_allowed('speech') = true; % we allow the speech epoch to consume preceding epochs; we don't have enough trials to throw out early response trials
-epochs.dur_fix('postprod') = 2;             % post speech epoch - look for beta rebound here
-    epochs.onset{'postprod'} = {'t_prod_off',0}; 
-    epochs.offset{'postprod'} = {'t_prod_off',2}; 
-    
-op.epochs = epochs; 
-
-
 % 'base' = average durng pre-visual-stim baseline
 % all response values except 'base' are baseline-normalized by dividing by that trial's baseline average... 'base' records the absolute value of the baseline
 ntrials = height(trials);
 nchans = length(D_wavpow.label);
+nans_ch = nan(nchans,1); 
 nans_tr = nan(ntrials,1); 
 cel_tr = cell(ntrials,1); 
 
@@ -157,26 +110,77 @@ trials.t_aud_syl_on = trials_with_stim_timing.audio_onset;
 trials.t_aud_syl_off = trials_with_stim_timing.audio_offset;
 trials.t_aud_go_on = trials_with_stim_timing.audio_go_onset;
 trials.t_aud_go_off = trials_with_stim_timing.audio_go_offset;
-trials.starts = trials.t_aud_syl_on - epochs.dur_fix('base'); % trial starts at beginning of baseline window - before vis onset, which comes 1sec earlier than audio stim in dbsseeq 
-trials.ends = trials.t_prod_off + epochs.dur_fix('postprod'); % trial ends at fixed time after voice offset
+trials.starts = trials.t_aud_syl_on - base_win_sec(1); % trial starts at beginning of baseline window - before vis onset, which comes 1sec earlier than audio stim in dbsseeq 
+trials.ends = trials.t_prod_off + trial_end_post_speech_win; % trial ends at fixed time after voice offset
 trials.duration = trials.ends - trials.starts; 
 trials.cons = cell(ntrials,3); 
 trials.vow = cel_tr; 
 
-% don't bother analyzing stop trials, even though we could theoretically analyze the pre-go-beep portion of the trial
-.... it makes epoch logical parsing more confusing to only part of certain trials and the entirety of other trials
-op.trials_to_analyze = ~trials.is_stoptrial; 
-[resp, trials] = get_epoched_responses(D_wavpow,trials,op);
 
+% table containing responses during epochs for each chan
+cel = repmat({nans_tr},nchans,1); % 1 value per trial per chan
+resp = table(   D_wavpow.label, true(nchans,1), cel,   repmat({cel_tr},nchans,1),  cel,    cel,    cel,    ...
+  'VariableNames', {'chan',     'bad_elc',        'base', 'timecourse',             'stim', 'prep', 'prod'   }); 
 
-% get phonemes on each trial
+                                % make tables for storing aligned timecourses
+                                if op.save_aligned_timecourses
+                                n_align_events = length(op.align_event_names); 
+                                aligntab = table(cell(n_align_events,1),cell(n_align_events,1),'VariableNames',{'trials','align_stats'},'RowNames',op.align_event_names);
+                                resp.timecourses_aligned = repmat({aligntab},nchans,1);
+                                end
+
+% extract epoch-related responses, get phonemes on each trial
 %%%% trials.times{itrial} use global time coordinates
 %%%% ....... start at a fixed baseline window before stim onset
 %%%% ....... end at a fixed time buffer after speech offset
 for itrial = 1:ntrials % itrial is absolute index across sessions; does not equal "trial_id" from loaded tables
+    iblock = trials.block_id(itrial); 
+    trial_id_in_block = trials.trial_id(itrial); % block-relative trial number
     
+    % get indices within the trial-specific set of timepoints of D_wavpow.time{1} that match our specified trial window
+    match_time_inds = D_wavpow.time{1} > trials.starts(itrial) & D_wavpow.time{1} < trials.ends(itrial); 
+    trials.times{itrial} = D_wavpow.time{1}(match_time_inds); % times in this redefined trial window... still using global time coordinates
 
-    % list individual phonemesresp.vis_audio_stim{ichan}
+    % get trial-relative baseline time indices; window time-locked to first stim onset
+    base_inds = D_wavpow.time{1} > trials.starts(itrial) & D_wavpow.time{1} < trials.starts(itrial) + [base_win_sec(1) - base_win_sec(2)]; 
+    stim_inds = D_wavpow.time{1} > trials.t_vis_syl_on(itrial) & D_wavpow.time{1} < trials.t_aud_syl_off(itrial) + stim_window_extend_end; % starts at vis onset, stop before vis offset (at aud offset)
+    prep_inds = D_wavpow.time{1} > trials.t_aud_syl_off(itrial) & D_wavpow.time{1} < [trials.t_prod_on(itrial) - speech_window_extend_start]; % this period includes go beep
+    prod_inds = D_wavpow.time{1} > [trials.t_prod_on(itrial) - speech_window_extend_start]   &   D_wavpow.time{1} < trials.t_prod_off(itrial);     
+
+    for ichan = 1:nchans
+        % baseline activity and timecourse
+        % use mean rather than nanmean, so that trials which had artifacts marked with NaNs will be excluded
+        resp.base{ichan}(itrial) = mean( D_wavpow.trial{1}(ichan, base_inds), 'includenan' ); % mean wavpow during baseline
+
+        % set up params for baselining
+        cfg = [];
+        cfg.baseval = resp.base{ichan}(itrial); 
+        cfg.method = op.baseline_method; 
+    
+        % get baseline-normalized trial timecourse
+       resp.timecourse{ichan}{itrial} = do_baselining(D_wavpow.trial{1}(ichan, match_time_inds), cfg); 
+
+       %%% if response looks artifactually high, set/leave all response values for this trials to nan
+       if max(resp.timecourse{ichan}{itrial}) > op.max_timecourse_base_ratio
+
+           resp.timecourse{ichan}{itrial} = nan(size(resp.timecourse{ichan}{itrial}));
+
+       else 
+
+            % response during stim presentation (not go beep)
+            resp.stim{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, stim_inds) ), cfg);
+    
+            % preparatory response
+            %%%% prep period inds = after stim ends and before syllable prod onset
+            resp.prep{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prep_inds) ), cfg);
+    
+            % response during speech production
+            resp.prod{ichan}(itrial) = do_baselining(mean( D_wavpow.trial{1}(ichan, prod_inds) ), cfg);
+       end
+
+    end    
+
+    % list individual phonemes
     trials.cons(itrial,:) = stim_info.consonant(strcmp(trials.word{itrial},stim_info.orthography),:);
     trials.vow(itrial) = stim_info.vowel(strcmp(trials.word{itrial},stim_info.orthography),:);    
     trials.ons_clust{itrial} = strrep(join(trials.cons(1,1:2)),' ',''); 
@@ -197,9 +201,25 @@ trials = movevars(trials,{'trial_id','learn_con','word_accuracy','seq_accuracy',
 resp.bad_elc = cellfun(@(x)all(isnan(x)),resp.base);
 for ichan = 1:nchans
 
+                        % get aligned timecourses
+                        if op.save_aligned_timecourses
+                        for i_ev = 1:n_align_events
+                            this_ev = op.align_event_names{i_ev};
+                            trials_to_align = trials;
+                            trials_to_align.resp_unaligned = resp.timecourse{ichan}; 
+
+                            cfg = [];
+                            cfg.time_align_var = this_ev; 
+                            [resp.timecourses_aligned{ichan}.trials{this_ev}, resp.timecourses_aligned{ichan}.align_stats{this_ev}]...
+                                = align_timecourses(trials_to_align,cfg);
+
+                            % convert to single to speed up saving/loading
+                            resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned = single(resp.timecourses_aligned{ichan}.trials{this_ev}.resp_aligned); 
+                        end
+                        end
 
                         % setup for tuning analysis
-    good_trials = resp.good_trial{ichan}; 
+    good_trials = ~isnan(resp.base{ichan}) & resp.base{ichan} ~= 0; % non-artifactual, non-zero-base trials for this channel
     good_gotrials = good_trials & ~trials.is_stoptrial;
     zeros_vec = zeros(nnz(good_trials),1); 
     zeros_vec_gotrials = zeros(nnz(good_gotrials),1); 
@@ -208,46 +228,46 @@ for ichan = 1:nchans
     is_native_trial = strcmp(trials.learn_con,'nat');
 
     if nnz(good_gotrials) > 1 % only do stats analysis if channel had >0 good go trials
-         stim_resp_novel = resp.vis_audio_stim{ichan}(good_gotrials & is_novel_trial);
-         stim_resp_trained = resp.vis_audio_stim{ichan}(good_gotrials & is_trained_trial);
+         stim_resp_novel = resp.stim{ichan}(good_gotrials & is_novel_trial);
+         stim_resp_trained = resp.stim{ichan}(good_gotrials & is_trained_trial);
          stim_resp_nonnative = [stim_resp_novel; stim_resp_trained]; 
-         stim_resp_nat = resp.vis_audio_stim{ichan}(good_gotrials & is_native_trial);
+         stim_resp_nat = resp.stim{ichan}(good_gotrials & is_native_trial);
 
          prep_resp_novel = resp.prep{ichan}(good_gotrials & is_novel_trial);
          prep_resp_trained = resp.prep{ichan}(good_gotrials & is_trained_trial);
          prep_resp_nonnative = [prep_resp_novel; prep_resp_trained]; 
          prep_resp_nat = resp.prep{ichan}(good_gotrials & is_native_trial);
 
-         prod_resp_novel = resp.speech{ichan}(good_gotrials & is_novel_trial);
-         prod_resp_trained = resp.speech{ichan}(good_gotrials & is_trained_trial);
+         prod_resp_novel = resp.prod{ichan}(good_gotrials & is_novel_trial);
+         prod_resp_trained = resp.prod{ichan}(good_gotrials & is_trained_trial);
          prod_resp_nonnative = [prod_resp_novel; prod_resp_trained]; 
-         prod_resp_nat = resp.speech{ichan}(good_gotrials & is_native_trial);
+         prod_resp_nat = resp.prod{ichan}(good_gotrials & is_native_trial);
         
         % above/below-baseline response during the stim period
-        [~, resp.p_stim(ichan)] = ttest2(resp.vis_audio_stim{ichan}(good_gotrials), zeros_vec_gotrials); 
+        [~, resp.p_stim(ichan)] = ttest2(resp.stim{ichan}(good_gotrials), zeros_vec_gotrials); 
 
         % above/below-baseline response during the prep period
         [~, resp.p_prep(ichan)] = ttest2(resp.prep{ichan}(good_gotrials), zeros_vec); 
     
         % above/below-baseline response during the production period
-        [~, resp.p_prod(ichan)] = ttest2(resp.speech{ichan}(good_gotrials), zeros_vec); 
+        [~, resp.p_prod(ichan)] = ttest2(resp.prod{ichan}(good_gotrials), zeros_vec); 
 
         % test for general task responsivity
         %%%% one way to make this metric more stringent would be: run anova on mean response in 4 periods: baseline, stim, prep, speech
         resp.p_min_stim_prep_prod(ichan) = min([resp.p_stim(ichan), resp.p_prep(ichan), resp.p_prod(ichan)]);
-        resp.rspv(ichan) = resp.p_min_stim_prep_prod(ichan) < op.responsivity_alpha; 
+        resp.rspv(ichan) = resp.p_min_stim_prep_prod(ichan) < responsivity_alpha; 
 
          % preferential response for learning condition(s)
-        resp.p_stim_learn(ichan) = anova1(resp.vis_audio_stim{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
+        resp.p_stim_learn(ichan) = anova1(resp.stim{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
         resp.p_prep_learn(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
-        resp.p_prod_learn(ichan) = anova1(resp.speech{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
+        resp.p_prod_learn(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.learn_con(good_gotrials),'off');
     
         % preference for native vs nonnative
-         resp.p_stim_nn_v_nat(ichan) = anova1(resp.vis_audio_stim{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+         resp.p_stim_nn_v_nat(ichan) = anova1(resp.stim{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_stim_nn_minus_nat(ichan) = sign( nanmean(stim_resp_nonnative) - nanmean(stim_resp_nat) ); 
         resp.p_prep_nn_v_nat(ichan) = anova1(resp.prep{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_prep_nn_minus_nat(ichan) = sign( nanmean(prep_resp_nonnative) - nanmean(prep_resp_nat) ); 
-        resp.p_prod_nn_v_nat(ichan) = anova1(resp.speech{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
+        resp.p_prod_nn_v_nat(ichan) = anova1(resp.prod{ichan}(good_gotrials),is_native_trial(good_gotrials),'off');
             resp.sign_prod_nn_minus_nat(ichan) = sign( nanmean(prod_resp_nonnative) - nanmean(prod_resp_nat) ); 
 
          % preference for novel nonnative vs. trained nonnative (effect of training occurring only during Training phase... no natives)
@@ -267,22 +287,22 @@ for ichan = 1:nchans
             resp.sign_prod_novel_minus_nat(ichan) = sign( nanmean(prod_resp_novel) - nanmean(prod_resp_nat) ); 
     
          % preferential response for specific stim/phonemes
-        resp.p_stim_syl(ichan) = anova1(resp.vis_audio_stim{ichan}(good_trials),trials.word(good_trials),'off'); % include stop trials
+        resp.p_stim_syl(ichan) = anova1(resp.stim{ichan}(good_trials),trials.word(good_trials),'off'); % include stop trials
         resp.p_prep_syl(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.word(good_gotrials),'off');
-        resp.p_prod_syl(ichan) = anova1(resp.speech{ichan}(good_gotrials),trials.word(good_gotrials),'off');
+        resp.p_prod_syl(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.word(good_gotrials),'off');
 
-        resp.p_stim_rime(ichan) = anova1(resp.vis_audio_stim{ichan}(good_trials),trials.rime(good_trials),'off'); % include stop trials
+        resp.p_stim_rime(ichan) = anova1(resp.stim{ichan}(good_trials),trials.rime(good_trials),'off'); % include stop trials
         resp.p_prep_rime(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.rime(good_gotrials),'off'); 
-        resp.p_prod_rime(ichan) = anova1(resp.speech{ichan}(good_gotrials),trials.rime(good_gotrials),'off');
+        resp.p_prod_rime(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.rime(good_gotrials),'off');
 
-        resp.p_stim_vow(ichan) = anova1(resp.vis_audio_stim{ichan}(good_trials),trials.vow(good_trials),'off'); % include stop trials
+        resp.p_stim_vow(ichan) = anova1(resp.stim{ichan}(good_trials),trials.vow(good_trials),'off'); % include stop trials
         resp.p_prep_vow(ichan) = anova1(resp.prep{ichan}(good_gotrials),trials.vow(good_gotrials),'off'); 
-        resp.p_prod_vow(ichan) = anova1(resp.speech{ichan}(good_gotrials),trials.vow(good_gotrials),'off');
+        resp.p_prod_vow(ichan) = anova1(resp.prod{ichan}(good_gotrials),trials.vow(good_gotrials),'off');
 
        for iphon = 1:3
-           resp.p_stim_cons(ichan,iphon) = anova1(resp.vis_audio_stim{ichan}(good_trials),trials.cons(good_trials,iphon),'off'); 
+           resp.p_stim_cons(ichan,iphon) = anova1(resp.stim{ichan}(good_trials),trials.cons(good_trials,iphon),'off'); 
             resp.p_prep_cons(ichan,iphon) = anova1(resp.prep{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
-            resp.p_prod_cons(ichan,iphon) = anova1(resp.speech{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
+            resp.p_prod_cons(ichan,iphon) = anova1(resp.prod{ichan}(good_gotrials),trials.cons(good_gotrials,iphon),'off'); 
        end     
     end
 end
@@ -292,6 +312,11 @@ resp.p_min_learn = min([resp.p_stim_learn, resp.p_prep_learn, resp.p_prod_learn]
 %% cleanup
 elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
 
+                            if op.save_aligned_timecourses
+                            resp.timecourse = []; % remove to save space in saved table.... mostly redundant w/ timecourses_aligned
+                            resp = movevars(resp,{'timecourses_aligned'},'After','HCPMMP1_weight_2');
+                            end
+
 % add the following variables to the electrodes response table... use 'electrode' as key variable
 info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'mni_x','mni_y','mni_z',...
@@ -299,7 +324,7 @@ info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
 resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
 resp.sub = cellstr(repmat(op.sub, nchans, 1));
-resp = movevars(resp,{'base','vis_audio_stim','prep','speech'},'After','HCPMMP1_weight_2');
+                                      resp = movevars(resp,{'base','stim','prep','prod'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
 
 % right DBS was not recorded during the SEQ task in these subjects but remained in the channels  table - remove these chans if they're present
@@ -312,4 +337,14 @@ op_out = op;
 
 end
 
+%%%% takes a response (numerical array) and does baseline normalization used a specified method
+function normed_response = do_baselining(response,cfg)
+    switch cfg.method
+        case 'subtract'
+            normed_response = response - cfg.baseval; 
+
+        case 'subtract_then_divide'
+            normed_response = [response - cfg.baseval] / cfg.baseval; 
+    end
+end
 
