@@ -1,4 +1,4 @@
- %%%% get average timecourse of all electrodes within a region
+%%%% plot all individual elcs meeting certain critera (e.g. tuning, region, subject)
   %%% load resp_all_subjects first
 % 
 
@@ -76,8 +76,21 @@ op.sort_cond = 'learn_con'; op.sort_cond_vals = {'nat','nn_train','nn_nov'};
 op.epochs_to_label = {'visual_stim','vis_audio_stim','speech'};  % Only show labels for these epochs
 % op.epochs_to_label = {};  % label all epochs
 
-% op.regions_to_plot  = {'SMC','IFG/IFS','Thal'};
+
+
+%% figure options
+op.plotrows = 3;
+op.plotcolumns = 5; 
+op.screen_order = [2 3 1]; 
+
+%% selection regions, subjects
 op.regions_to_plot = {}; % plot all regions
+% op.regions_to_plot  = {'SMC','IFG/IFS','Thal'};
+op.regions_to_plot  = {'Thal'};
+
+op.subjects_to_plot = {}; % plot all subjects
+% op.subjects_to_plot = {'DM1005'}: 
+
 
 %% Epoch visualization options
 op.epoch_colors = parula(height(op.epochs));  % or 'viridis', 'turbo', 'hsv', etc.
@@ -86,8 +99,8 @@ op.epoch_label_height = 0.92;
 op.epoch_label_fontsize = 8;
 
 %% ============ CALL MAIN FUNCTION ============
-[cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = ...
-    combine_plot_electrode_timecourses(resp, subs, op);
+[electrode_plot_data, align_stats_elc, resp_grpd_elc, cfg_elc, fig_handles, ax_handles] = ...
+    plot_electrode_timecourses(resp, subs, op);
 
 
 
