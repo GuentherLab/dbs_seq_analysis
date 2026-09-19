@@ -52,9 +52,9 @@ sublist ={...
      'DM1052';...
      'DM1054';...
      };
-sublist ={...
-     'DM1008';...
-     };
+% sublist ={...
+%      'DM1008';...
+%      };
 setpaths_dbs_seq()
 
 nsubs = length(sublist);
@@ -133,7 +133,8 @@ for isub = 1:nsubs
             end
         end
 
-        % save
+        % add mapping back to original electrode labels, then save
+        D_ref = reref_chan_to_electrode_label(D_ref); 
         save([FT_FILE_PREFIX,'raw-filt_ar-',op.art_crit,'_ref'],'D_ref','cfg_ref')
         
     end 
@@ -168,6 +169,7 @@ for isub = 1:nsubs
             cfg_wavpow.param = artparam;  
             D_wavpow_no_thresh_mask = multifreq_avg_power(cfg_wavpow, D_ref); % get power in band of interest
             cfg_wavpow.thisband = thisband; 
+            D_wavpow_no_thresh_mask = reref_chan_to_electrode_label(D_wavpow_no_thresh_mask); % add mapping from chans back to electrode labels
             save(wavpow_no_thresh_savename,'D_wavpow_no_thresh_mask','cfg_wavpow')
     
         % option below assumes that prior steps have already been run and that we don't want to rerun them
