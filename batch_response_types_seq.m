@@ -58,10 +58,10 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
     % run response type analysis on each subject individually
     for isub = 1:nsubs    
         op.sub = subs.sub{isub}
-%         set_project_specific_variables(); % subject-specific paths and variables
         [resp, trials, op] = response_types_seq(op);
+        subs.paths{isub} = op.paths; 
         savefile = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal];
-        save(savefile, 'trials','resp','op'); clear resp trials
+        save(savefile, 'trials','resp','op'); clear resp trials; op = rmfield(op,{'sub','paths','trials_to_analyze'}); 
     end
 
     
@@ -72,10 +72,10 @@ for iband = 1:nbands % run full analysis, compile subjects, save results for all
         op.sub = subs.sub{isub};
         load([PATH_RESULTS, filesep, op.sub, '_responses_', op.resp_signal],'resp','trials','op')
         resp_all = [resp_all; resp(~resp.bad_elc,:)];
-        subs.trials{isub} = trials; 
+        subs.trials{isub} = trials; clear resp trials; op = rmfield(op,{'sub','paths','trials_to_analyze'}); 
     end
 
-    resp = resp_all; clear resp_all; op = rmfield(op,'sub'); 
+    resp = resp_all; clear resp_all; 
     save(compiled_responses_filepath,'resp','subs','op') % may need to use '-v7.3' if resp size is larger than 2gb
     fprintf(['Saved all-subject response table (good elcs only) in %s \n'], compiled_responses_filepath);
 

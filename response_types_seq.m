@@ -17,7 +17,7 @@ field_default('op','responsivity_alpha',0.05); % uncorrected
 
 
 %% Defining paths, loading parameters
-setpaths_dbs_seq()
+setpaths_dbs_seq();
 field_default('op','resp_signal','hg'); 
 field_default('op','baseline_method','subtract_then_divide'); % options: 'divide_then_subtract','subtract'
 field_default('op','max_timecourse_base_ratio',50); % in each trial, if ratio of timecourse avg to baseline is higher than this, exclude the trial
@@ -41,57 +41,12 @@ load([PATH_FIELDTRIP, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-', TASK,
     '_ft-', op.resp_signal, '.mat'],'D_wavpow')
 
 % % trial timing info
-trials = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-' op.sub, '_ses-', SESSION, '_task-',TASK,...
-     '_annot-produced-syllables.tsv']);
+trials_file_beh = [PATH_ANNOT, filesep, 'sub-' op.sub, '_ses-', SESSION, '_task-',TASK,'_annot-produced-syllables.tsv'];
+trials = bml_annot_read_tsv(trials_file_beh);
 trials_with_stim_timing = bml_annot_read_tsv([PATH_ANNOT, filesep, 'sub-', op.sub, '_ses-', SESSION, '_task-',...
     TASK, '_annot-trials.tsv']);
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % electrodes_table_filename = [PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv'];
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % if exist(electrodes_table_filename, 'file')
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     elc_info_raw = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_electrodes.tsv';]); 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         elc_info_raw = renamevars(elc_info_raw,'name','chan');
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % else
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     channels = bml_annot_read_tsv([PATH_ANNOT filesep 'sub-' op.sub '_ses-' SESSION '_channels.tsv']); %%%% for connector info
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         channels.name = strrep(channels.name,'_Ll','_Lm'); % change name to match naming convention in electrodes table
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     channels(channels.connector==0,:) = []; % channels with this connector label seem to be duplicates or unused
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     elc_info_raw = channels; 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     elc_info_raw = renamevars(elc_info_raw,'name','chan');
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     % fill in blank info for localization variables if electrodes table is not available
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     nancol = nan(height(elc_info_raw),1); 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     celcol = cell(height(elc_info_raw),1); 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     elc_info_blank = table(...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         nancol, nancol, nancol, ...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         nancol, nancol, nancol, ...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         celcol, nancol, celcol, nancol, celcol, nancol, ...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         celcol, nancol,celcol, nancol, ...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         'VariableNames',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         {'native_x','native_y','native_z',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         'mni_x','mni_y','mni_z',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 	    'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %         'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'}); 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % %     elc_info_raw = [elc_info_raw, elc_info_blank];
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % end
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % rename dbs channels to match bipolar reref 'channels'
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %         % % % % % % % dbs_bipolar_chan_names = {'dbs_L1-L2','dbs_L2A-B','dbs_L2B-C','dbs_L2C-A','dbs_L3A-B','dbs_L3B-C','dbs_L3C-A','dbs_L4-L3'}; % strict 2-chan pairwise reref for ring elecs
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % mapElcToChan = containers.Map(dbs_elc_names, dbs_bipolar_chan_names);
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % elc_info = elc_info_raw; 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % for i = 1:numel(elc_info.chan)
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %     if isKey(mapElcToChan, elc_info.chan{i})
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %         elc_info.chan{i} = mapElcToChan(elc_info.chan{i});
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %     end
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % end
-
 stim_info = load_seq_stim_info(PATH_STIM_INFO_TABLE); % list of phonemes for all stim
-
 
 %% get responses in predefined epochs
 
@@ -289,15 +244,6 @@ end
 
 resp.p_min_learn = min([resp.p_stim_learn, resp.p_prep_learn, resp.p_prod_learn],[],2);
     
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %% cleanup
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % elec_info_overlapping_resptable = elc_info(ismember(elc_info.chan,resp.chan),:); % include only electrodes analyzed for dbsseq
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % add the following variables to the electrodes response table... use 'electrode' as key variable
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % info_vars_to_copy = {'chan','type','native_x','native_y','native_z',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % %     'mni_x','mni_y','mni_z',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 	'DISTAL_label_1','DISTAL_weight_1','DISTAL_label_2','DISTAL_weight_2','DISTAL_label_3','DISTAL_weight_3',...
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % %     'HCPMMP1_label_1','HCPMMP1_weight_1','HCPMMP1_label_2','HCPMMP1_weight_2'};
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % resp = join(resp, elec_info_overlapping_resptable(:,info_vars_to_copy)); % add elc_info to resp
 resp.sub = cellstr(repmat(op.sub, nchans, 1));
 resp = movevars(resp,{'base','vis_audio_stim','prep','speech'},'After','HCPMMP1_weight_2');
 resp = movevars(resp,{'sub','chan','HCPMMP1_label_1'},'Before',1);
@@ -308,6 +254,12 @@ resp = resp(~contains(resp.chan,'dbs_R'),:);
 % assign region labels
 resp = define_brain_regions(resp); 
 
+paths.electrodes = PATH_ELECTRODES;
+paths.fieldtrip_ref = [PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',TASK, '_ft-raw-filt_ar-',op.art_crit, '_ref.mat']; 
+paths.trials_beh = trials_file_beh; 
+paths.artifact_manual = [PATH_ANNOT, filesep, 'sub-' op.sub '_ses-' SESSION, '_task-',TASK, '_artifact-manual.tsv']; 
+paths.resp = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal];
+op.paths = paths; 
 op_out = op; 
 
 end
