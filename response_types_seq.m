@@ -258,7 +258,7 @@ paths.electrodes = PATH_ELECTRODES;
 paths.fieldtrip_ref = [PATH_FIELDTRIP, filesep, 'sub-',op.sub, '_ses-',SESSION, '_task-',TASK, '_ft-raw-filt_ar-',op.art_crit, '_ref.mat']; 
 paths.trials_beh = trials_file_beh; 
 paths.artifact_manual = [PATH_ANNOT, filesep, 'sub-' op.sub '_ses-' SESSION, '_task-',TASK, '_artifact-manual.tsv']; 
-paths.resp = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal];
+paths.resp = [PATH_RESULTS, filesep, op.sub '_responses_' op.resp_signal, '.mat'];
 op.paths = paths; 
 op_out = op; 
 
