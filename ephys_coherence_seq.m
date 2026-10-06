@@ -1,6 +1,8 @@
 
 %%%% do coherence analysis for subjects in dbsseq and compile pairs into a single table
 % you must run batch_response_types_seq first to generate the subs table (covers all subs) and resp.rspv (specific to each sub)
+%
+% 2026/10/4 - with 1k pairs, 50 freqs, 3 conditions, 1 sync time.... takes 6h to run on turbo, stored as 6gb
 
  % most important is rsvp … maybe also p prod learn prep stim, p prod prep stim, p syl stim prep prod
 op.resp_vars_to_copy = {'rspv','bad_elc','p_min_stim_prep_prod',...
@@ -70,3 +72,62 @@ end
 
 
 coh = ephys_coherence(subs, op) 
+
+%% plotting example pair
+pair_row = 540;
+
+% --- TOGGLE SCALE MODE HERE ---
+% Choices: 'equal' (log-like index scale assuming y spacing is log) or 'linear' (true frequency spacing)
+% yscale_mode = 'linear'; 
+yscale_mode = 'equal'; 
+
+
+sync_event = 't_prod_on'; 
+coh1 = coh.coh{pair_row}; 
+xtime = coh1.time{sync_ind};
+tcon = coh1.trialconds{sync_event}; 
+ncon = height(tcon);  
+
+close all
+hfig = figure('WindowState', 'maximized');
+
+for icon = 1:ncon
+    subplot(1, ncon, icon)
+    coh_data = tcon{tcon.cond{icon}, 'freqs'}{1}.coh; 
+    plotfreqs = tcon{tcon.cond{icon}, 'freqs'}{1}.freq; 
+    hax = gca;
+    
+    switch yscale_mode
+        case 'equal'
+            % 1. EQUAL HEIGHTS MODE (Natively stretches rows equally)
+            imagesc(xtime, 1:length(plotfreqs), coh_data);
+            axis xy;
+            
+            % Automatically pick 8 evenly spaced row indices for labels
+            tick_idx = round(linspace(1, length(plotfreqs), 8)); 
+            hax.YTick = tick_idx;
+            hax.YTickLabel = string(round(plotfreqs(tick_idx), 1));
+        
+        case 'linear'
+            % 2. TRUE LINEAR SCALE MODE (Row heights match frequency gaps)
+            % pcolor draws a checkerboard grid using the true coordinates
+            hp = pcolor(xtime, plotfreqs, coh_data);
+            shading flat; % Removes the black grid lines between pixels
+            axis xy;
+            
+            % Let MATLAB handle the numeric ticks naturally for linear spacing
+            hax.YTickMode = 'auto';
+            hax.YTickLabelMode = 'auto';
+        otherwise
+            error('unknown scale mode')
+    end
+    
+    axis tight
+    title(tcon.cond{icon})
+    ylabel('Frequency (Hz)')
+    xlabel(['Time after ', sync_event, ' (s)'])
+end
+
+
+
+

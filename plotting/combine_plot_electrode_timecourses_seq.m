@@ -19,7 +19,7 @@ op.analyze_tuned_elcs_only = 0;
 
 % op.tuning_param = 'p_stim_learn';
 % op.tuning_param = 'p_prep_learn';
-op.tuning_param = 'p_prod_learn';
+% op.tuning_param = 'p_prod_learn';
 
 % op.tuning_param = 'p_stim_nn_v_nat';
 % op.tuning_param = 'p_prep_nn_v_nat'; 
@@ -58,11 +58,11 @@ op.tuning_param = 'p_prod_learn';
 % op.tuning_param = 'p_prod_vow';
 
 % op.tuning_param = 'p_min_stim_prep_prod'; 
-% op.tuning_param = 'p_min_learn';  
+op.tuning_param = 'p_min_learn';  
 
 
 op.sort_cond = 'learn_con'; op.sort_cond_vals = {'nat','nn_train','nn_nov'}; 
-% op.sort_cond = 'is_nat';  op.sort_cond_vals = [0 1]; % need to re-add the creation of this trials table variable in response_types_seq
+% op.sort_cond = 'is_nat';  op.sort_cond_vals = [0 1]; %
 % op.sort_cond = 'word'; op.sort_cond_vals = {}; 
 % op.sort_cond = 'vow'; op.sort_cond_vals = {}; 
 % op.sort_cond = 'word_accuracy'; op.sort_cond_vals = [0 1]; 
@@ -73,10 +73,12 @@ op.sort_cond = 'learn_con'; op.sort_cond_vals = {'nat','nn_train','nn_nov'};
 % If cell array: label only specified epochs
 %%%%%%%% dbs-seq epochs = 'prebase','base','postbase','visual_stim','vis_aud_stim','delay','prep','speech','postprod'
 
-op.epochs_to_label = {'visual_stim','vis_audio_stim','speech'};  % Only show labels for these epochs
+op.epochs_to_label = {'visual_stim','delay','speech'};  % Only show labels for these epochs
+% op.epochs_to_label = {'visual_stim','vis_audio_stim','speech'};  % Only show labels for these epochs
 % op.epochs_to_label = {};  % label all epochs
 
 % op.regions_to_plot  = {'SMC','IFG/IFS','Thal'};
+op.regions_to_plot  = {'SMC','IFG/IFS','STG'};
 op.regions_to_plot = {}; % plot all regions
 
 %% Epoch visualization options
@@ -86,6 +88,8 @@ op.epoch_label_height = 0.92;
 op.epoch_label_fontsize = 8;
 
 %% ============ CALL MAIN FUNCTION ============
+close all
+
 [cond_elc_rgn, align_stats_rgn, resp_grpd_rgn, cfg_rgn] = ...
     combine_plot_electrode_timecourses(resp, subs, op);
 
